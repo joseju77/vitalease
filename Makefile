@@ -7,7 +7,7 @@ verify_ssh_key := $(shell mkdir -p docker/ssh && [ ! -f docker/ssh/authorized_ke
 export COMPOSE_PROJECT_NAME := $(shell echo $(APP_NAME) | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')
 export COMPOSE_FILE := docker-compose.dev.yml
 
-.PHONY: help build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell
+.PHONY: help build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell lint lint-fix lint-staged test
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -51,3 +51,20 @@ nginx-shell: ## Shell into the nginx container
 
 redis-shell: ## Shell into the redis container
 	@docker compose exec redis sh
+
+# --- Quality ---
+lint: ## Run all linters in check-only mode (ESLint, Prettier, Pint)
+	@docker compose exec -T -u www-data laravel npm run lint
+	@docker compose exec -T -u www-data laravel npm run format:check
+	@docker compose exec -T -u www-data laravel vendor/bin/pint --test
+
+lint-fix: ## Auto-fix lint/formatting issues (ESLint, Prettier, Pint)
+	@docker compose exec -T -u www-data laravel npm run lint:fix
+	@docker compose exec -T -u www-data laravel npm run format
+	@docker compose exec -T -u www-data laravel vendor/bin/pint
+
+lint-staged: ## Run lint-staged against the currently staged files (used by the pre-commit hook)
+	@docker compose exec -T -u www-data laravel npx lint-staged
+
+test: ## Run the backend test suite
+	@docker compose exec -T -u www-data laravel php artisan test

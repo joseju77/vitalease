@@ -31,6 +31,7 @@ RUN apk add --no-cache --virtual .build-deps \
       libpq \
       libzip \
       bash \
+      git \
       supervisor openssh tini \
       nodejs npm \
     && pecl install -o -f redis xdebug \
