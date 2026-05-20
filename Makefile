@@ -7,7 +7,7 @@ verify_ssh_key := $(shell mkdir -p docker/ssh && [ ! -f docker/ssh/authorized_ke
 export COMPOSE_PROJECT_NAME := $(shell echo $(APP_NAME) | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')
 export COMPOSE_FILE := docker-compose.dev.yml
 
-.PHONY: help build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell lint lint-fix lint-staged test
+.PHONY: help build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell lint lint-fix lint-staged test test-frontend test-all
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -68,3 +68,8 @@ lint-staged: ## Run lint-staged against the currently staged files (used by the 
 
 test: ## Run the backend test suite
 	@docker compose exec -T -u www-data laravel php artisan test
+
+test-frontend: ## Run the frontend test suite
+	@docker compose exec -T -u www-data laravel npm run test
+
+test-all: test test-frontend ## Run both backend and frontend test suites
