@@ -7,10 +7,16 @@ verify_ssh_key := $(shell mkdir -p docker/ssh && [ ! -f docker/ssh/authorized_ke
 export COMPOSE_PROJECT_NAME := $(shell echo $(APP_NAME) | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')
 export COMPOSE_FILE := docker-compose.dev.yml
 
-.PHONY: help build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell lint lint-fix lint-staged test test-frontend test-all
+.PHONY: help setup build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell lint lint-fix lint-staged test test-frontend test-all
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
+
+setup: up ## First-time setup: install dependencies, generate app key, run migrations
+	@docker compose exec -T -u www-data laravel composer install
+	@docker compose exec -T -u www-data laravel npm install
+	@docker compose exec -T -u www-data laravel sh -c 'grep -q "^APP_KEY=base64" .env || php artisan key:generate'
+	@docker compose exec -T -u www-data laravel php artisan migrate
 
 # --- Build, Start, Stop, Restart, Recreate ---
 build: ## Build docker containers
