@@ -1,6 +1,5 @@
 {
     "preset": "laravel",
-    "exclude": ["old_project"],
     "rules": {
         "Pint/laravel_blade": true
     }

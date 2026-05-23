@@ -31,13 +31,6 @@ export default [
         },
     },
     {
-        ignores: [
-            'vendor/**',
-            'node_modules/**',
-            'public/build/**',
-            'storage/**',
-            'bootstrap/cache/**',
-            'old_project/**',
-        ],
+        ignores: ['vendor/**', 'node_modules/**', 'public/build/**', 'storage/**', 'bootstrap/cache/**'],
     },
 ];
