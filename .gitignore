@@ -1,7 +1,6 @@
 .idea/
 .plans/
 .atl/
-# Laravel
 *.log
 .DS_Store
 .env
