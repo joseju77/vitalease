@@ -22,7 +22,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'password' => Hash::make('password'),
-            'is_active' => true,
+            'has_access' => true,
         ];
     }
 
@@ -32,7 +32,7 @@ class UserFactory extends Factory
     public function inactive(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_active' => false,
+            'has_access' => false,
         ]);
     }
 }
