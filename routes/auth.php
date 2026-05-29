@@ -8,6 +8,8 @@ Route::middleware('guest')
     ->name('auth.')
     ->group(function () {
         Route::post('/login', 'store')->name('login.store');
+        Route::get('/oauth/google/redirect', 'redirectToGoogle')->name('google.redirect');
+        Route::get('/oauth/google/callback', 'handleGoogleCallback')->name('google.callback');
     });
 
 Route::post('logout', [AuthController::class, 'destroy'])
