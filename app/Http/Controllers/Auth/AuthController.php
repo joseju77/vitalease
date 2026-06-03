@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 use Uri\InvalidUriException;
@@ -15,6 +17,14 @@ use Uri\Rfc3986\Uri;
 
 class AuthController extends Controller
 {
+    /**
+     * Display the login page.
+     */
+    public function login(): Response
+    {
+        return Inertia::render('auth/Login');
+    }
+
     /**
      * Handle an incoming authentication request.
      */
@@ -75,11 +85,13 @@ class AuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->user();
         } catch (Throwable) {
-            return redirect('/')->withErrors(['email' => __('modules/auth/login.errors.google_auth_failed')]);
+            return redirect()->route('auth.login')
+                ->withErrors(['email' => __('modules/auth/login.errors.google_auth_failed')]);
         }
 
         if (! $googleUser->getEmail()) {
-            return redirect('/')->withErrors(['email' => __('modules/auth/login.errors.google_missing_email')]);
+            return redirect()->route('auth.login')
+                ->withErrors(['email' => __('modules/auth/login.errors.google_missing_email')]);
         }
 
         $user = User::query()
@@ -88,7 +100,8 @@ class AuthController extends Controller
             ->first();
 
         if (! $user) {
-            return redirect('/')->withErrors(['email' => __('modules/auth/login.errors.invalid_credentials')]);
+            return redirect()->route('auth.login')
+                ->withErrors(['email' => __('modules/auth/login.errors.invalid_credentials')]);
         }
 
         Auth::login($user);
