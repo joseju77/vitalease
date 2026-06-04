@@ -12,6 +12,7 @@ usuarios, roles y permisos.
 - **Entorno de desarrollo**: Docker (nginx + PHP-FPM + PostgreSQL + Redis).
 
 Las decisiones de arquitectura y sus alternativas consideradas están documentadas en [`docs/adr/`](docs/adr/).
+La documentación de cada feature vive en [`docs/features/`](docs/features/).
 
 ## Requisitos previos
 
