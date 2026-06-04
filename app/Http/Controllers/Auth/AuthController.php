@@ -34,6 +34,8 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
+        $request->user()->updateQuietly(['last_login_at' => now()]);
+
         return redirect()->intended();
     }
 
@@ -107,6 +109,8 @@ class AuthController extends Controller
         Auth::login($user);
 
         $request->session()->regenerate();
+
+        $user->updateQuietly(['last_login_at' => now()]);
 
         return redirect()->intended();
     }
