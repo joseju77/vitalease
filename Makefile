@@ -7,7 +7,7 @@ verify_ssh_key := $(shell mkdir -p docker/ssh && [ ! -f docker/ssh/authorized_ke
 export COMPOSE_PROJECT_NAME := $(shell echo $(APP_NAME) | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')
 export COMPOSE_FILE := docker-compose.dev.yml
 
-.PHONY: help setup build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell lint lint-fix lint-staged test test-frontend test-all
+.PHONY: help setup build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell lint lint-fix lint-staged test test-db test-frontend test-all
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -72,7 +72,10 @@ lint-fix: ## Auto-fix lint/formatting issues (ESLint, Prettier, Pint)
 lint-staged: ## Run lint-staged against the currently staged files (used by the pre-commit hook)
 	@docker compose exec -T -u www-data laravel npx lint-staged
 
-test: ## Run the backend test suite
+test-db: ## Ensure the dedicated Postgres test database exists
+	@docker compose exec -T -e PGPASSWORD=$(DB_PASSWORD) postgres createdb -U $(DB_USERNAME) vitalease_testing 2>/dev/null || true
+
+test: test-db ## Run the backend test suite
 	@docker compose exec -T -u www-data laravel php artisan test
 
 test-frontend: ## Run the frontend test suite
