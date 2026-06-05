@@ -7,8 +7,8 @@
         "dev": "vite",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
-        "format": "prettier --write resources/js resources/css package.json components.json eslint.config.js prettier.config.js vite.config.js vitest.config.js",
-        "format:check": "prettier --check resources/js resources/css package.json components.json eslint.config.js prettier.config.js vite.config.js vitest.config.js",
+        "format": "prettier --write resources/js resources/css package.json components.json eslint.config.js prettier.config.js vite.config.ts vitest.config.ts",
+        "format:check": "prettier --check resources/js resources/css package.json components.json eslint.config.js prettier.config.js vite.config.ts vitest.config.ts",
         "prepare": "husky",
         "test": "vitest run",
         "test:watch": "vitest"
@@ -27,8 +27,11 @@
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@laravel/vite-plugin-wayfinder": "^0.1.10",
         "@tailwindcss/vite": "^4.0.0",
+        "@types/node": "^26.6.1",
         "@vue/eslint-config-prettier": "^10.2.0",
+        "@vue/eslint-config-typescript": "^14.9.0",
         "@vue/test-utils": "^2.5.1",
         "concurrently": "^10.0.3",
         "eslint": "^10.10.0",
@@ -42,8 +45,10 @@
         "prettier-plugin-blade": "^3.3.3",
         "prettier-plugin-tailwindcss": "^0.8.1",
         "tailwindcss": "^4.0.0",
+        "typescript": "^6.0.3",
         "vite": "^8.0.0",
-        "vitest": "^5.0.1"
+        "vitest": "^5.0.1",
+        "vue-tsc": "^3.3.11"
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
@@ -51,8 +56,9 @@
     "dependencies": {
         "@inertiajs/vite": "^3.7.1",
         "@inertiajs/vue3": "^3.7.1",
-        "@lucide/vue": "^1.46.0",
+        "@lucide/vue": "^1.47.0",
         "@vitejs/plugin-vue": "^6.0.9",
+        "@vueuse/core": "^15.0.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "reka-ui": "^2.10.4",
