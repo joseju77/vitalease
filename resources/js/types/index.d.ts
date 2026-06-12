@@ -10,6 +10,8 @@ export interface User {
 
 export interface Auth {
     user: User | null;
+    permissions: string[];
+    is_super_admin: boolean;
 }
 
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {

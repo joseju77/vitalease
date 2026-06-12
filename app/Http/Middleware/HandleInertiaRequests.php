@@ -35,9 +35,15 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
-            //
+            'auth' => [
+                'user' => $user?->only(['uuid', 'name', 'email', 'has_access', 'last_login_at', 'created_at', 'updated_at']),
+                'permissions' => $user ? $user->getAllPermissions()->pluck('name')->values()->all() : [],
+                'is_super_admin' => (bool) $user?->hasRole('super-admin'),
+            ],
         ];
     }
 }
