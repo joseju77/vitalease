@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Users\StoreUserRequest;
 use App\Http\Requests\Users\UpdateUserAccessRequest;
+use App\Http\Requests\Users\UpdateUserAuthorizationRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -61,6 +63,19 @@ class UserController extends Controller
     public function updateAccess(UpdateUserAccessRequest $request, User $user): RedirectResponse
     {
         $user->update($request->validated());
+
+        return back();
+    }
+
+    /**
+     * Sync the target user's roles and direct permissions.
+     */
+    public function updateAuthorization(UpdateUserAuthorizationRequest $request, User $user): RedirectResponse
+    {
+        DB::transaction(function () use ($request, $user): void {
+            $user->syncRoles($request->validated('roles'));
+            $user->syncPermissions($request->validated('permissions'));
+        });
 
         return back();
     }
