@@ -13,8 +13,7 @@ Route::middleware('auth')
     ->name('users.')
     ->group(function () {
         Route::get('/users', 'index')->name('index')->middleware('can:viewAny,App\Models\User');
-        Route::get('/users/create', 'create')->name('create')->middleware('can:create,App\Models\User');
         Route::post('/users', 'store')->name('store')->middleware('can:create,App\Models\User');
-        Route::patch('/users/{user}/access', 'updateAccess')->name('access')->middleware('can:update,user');
+        Route::patch('/users/{user}', 'update')->name('update')->middleware('can:update,user');
         Route::put('/users/{user}/authorization', 'updateAuthorization')->name('authorization')->middleware('can:update,user');
     });

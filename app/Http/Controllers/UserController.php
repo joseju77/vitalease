@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Users\StoreUserRequest;
-use App\Http\Requests\Users\UpdateUserAccessRequest;
 use App\Http\Requests\Users\UpdateUserAuthorizationRequest;
+use App\Http\Requests\Users\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -30,14 +30,6 @@ class UserController extends Controller
     }
 
     /**
-     * Display the form for creating a new user.
-     */
-    public function create(): Response
-    {
-        return Inertia::render('users/Create');
-    }
-
-    /**
      * Store a newly created user.
      *
      * This is the only account-creation path in the application: the admin
@@ -55,12 +47,12 @@ class UserController extends Controller
     }
 
     /**
-     * Toggle the target user's access flag.
+     * Update the target user's name, email, and access flag.
      *
-     * This only affects the next login attempt; it does not terminate an
-     * already-active session.
+     * Toggling `has_access` off only affects the next login attempt; it does
+     * not terminate an already-active session.
      */
-    public function updateAccess(UpdateUserAccessRequest $request, User $user): RedirectResponse
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
         $user->update($request->validated());
 
