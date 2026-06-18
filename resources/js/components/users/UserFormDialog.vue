@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import { store, update } from '@/actions/App/Http/Controllers/UserController';
 import { Button } from '@/components/ui/button';
 import {
@@ -68,6 +69,7 @@ function submit() {
             preserveScroll: true,
             onSuccess: () => {
                 open.value = false;
+                toast.success('Usuario creado');
             },
         });
         return;
@@ -85,6 +87,7 @@ function submit() {
         preserveScroll: true,
         onSuccess: () => {
             open.value = false;
+            toast.success('Usuario actualizado');
         },
     });
 }

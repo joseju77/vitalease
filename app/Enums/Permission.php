@@ -14,6 +14,7 @@ enum Permission: string
     case ConsultationsCreate = 'consultations.create';
     case ConsultationsUpdate = 'consultations.update';
     case ConsultationsDelete = 'consultations.delete';
+    case RolesManage = 'roles.manage';
 
     /**
      * @return list<string>

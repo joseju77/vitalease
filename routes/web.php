@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -16,4 +17,14 @@ Route::middleware('auth')
         Route::post('/users', 'store')->name('store')->middleware('can:create,App\Models\User');
         Route::patch('/users/{user}', 'update')->name('update')->middleware('can:update,user');
         Route::put('/users/{user}/authorization', 'updateAuthorization')->name('authorization')->middleware('can:update,user');
+    });
+
+Route::middleware('auth')
+    ->controller(RoleController::class)
+    ->name('roles.')
+    ->group(function () {
+        Route::get('/roles', 'index')->name('index')->middleware('can:viewAny,Spatie\Permission\Models\Role');
+        Route::post('/roles', 'store')->name('store')->middleware('can:create,Spatie\Permission\Models\Role');
+        Route::patch('/roles/{role}', 'update')->name('update')->middleware('can:update,role');
+        Route::delete('/roles/{role}', 'destroy')->name('destroy')->middleware('can:delete,role');
     });

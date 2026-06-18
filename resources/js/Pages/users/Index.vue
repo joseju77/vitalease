@@ -5,6 +5,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import UserAuthorizationDialog from '@/components/users/UserAuthorizationDialog.vue';
 import UserFormDialog from '@/components/users/UserFormDialog.vue';
 import { formatDateTime } from '@/lib/formatDateTime';
 
@@ -24,6 +25,8 @@ interface ManagedUser {
     email: string;
     has_access: boolean;
     last_login_at: string | null;
+    roles: string[];
+    permissions: string[];
 }
 
 defineProps<{
@@ -31,10 +34,13 @@ defineProps<{
         data: ManagedUser[];
         links: PaginationLink[];
     };
+    roleCatalog: string[];
+    permissionCatalog: string[];
 }>();
 
 const createOpen = ref(false);
 const editingUser = ref<ManagedUser | null>(null);
+const authorizingUser = ref<ManagedUser | null>(null);
 
 const editOpen = computed({
     get: () => editingUser.value !== null,
@@ -45,8 +51,21 @@ const editOpen = computed({
     },
 });
 
+const authorizationOpen = computed({
+    get: () => authorizingUser.value !== null,
+    set: (value: boolean) => {
+        if (!value) {
+            authorizingUser.value = null;
+        }
+    },
+});
+
 function edit(user: ManagedUser) {
     editingUser.value = user;
+}
+
+function manageAuthorization(user: ManagedUser) {
+    authorizingUser.value = user;
 }
 </script>
 
@@ -84,7 +103,10 @@ function edit(user: ManagedUser) {
                         </Badge>
                     </TableCell>
                     <TableCell class="text-right">
-                        <Button variant="outline" size="sm" @click="edit(user)">Editar</Button>
+                        <div class="flex justify-end gap-2">
+                            <Button variant="outline" size="sm" @click="edit(user)">Editar</Button>
+                            <Button variant="outline" size="sm" @click="manageAuthorization(user)">Permisos</Button>
+                        </div>
                     </TableCell>
                 </TableRow>
             </TableBody>
@@ -117,5 +139,13 @@ function edit(user: ManagedUser) {
         v-model:open="editOpen"
         mode="edit"
         :user="editingUser"
+    />
+    <UserAuthorizationDialog
+        v-if="authorizingUser"
+        :key="`authorization-${authorizingUser.uuid}`"
+        v-model:open="authorizationOpen"
+        :user="authorizingUser"
+        :role-catalog="roleCatalog"
+        :permission-catalog="permissionCatalog"
     />
 </template>
