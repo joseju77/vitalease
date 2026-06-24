@@ -1,0 +1,546 @@
+[
+    {
+        "name": "Rectoría",
+        "segment": 3
+    },
+    {
+        "name": "Secretaría Técnica",
+        "segment": 3
+    },
+    {
+        "name": "Secretaría Particular",
+        "segment": 3
+    },
+    {
+        "name": "Asistente de Rectoría",
+        "segment": 3
+    },
+    {
+        "name": "Asistente de Protocolo",
+        "segment": 3
+    },
+    {
+        "name": "Secretaría Académica",
+        "segment": 3
+    },
+    {
+        "name": "Oficina de Comisiones del Consejo",
+        "segment": 3
+    },
+    {
+        "name": "Área de Convenios y Contratos",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Planeación",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Programas Docentes",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Investigación",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Posgrados",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Extensión",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Vinculación",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Servicio Social",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Difusión",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Servicios Académicos",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Becas e Intercambio",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Desarrollo Bibliotecario",
+        "segment": 3
+    },
+    {
+        "name": "Centro Integral de Documentación",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Tecnologías para el Aprendizaje",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Cómputo y Telecomunicaciones para el Aprendizaje",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Multimedia Instruccional",
+        "segment": 3
+    },
+    {
+        "name": "Instituto Transdisciplinar de Investigación y Servicios de la Universidad de Guadalajara (ITRANS)",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Licenciatura en Física",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Licenciatura en Matemáticas",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Licenciatura en Química",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Licenciatura en Químico Farmacéutico Biólogo",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Licenciatura en Ciencia de Materiales",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería Química",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería Civil",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería en Topografía Geomática",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería en Alimentos y Biotecnología",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería Industrial",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería Mecánica Eléctrica",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería en Logística y Transporte",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería Informática",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería Biomédica",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería en Computación",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería en Comunicaciones y Electrónica",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería Robótica",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Ingeniería Fotónica",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Licenciatura en Desarrollo de Sistemas Web (Virtual)",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Licenciatura en Tecnologías e Información (Virtual)",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias Biofarmacéuticas",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Bioingeniería y Cómputo Inteligente",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Física",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Química",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Inocuidad Alimentaria",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Enseñanza de las Matemáticas",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Matemáticas",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencia de Materiales",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Hidrometeorología",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Ingeniería Química",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Procesos Biotecnológicos",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Ingeniería Eléctrica",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencia de Productos Forestales",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Ingeniería Electrónica y Computación",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Óptica y Fotónica",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ciencias en Robótica e Inteligencia Artificial",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Cómputo Aplicado",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ingeniería Civil",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de la Maestría en Ingeniería y Ciencia de Datos",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencias en Física",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencias en Química",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencias en Bioquímica Molecular y Traslacional",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencia de Biomateriales Sustentables",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencia de Materiales",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencias en Matemáticas",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencias en Ingeniería Química",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencias en Inteligencia Computacional",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencias en Procesos Biotecnológicos (Directo)",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencias en Procesos Biotecnológicos (Tradicional)",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Ciencias de la Electrónica y la Computación",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación del Doctorado en Microbiología y Biotecnología Molecular",
+        "segment": 3
+    },
+    {
+        "name": "Secretaría Administrativa",
+        "segment": 3
+    },
+    {
+        "name": "Primeros Contactos para la Atención de Violencia de Género",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Control Escolar",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Atención",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Ingreso y Grado",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Control de Alumnos y Egresados",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Servicios Generales",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Mantenimiento",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Adquisiciones y Suministros",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Finanzas",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Contabilidad",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Presupuesto",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Nómina",
+        "segment": 3
+    },
+    {
+        "name": "Fondos Externos",
+        "segment": 3
+    },
+    {
+        "name": "Coordinación de Personal",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Personal Académico",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Personal Administrativo",
+        "segment": 3
+    },
+    {
+        "name": "Unidad de Enseñanza Incorporada",
+        "segment": 3
+    },
+    {
+        "name": "División de Ciencias Básicas",
+        "segment": 2
+    },
+    {
+        "name": "Secretaría de la División de Ciencias Básicas",
+        "segment": 3
+    },
+    {
+        "name": "Departamento de Farmacobiología",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Química",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Matemáticas",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Física",
+        "segment": 2
+    },
+    {
+        "name": "Instituto de Astronomía y Meteorología",
+        "segment": 2
+    },
+    {
+        "name": "División de Ingenierías",
+        "segment": 2
+    },
+    {
+        "name": "Secretaría de la División de Ingenierías",
+        "segment": 3
+    },
+    {
+        "name": "Departamento de Ingeniería Química",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Ingeniería Civil y Topografía",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Ingeniería Industrial",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Ingeniería Mecánica Eléctrica",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Madera Celulosa y Papel",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Ingeniería de Proyectos",
+        "segment": 2
+    },
+    {
+        "name": "División de Tecnologías para la Integración Ciber-Humana",
+        "segment": 2
+    },
+    {
+        "name": "Secretaría de la División de Tecnologías para la Integración Ciber-Humana",
+        "segment": 3
+    },
+    {
+        "name": "Departamento de Bioingeniería Traslacional",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Ciencias Computacionales",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Ingeniería Electro-Fotónica",
+        "segment": 2
+    },
+    {
+        "name": "Departamento de Innovación Basada en la Información y el Conocimiento",
+        "segment": 2
+    },
+    {
+        "name": "Consejo Social",
+        "segment": 3
+    },
+    {
+        "name": "Patronato",
+        "segment": 3
+    },
+    {
+        "name": "Contraloría del Centro",
+        "segment": 3
+    },
+    {
+        "name": "Licenciatura en Física",
+        "segment": 1
+    },
+    {
+        "name": "Licenciatura en Química",
+        "segment": 1
+    },
+    {
+        "name": "Licenciatura en Matemáticas",
+        "segment": 1
+    },
+    {
+        "name": "Licenciatura en Químico Farmacéutico Biólogo",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería Química",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería en Topografía Geomática",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería Mecánica Eléctrica",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería Industrial",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería Civil",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería Biomédica",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería en Computación",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería Informática",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería en Comunicaciones y Electrónica",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería en Alimentos y Biotecnología",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería Robótica",
+        "segment": 1
+    },
+    {
+        "name": "Licenciatura en Ciencia de Materiales",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería Fotónica",
+        "segment": 1
+    },
+    {
+        "name": "Ingeniería en Logística y Transporte",
+        "segment": 1
+    },
+    {
+        "name": "Técnico Superior Universitario",
+        "segment": 1
+    }
+]
