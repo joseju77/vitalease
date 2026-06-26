@@ -1,11 +1,15 @@
 <?php
 
 use App\Enums\BloodType;
+use App\Enums\KinshipType;
 use App\Enums\MaritalStatus;
 use App\Enums\SexAtBirth;
 use App\Models\Enrollment;
 use App\Models\FamilyMedicalUnit;
+use App\Models\Neighborhood;
 use App\Models\Patient;
+use App\Models\PatientContactInformation;
+use App\Models\PatientEmergencyContact;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 
@@ -98,5 +102,72 @@ describe('patient factory states', function () {
         $patients = Patient::factory()->count(5)->create();
 
         expect($patients)->toHaveCount(5);
+    });
+});
+
+describe('patient contact information model', function () {
+    it('belongs to a patient', function () {
+        $patient = Patient::factory()->create();
+        $contactInformation = PatientContactInformation::factory()->create(['patient_id' => $patient->id]);
+
+        expect($contactInformation->patient)->toBeInstanceOf(Patient::class)
+            ->and($contactInformation->patient->id)->toBe($patient->id);
+    });
+
+    it('is reachable through the patient contactInformation relation', function () {
+        $patient = Patient::factory()->create();
+        $contactInformation = PatientContactInformation::factory()->create(['patient_id' => $patient->id]);
+
+        expect($patient->contactInformation)->toBeInstanceOf(PatientContactInformation::class)
+            ->and($patient->contactInformation->patient_id)->toBe($contactInformation->patient_id);
+    });
+
+    it('defaults to a null institutional email', function () {
+        $contactInformation = PatientContactInformation::factory()->create();
+
+        expect($contactInformation->institutional_email)->toBeNull();
+    });
+
+    it('attaches a unique institutional email via withInstitutionalEmail', function () {
+        $contactInformation = PatientContactInformation::factory()->withInstitutionalEmail()->create();
+
+        expect($contactInformation->institutional_email)->not->toBeNull();
+    });
+
+    it('attaches a known neighborhood via withNeighborhood', function () {
+        $contactInformation = PatientContactInformation::factory()->withNeighborhood()->create();
+
+        expect($contactInformation->neighborhood_id)->not->toBeNull()
+            ->and($contactInformation->neighborhood)->toBeInstanceOf(Neighborhood::class);
+    });
+});
+
+describe('patient emergency contact model', function () {
+    it('belongs to a patient', function () {
+        $patient = Patient::factory()->create();
+        $emergencyContact = PatientEmergencyContact::factory()->create(['patient_id' => $patient->id]);
+
+        expect($emergencyContact->patient)->toBeInstanceOf(Patient::class)
+            ->and($emergencyContact->patient->id)->toBe($patient->id);
+    });
+
+    it('is reachable through the patient emergencyContacts relation', function () {
+        $patient = Patient::factory()->create();
+        PatientEmergencyContact::factory()->count(2)->create(['patient_id' => $patient->id]);
+
+        expect($patient->emergencyContacts)->toHaveCount(2)
+            ->and($patient->emergencyContacts->first())->toBeInstanceOf(PatientEmergencyContact::class);
+    });
+
+    it('casts kinship_type to the KinshipType enum', function () {
+        $emergencyContact = PatientEmergencyContact::factory()->create();
+
+        expect($emergencyContact->kinship_type)->toBeInstanceOf(KinshipType::class);
+    });
+
+    it('generates constraint-safe emergency contacts in bulk', function () {
+        $emergencyContacts = PatientEmergencyContact::factory()->count(5)->create();
+
+        expect($emergencyContacts)->toHaveCount(5);
     });
 });

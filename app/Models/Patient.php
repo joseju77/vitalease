@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 #[Fillable([
@@ -81,5 +83,21 @@ class Patient extends Model
     public function familyMedicalUnit(): BelongsTo
     {
         return $this->belongsTo(FamilyMedicalUnit::class);
+    }
+
+    /**
+     * @return HasOne<PatientContactInformation, $this>
+     */
+    public function contactInformation(): HasOne
+    {
+        return $this->hasOne(PatientContactInformation::class);
+    }
+
+    /**
+     * @return HasMany<PatientEmergencyContact, $this>
+     */
+    public function emergencyContacts(): HasMany
+    {
+        return $this->hasMany(PatientEmergencyContact::class);
     }
 }
