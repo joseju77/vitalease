@@ -100,4 +100,28 @@ class Patient extends Model
     {
         return $this->hasMany(PatientEmergencyContact::class);
     }
+
+    /**
+     * @return HasMany<PatientAilment, $this>
+     */
+    public function ailments(): HasMany
+    {
+        return $this->hasMany(PatientAilment::class);
+    }
+
+    /**
+     * @return HasOne<PatientOtherAilment, $this>
+     */
+    public function otherAilments(): HasOne
+    {
+        return $this->hasOne(PatientOtherAilment::class);
+    }
+
+    /**
+     * @return HasOne<PatientGynecologicalHistory, $this>
+     */
+    public function gynecologicalHistory(): HasOne
+    {
+        return $this->hasOne(PatientGynecologicalHistory::class);
+    }
 }
