@@ -6,6 +6,8 @@ use App\Enums\ContraceptiveMethod;
 use App\Enums\KinshipType;
 use App\Enums\MaritalStatus;
 use App\Enums\SexAtBirth;
+use App\Models\Enrollment;
+use App\Models\FamilyMedicalUnit;
 use App\Models\Neighborhood;
 use App\Models\Patient;
 use App\Models\PatientAilment;
@@ -290,4 +292,314 @@ describe('atomic aggregate persistence', function () {
             ->and($patient->otherAilments)->not->toBeNull()
             ->and($patient->gynecologicalHistory)->not->toBeNull();
     });
+});
+
+describe('coordinated cross-field validation', function () {
+    it('rejects an internal and external enrollment submitted together', function () {
+        $enrollment = Enrollment::factory()->create();
+
+        $payload = validRegistrationPayload(['patient' => [
+            'enrollment_id' => $enrollment->id,
+            'enrollment_number' => 'A-100',
+            'external_enrollment' => 'EXT-100',
+        ]]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'patient.enrollment_id' => __('modules/patients/registration.custom.enrollment_xor'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('rejects a submission with neither an internal nor an external enrollment', function () {
+        $payload = validRegistrationPayload(['patient' => [
+            'enrollment_id' => null,
+            'enrollment_number' => null,
+            'external_enrollment' => null,
+        ]]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'patient.enrollment_id' => __('modules/patients/registration.custom.enrollment_xor'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('accepts an internal enrollment submitted on its own', function () {
+        $enrollment = Enrollment::factory()->create();
+
+        $payload = validRegistrationPayload(['patient' => [
+            'enrollment_id' => $enrollment->id,
+            'enrollment_number' => 'A-100',
+            'external_enrollment' => null,
+        ]]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionDoesntHaveErrors('patient.enrollment_id');
+        expect(Patient::query()->count())->toBe(1);
+    });
+
+    it('rejects a catalog family medical unit and a free-text one submitted together', function () {
+        $familyMedicalUnit = FamilyMedicalUnit::factory()->create();
+
+        $payload = validRegistrationPayload(['patient' => [
+            'family_medical_unit_id' => $familyMedicalUnit->id,
+            'other_family_medical_unit' => fake()->company(),
+        ]]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'patient.family_medical_unit_id' => __('modules/patients/registration.custom.family_medical_unit_xor'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('rejects a submission with neither a catalog nor a free-text family medical unit', function () {
+        $payload = validRegistrationPayload(['patient' => [
+            'family_medical_unit_id' => null,
+            'other_family_medical_unit' => null,
+        ]]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'patient.family_medical_unit_id' => __('modules/patients/registration.custom.family_medical_unit_xor'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('accepts a catalog family medical unit submitted on its own', function () {
+        $familyMedicalUnit = FamilyMedicalUnit::factory()->create();
+
+        $payload = validRegistrationPayload(['patient' => [
+            'family_medical_unit_id' => $familyMedicalUnit->id,
+            'other_family_medical_unit' => null,
+        ]]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionDoesntHaveErrors('patient.family_medical_unit_id');
+        expect(Patient::query()->count())->toBe(1);
+    });
+
+    it('rejects a neighborhood that does not belong to the submitted zip code', function () {
+        $zipCode = ZipCode::factory()->create();
+        $otherZipCode = ZipCode::factory()->create();
+        $neighborhood = Neighborhood::factory()->create(['zip_code' => $otherZipCode->code]);
+
+        $payload = validRegistrationPayload(['contact_information' => [
+            'zip_code' => $zipCode->code,
+            'neighborhood_id' => $neighborhood->id,
+        ]]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'contact_information.neighborhood_id' => __('modules/patients/registration.custom.neighborhood_zip_code_mismatch'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('accepts a neighborhood that belongs to the submitted zip code', function () {
+        $zipCode = ZipCode::factory()->create();
+        $neighborhood = Neighborhood::factory()->create(['zip_code' => $zipCode->code]);
+
+        $payload = validRegistrationPayload(['contact_information' => [
+            'zip_code' => $zipCode->code,
+            'neighborhood_id' => $neighborhood->id,
+        ]]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionDoesntHaveErrors('contact_information.neighborhood_id');
+        expect(Patient::query()->count())->toBe(1);
+    });
+
+    it('rejects other_ailments when none of its three fields carry content', function () {
+        $payload = validRegistrationPayload([
+            'other_ailments' => ['surgeries' => null, 'allergies' => null, 'others' => null],
+        ]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'other_ailments' => __('modules/patients/registration.custom.other_ailments_empty'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('accepts other_ailments when at least one of its fields carries content', function () {
+        $payload = validRegistrationPayload([
+            'other_ailments' => ['surgeries' => null, 'allergies' => 'Penicillin', 'others' => null],
+        ]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionDoesntHaveErrors('other_ailments');
+        expect(Patient::query()->count())->toBe(1);
+    });
+
+    it('rejects a gynecological history submitted for a Male patient', function () {
+        $payload = validRegistrationPayload([
+            'patient' => ['sex_at_birth' => SexAtBirth::Male->value],
+            'gynecological_history' => validGynecologicalHistory(),
+        ]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'gynecological_history' => __('modules/patients/registration.custom.gynecological_history_not_applicable'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('accepts a gynecological history submitted for a Female patient', function () {
+        $payload = validRegistrationPayload([
+            'patient' => ['sex_at_birth' => SexAtBirth::Female->value],
+            'gynecological_history' => validGynecologicalHistory(),
+        ]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionDoesntHaveErrors('gynecological_history');
+        expect(Patient::query()->count())->toBe(1);
+    });
+
+    it('rejects a pap smear date submitted without its result', function () {
+        $payload = validRegistrationPayload([
+            'patient' => ['sex_at_birth' => SexAtBirth::Female->value],
+            'gynecological_history' => [
+                ...validGynecologicalHistory(),
+                'last_pap_smear_date' => '2025-01-01',
+                'last_pap_smear_was_positive' => null,
+            ],
+        ]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'gynecological_history.last_pap_smear_date' => __('modules/patients/registration.custom.pap_smear_pairing'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('rejects a pap smear result submitted without its date', function () {
+        $payload = validRegistrationPayload([
+            'patient' => ['sex_at_birth' => SexAtBirth::Female->value],
+            'gynecological_history' => [
+                ...validGynecologicalHistory(),
+                'last_pap_smear_date' => null,
+                'last_pap_smear_was_positive' => false,
+            ],
+        ]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'gynecological_history.last_pap_smear_date' => __('modules/patients/registration.custom.pap_smear_pairing'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('accepts a gynecological history with neither a pap smear date nor a result', function () {
+        $payload = validRegistrationPayload([
+            'patient' => ['sex_at_birth' => SexAtBirth::Female->value],
+            'gynecological_history' => [
+                ...validGynecologicalHistory(),
+                'last_pap_smear_date' => null,
+                'last_pap_smear_was_positive' => null,
+            ],
+        ]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionDoesntHaveErrors('gynecological_history.last_pap_smear_date');
+        expect(Patient::query()->count())->toBe(1);
+    });
+
+    it('rejects pregnancy-related counts that exceed the number of pregnancies', function () {
+        $payload = validRegistrationPayload([
+            'patient' => ['sex_at_birth' => SexAtBirth::Female->value],
+            'gynecological_history' => [
+                ...validGynecologicalHistory(),
+                'pregnancies' => 1,
+                'vaginal_deliveries' => 1,
+                'cesareans' => 1,
+                'abortions' => 0,
+            ],
+        ]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionHasErrors([
+            'gynecological_history.pregnancies' => __('modules/patients/registration.custom.pregnancy_counts_exceeded'),
+        ]);
+        expect(Patient::query()->count())->toBe(0);
+    });
+
+    it('accepts pregnancy-related counts that equal the number of pregnancies', function () {
+        $payload = validRegistrationPayload([
+            'patient' => ['sex_at_birth' => SexAtBirth::Female->value],
+            'gynecological_history' => [
+                ...validGynecologicalHistory(),
+                'pregnancies' => 2,
+                'vaginal_deliveries' => 1,
+                'cesareans' => 1,
+                'abortions' => 0,
+            ],
+        ]);
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertSessionDoesntHaveErrors('gynecological_history.pregnancies');
+        expect(Patient::query()->count())->toBe(1);
+    });
+});
+
+describe('invalid catalog references', function () {
+    it('rejects a non-existent catalog id', function (string $field, array $overrides) {
+        $response = $this->post(route('patients.register.store'), validRegistrationPayload($overrides));
+
+        $response->assertSessionHasErrors([$field]);
+        expect(Patient::query()->count())->toBe(0);
+    })->with([
+        'a non-existent enrollment id' => [
+            'patient.enrollment_id',
+            ['patient' => ['enrollment_id' => 999999, 'enrollment_number' => 'A-100', 'external_enrollment' => null]],
+        ],
+        'a non-existent family medical unit id' => [
+            'patient.family_medical_unit_id',
+            ['patient' => ['family_medical_unit_id' => 999999, 'other_family_medical_unit' => null]],
+        ],
+        'a non-existent neighborhood id' => [
+            'contact_information.neighborhood_id',
+            ['contact_information' => ['neighborhood_id' => 999999]],
+        ],
+    ]);
+});
+
+describe('invalid enum values', function () {
+    it('rejects an out-of-range enum value', function (string $field, array $overrides) {
+        $response = $this->post(route('patients.register.store'), validRegistrationPayload($overrides));
+
+        $response->assertSessionHasErrors([$field]);
+        expect(Patient::query()->count())->toBe(0);
+    })->with([
+        'sex_at_birth' => ['patient.sex_at_birth', ['patient' => ['sex_at_birth' => 999]]],
+        'marital_status' => ['patient.marital_status', ['patient' => ['marital_status' => 999]]],
+        'blood_type' => ['patient.blood_type', ['patient' => ['blood_type' => 999]]],
+        'kinship_type' => ['emergency_contacts.0.kinship_type', ['emergency_contacts' => [['kinship_type' => 999]]]],
+        'ailment_type' => ['ailments.0.ailment_type', ['ailments' => [['ailment_type' => 999]]]],
+        'contraceptive_method' => [
+            'gynecological_history.contraceptive_method',
+            [
+                'patient' => ['sex_at_birth' => SexAtBirth::Female->value],
+                'gynecological_history' => [...validGynecologicalHistory(), 'contraceptive_method' => 999],
+            ],
+        ],
+    ]);
 });
