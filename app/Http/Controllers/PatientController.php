@@ -11,11 +11,11 @@ use App\Enums\SexAtBirth;
 use App\Http\Requests\Patients\StorePatientRegistrationRequest;
 use App\Models\Enrollment;
 use App\Models\FamilyMedicalUnit;
-use App\Models\Municipality;
 use App\Models\Neighborhood;
 use App\Models\Patient;
-use App\Models\ZipCode;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,8 +25,8 @@ class PatientController extends Controller
 {
     /**
      * Display the anonymous patient registration metadata: enum options and
-     * the location, family-medical-unit, and enrollment catalogs a guest
-     * needs to pre-fill the registration form.
+     * the family-medical-unit and enrollment catalogs a guest needs to
+     * pre-fill the registration form.
      */
     public function create(): Response
     {
@@ -37,19 +37,29 @@ class PatientController extends Controller
             'kinshipTypeOptions' => array_column(KinshipType::cases(), 'value'),
             'ailmentTypeOptions' => array_column(AilmentType::cases(), 'value'),
             'contraceptiveMethodOptions' => array_column(ContraceptiveMethod::cases(), 'value'),
-            'municipalities' => Municipality::query()->orderBy('id')->get(['id', 'name']),
-            'postalCodes' => ZipCode::query()->orderBy('code')->get(['code', 'municipality_id']),
-            'neighborhoodsByPostalCode' => Neighborhood::query()
-                ->orderBy('zip_code')
-                ->orderBy('id')
-                ->get(['id', 'name', 'zip_code'])
-                ->groupBy('zip_code')
-                ->map(fn ($neighborhoods) => $neighborhoods
-                    ->map(fn (Neighborhood $neighborhood) => ['id' => $neighborhood->id, 'name' => $neighborhood->name])
-                    ->values()),
             'familyMedicalUnits' => FamilyMedicalUnit::query()->orderBy('id')->get(['id', 'name', 'address']),
             'enrollments' => Enrollment::query()->orderBy('id')->get(['id', 'name', 'segment']),
         ]);
+    }
+
+    /**
+     * Anonymous, rate-limited postal-code neighborhood lookup for the
+     * registration form: returns only the neighborhoods belonging to one
+     * submitted 5-digit postal code, scoped narrowly instead of shipping the
+     * full neighborhood catalog on every page load.
+     */
+    public function neighborhoods(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'zip_code' => ['required', 'string', 'regex:/^[0-9]{5}$/'],
+        ]);
+
+        $neighborhoods = Neighborhood::query()
+            ->where('zip_code', $validated['zip_code'])
+            ->orderBy('id')
+            ->get(['id', 'name']);
+
+        return response()->json($neighborhoods);
     }
 
     /**

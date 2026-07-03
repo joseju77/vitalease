@@ -1,3 +1,18 @@
+import '@inertiajs/core';
+
+declare module '@inertiajs/core' {
+    export interface InertiaConfig {
+        flashDataType: {
+            /**
+             * One-time success confirmation for the public patient
+             * registration flow. Never persisted across reloads and never
+             * carries patient or medical data.
+             */
+            registrationSuccess?: boolean;
+        };
+    }
+}
+
 export interface User {
     uuid?: string;
     name: string;
