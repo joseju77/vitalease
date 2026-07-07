@@ -48,13 +48,11 @@ const props = withDefaults(
                 searchPlaceholder?: string;
                 emptyMessage?: string;
                 controlClass?: HTMLAttributes['class'];
-                maxVisibleOptions?: number;
             }
     >(),
     {
         searchPlaceholder: 'Search...',
         emptyMessage: 'No results found.',
-        maxVisibleOptions: 5,
     },
 );
 
@@ -94,7 +92,6 @@ const commandProps = computed(() => ({
         'searchPlaceholder',
         'emptyMessage',
         'disabled',
-        'maxVisibleOptions',
     ),
 }));
 
@@ -126,49 +123,6 @@ const flattenedOptions = computed(() => {
     }
     return props.options as ComboboxOption[];
 });
-
-/**
- * Renders every option unconditionally once the visitor is searching, so the
- * built-in item-by-item filter (`CommandItem`'s `isRender`) can still find a
- * match anywhere in the list. Only the unsearched, freshly-opened state caps
- * how many `CommandItem`s mount, since that is the state that otherwise
- * always renders the full catalog (up to hundreds of rows) at once.
- */
-const isSearching = computed(() => !!searchValue.value);
-
-const visibleFlatOptions = computed<ComboboxOption[]>(() => {
-    if (hasOptionGroups.value) {
-        return [];
-    }
-    const options = props.options as ComboboxOption[];
-    return isSearching.value ? options : options.slice(0, props.maxVisibleOptions);
-});
-
-const visibleOptionGroups = computed<ComboboxOptionGroup[]>(() => {
-    if (!hasOptionGroups.value) {
-        return [];
-    }
-    const groups = props.options as ComboboxOptionGroup[];
-    if (isSearching.value) {
-        return groups;
-    }
-
-    let remaining = props.maxVisibleOptions;
-    const capped: ComboboxOptionGroup[] = [];
-    for (const group of groups) {
-        if (remaining <= 0) {
-            break;
-        }
-        const options = group.options.slice(0, remaining);
-        if (options.length) {
-            capped.push({ ...group, options });
-            remaining -= options.length;
-        }
-    }
-    return capped;
-});
-
-const isTruncated = computed(() => !isSearching.value && flattenedOptions.value.length > props.maxVisibleOptions);
 
 const isEmpty = computed(() => {
     if (Array.isArray(modelValue.value)) {
@@ -312,7 +266,7 @@ const handleSelection = (value: AcceptableValue | AcceptableValue[]) => {
                         <slot name="options">
                             <template v-if="hasOptionGroups">
                                 <CommandGroup
-                                    v-for="(group, groupIndex) in visibleOptionGroups"
+                                    v-for="(group, groupIndex) in props.options as ComboboxOptionGroup[]"
                                     :key="groupIndex"
                                     :heading="group.label"
                                 >
@@ -337,7 +291,7 @@ const handleSelection = (value: AcceptableValue | AcceptableValue[]) => {
                             </template>
                             <CommandGroup v-else>
                                 <CommandItem
-                                    v-for="(option, index) in visibleFlatOptions"
+                                    v-for="(option, index) in props.options as ComboboxOption[]"
                                     :key="index"
                                     :value="option.value"
                                     :disabled="option.disabled"
@@ -355,10 +309,6 @@ const handleSelection = (value: AcceptableValue | AcceptableValue[]) => {
                                 </CommandItem>
                             </CommandGroup>
                         </slot>
-                        <p v-if="isTruncated" class="px-2 py-1.5 text-xs text-muted-foreground">
-                            Mostrando {{ maxVisibleOptions }} de {{ flattenedOptions.length }} — escribe para buscar
-                            más.
-                        </p>
                     </CommandList>
                 </Command>
             </PopoverContent>

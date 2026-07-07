@@ -2,6 +2,7 @@
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { redirect } from '@/routes/auth/google';
+import { create as createPatientRegistration } from '@/actions/App/Http/Controllers/PatientController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -85,6 +86,13 @@ const showEmailForm = ref(false);
                     >
                         <EmailLoginForm v-if="showEmailForm" />
                     </Transition>
+
+                    <p class="pt-2 text-center text-sm text-muted-foreground">
+                        ¿Eres paciente?
+                        <a :href="createPatientRegistration().url" class="font-medium text-primary hover:underline">
+                            Regístrate aquí
+                        </a>
+                    </p>
                 </CardContent>
             </Card>
         </div>
