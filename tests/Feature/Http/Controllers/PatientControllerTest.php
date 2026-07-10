@@ -582,6 +582,50 @@ describe('invalid catalog references', function () {
     ]);
 });
 
+describe('UI-shaped payload join', function () {
+    it('persists a complete UI-shaped registration payload and strips the UI-only zip_code before persistence', function () {
+        $payload = validRegistrationPayload();
+
+        $response = $this->post(route('patients.register.store'), $payload);
+
+        $response->assertRedirect(route('patients.register'));
+
+        $patient = Patient::query()->sole();
+        expect($patient->contactInformation)->not->toBeNull()
+            ->and($patient->contactInformation->getAttributes())->not->toHaveKey('zip_code')
+            ->and($patient->contactInformation->neighborhood_id)->toBe($payload['contact_information']['neighborhood_id']);
+    });
+});
+
+describe('neighborhood lookup endpoint', function () {
+    it('returns only the neighborhoods belonging to the requested zip code, in id order', function () {
+        $targetZipCode = ZipCode::factory()->create();
+        $otherZipCode = ZipCode::factory()->create();
+
+        $firstNeighborhood = Neighborhood::factory()->create(['zip_code' => $targetZipCode->code, 'name' => 'Centro']);
+        $secondNeighborhood = Neighborhood::factory()->create(['zip_code' => $targetZipCode->code, 'name' => 'Roma']);
+        Neighborhood::factory()->create(['zip_code' => $otherZipCode->code, 'name' => 'Americana']);
+
+        $response = $this->getJson(route('patients.register.neighborhoods', ['zip_code' => $targetZipCode->code]));
+
+        $response->assertOk();
+        $response->assertExactJson([
+            ['id' => $firstNeighborhood->id, 'name' => $firstNeighborhood->name],
+            ['id' => $secondNeighborhood->id, 'name' => $secondNeighborhood->name],
+        ]);
+    });
+
+    it('rejects a malformed zip code with a 422 validation error', function () {
+        // getJson() sends `Accept: application/json`; without it Laravel
+        // redirects (302) on the underlying ValidationException instead of
+        // returning 422.
+        $response = $this->getJson(route('patients.register.neighborhoods', ['zip_code' => '123']));
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('zip_code');
+    });
+});
+
 describe('invalid enum values', function () {
     it('rejects an out-of-range enum value', function (string $field, array $overrides) {
         $response = $this->post(route('patients.register.store'), validRegistrationPayload($overrides));
