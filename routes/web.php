@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PatientController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -8,6 +9,16 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('Welcome');
 });
+
+Route::controller(PatientController::class)
+    ->name('patients.')
+    ->group(function () {
+        Route::get('/patients/register', 'create')->name('register');
+        Route::post('/patients/register', 'store')->name('register.store')->middleware('throttle:5,1');
+        Route::get('/patients/register/neighborhoods', 'neighborhoods')
+            ->name('register.neighborhoods')
+            ->middleware('throttle:30,1');
+    });
 
 Route::middleware('auth')
     ->controller(UserController::class)

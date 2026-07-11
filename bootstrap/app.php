@@ -26,4 +26,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Anonymous patient registration carries demographic and medical
+        // data; none of these roots may be flashed back as old input on a
+        // validation failure.
+        $exceptions->dontFlash([
+            'patient',
+            'contact_information',
+            'emergency_contacts',
+            'ailments',
+            'other_ailments',
+            'gynecological_history',
+        ]);
     })->create();

@@ -1,0 +1,522 @@
+[
+    {
+        "name": "UMF 97 Magdalena",
+        "address": "Calle Ignacio Zaragoza 29 Magdalena, Col. Magdalena Centro, Magdalena, C.P. 46470"
+    },
+    {
+        "name": "HGS 185 Arandas",
+        "address": "Calle Primera Poniente 30 Arandas, Col. Arandas Centro, Arandas, C.P. 47180"
+    },
+    {
+        "name": "HGR 45 Guadalajara",
+        "address": "Calle San Felipe 1014 Guadalajara, Col. Guadalajara Centro, Guadalajara, C.P. 44100"
+    },
+    {
+        "name": "UMF 1 Guadalajara",
+        "address": "Calzada del Campesino 100 Guadalajara, Col. Guadalajara Centro, Guadalajara, C.P. 44100"
+    },
+    {
+        "name": "UMF 2 Guadalajara",
+        "address": "Calle Jesús Gárcia 1480 Guadalajara, Col. Santa Teresita, Guadalajara, C.P. 44600"
+    },
+    {
+        "name": "UMF 92 Miravalle",
+        "address": "Avenida Gobernador Luis G. Curiel Entre. Av. De la Pintura y Salome Piña S\/n Guadalajara, Col. Miravalle, Guadalajara, C.P. 44990"
+    },
+    {
+        "name": "HGZ 14 Guadalajara",
+        "address": "Avenida Revolución y Av Rio Nilo 2735 Guadalajara, Col. Jardines de la Paz, Guadalajara, C.P. 44860"
+    },
+    {
+        "name": "UMFH 5 el Salto",
+        "address": "Prolongación Calle 70 788 el Salto, Col. El Salto Centro, El Salto, C.P. 45680"
+    },
+    {
+        "name": "HGSMF 27 Villa Corona",
+        "address": "Calle Hidalgo 187 Villa Corona, Col. Villa Corona Centro, Villa Corona, C.P. 45730"
+    },
+    {
+        "name": "UMFH 13 Pihuamo",
+        "address": "Carretera Guadalajara-Pihuamo Km 220 S\/n Pihuamo, Col. Pihuamo, Pihuamo, C.P. 49870"
+    },
+    {
+        "name": "UMFH 19 Tuxpan",
+        "address": "Avenida Francisco I Madero 422 Tuxpan, Col. Floresta, Tuxpan, C.P. 49810"
+    },
+    {
+        "name": "HGZMF 9 Cd. Guzmán",
+        "address": "Avenida Cristobal Colon Esq Gante 750 Ciudad Guzmán, Col. Ciudad Guzmán Centro, Zapotlán el Grande, C.P. 49000"
+    },
+    {
+        "name": "UMFH 17 Atentique",
+        "address": "Calle Hidalgo 10 Atenquique, Col. Atenquique, Atenquique, C.P. 49820"
+    },
+    {
+        "name": "UMF 12 el Arenal",
+        "address": "Calle Hidalgo Esq 5 de Mayo 77 el Arenal, Col. El Arenal, El Arenal, C.P. 45350"
+    },
+    {
+        "name": "UMF 95 Poncitlán",
+        "address": "Calle Santa María Entre Reforma y Vicente Flores 210 Poncitlán, Col. Poncitlan Centro, Poncitlán, C.P. 45950"
+    },
+    {
+        "name": "UMF 56 Acatlán",
+        "address": "Calle Ramon Corona 57 Acatlán de Juárez, Col. Acatlán de Juárez, Acatlán de Juárez, C.P. 45700"
+    },
+    {
+        "name": "UMF 4 Atemajac",
+        "address": "Avenida Fidel Velázquez 1531 Guadalajara, Col. Fidel Velázaquez, Guadalajara, C.P. 44216"
+    },
+    {
+        "name": "UMF 53 Zapopan",
+        "address": "Avenida Juan Pablo Ii (antes los Laureles) Esq Hidalgo 150 Zapopan, Col. Zapopan Centro, Zapopan, C.P. 45100"
+    },
+    {
+        "name": "UMF 171 Zapopan",
+        "address": "Avenida Lopez Mateos Sur Esq Pedro Simon Laplace 3436 Zapopan, Col. La Calma, Zapopan, C.P. 45070"
+    },
+    {
+        "name": "UMF 178 Guadalupe",
+        "address": "Avenida Guadalupe Esq. Av Piotr Tchaikovski 6215 Zapopan, Col. Guadalupe, Zapopan, C.P. 45047"
+    },
+    {
+        "name": "UMF 98 Teuchitlán",
+        "address": "Calle Prolongación Rojeña Entre Hidalgo y Galeana 28 Teuchitlan, Col. Teuchitlán, Teuchitlán, C.P. 46760"
+    },
+    {
+        "name": "UMF 44 Arandas",
+        "address": "Calle Alvaro Obregón 405 Arandas, Col. Arandas Centro, Arandas, C.P. 47180"
+    },
+    {
+        "name": "UMF 25 la Sauceda",
+        "address": "Calle Francisco Villa 67 la Sauceda, Col. Lázaro Cárdenas, Cocula, C.P. 48504"
+    },
+    {
+        "name": "UMF 37 Ing. Melchor",
+        "address": "Ingenio Melchor Ocampo S\/n Ingenio Melchor Ocampo, Col. El Grullo Centro, Autlán de Navarro, C.P. 48740"
+    },
+    {
+        "name": "UMF 38 Buena Vista",
+        "address": "Calle Libertad 69 Buenavista, Col. Buenavista, San Martín Hidalgo, C.P. 46775"
+    },
+    {
+        "name": "UMF 36 la Garita",
+        "address": "Avenida Libertad 35 la Garita, Col. La Garita, Tamazula de Gordiano, C.P. 49967"
+    },
+    {
+        "name": "UMF 35 Vista Hermosa",
+        "address": "Calle Fco I Madero 25 Vista Hermosa (santa Cruz del Cortijo), Col. Vista Hermosa, Tamazula de Gordiano, C.P. 49657"
+    },
+    {
+        "name": "UMF 93 Tonalá",
+        "address": "Avenida Tonaltecas 131 Tonalá, Col. Lomas de Tónala, Tonalá, C.P. 45400"
+    },
+    {
+        "name": "UMF 39 Tlaquepaque",
+        "address": "Calzada Dr. Roberto Michel 3340 Tlaquepaque, Col. Álamo Industrial, Tlaquepaque, C.P. 45593"
+    },
+    {
+        "name": "UMF 54 Tlaquepaque",
+        "address": "Calle Vicente Guerrero 875 Tlaquepaque, Col. La Asunción, Tlaquepaque, C.P. 45527"
+    },
+    {
+        "name": "HGZ 42 Pto. Vallarta",
+        "address": "Boulevard Francisco Medina Ascencio y Melchor Ocampo 2066 Puerto Vallarta, Col. Díaz Ordaz, Puerto Vallarta, C.P. 48310"
+    },
+    {
+        "name": "UMF 170 del Mar",
+        "address": "Calle Oceano Pacifico Pte. 350 Puerto Vallarta, Col. El Palmar de Aramara, Puerto Vallarta, C.P. 48314"
+    },
+    {
+        "name": "UMF 179 las Parotas",
+        "address": "Calle Sagitario 206 Puerto Vallarta, Col. Bosque del Progreso, Puerto Vallarta, C.P. 48290"
+    },
+    {
+        "name": "UMF 62 Sayula",
+        "address": "Calzada del Ejercito 308 Sayula, Col. Polanco, Sayula, C.P. 49303"
+    },
+    {
+        "name": "UMF 87 Teocaltiche",
+        "address": "Calle Loma Bonita 12 Teocaltiche, Col. Colinas de la Cruz, Teocaltiche, C.P. 47202"
+    },
+    {
+        "name": "UMF 47 Zapotlanejo",
+        "address": "Avenida Juárez 330 Zapotlanejo, Col. Zapotlanejo, Zapotlanejo, C.P. 45430"
+    },
+    {
+        "name": "HES Cmn Occidente",
+        "address": "Calle Belisario Domínguez Entre Salvador Quevedo y Sierra Morena 1000 Guadalajara, Col. Independencia Oriente, Guadalajara, C.P. 44340"
+    },
+    {
+        "name": "UMF 73 Martín Hidalgo",
+        "address": "Calle Moctezuma 20 San Martín Hidalgo, Col. San Martín Hidalgo, San Martín Hidalgo, C.P. 46770"
+    },
+    {
+        "name": "BS Cmn Occidente",
+        "address": "Calle Belisario Domínguez Entre Salvador Quevedo y Sierra Morena 1000 Guadalajara, Col. Independencia Oriente, Guadalajara, C.P. 44340"
+    },
+    {
+        "name": "HGR 110 Oblatos",
+        "address": "Calle Circunvalación Oblatos 2208 Guadalajara, Col. Circunvalación Oblatos, Guadalajara, C.P. 44716"
+    },
+    {
+        "name": "UMF 48 Guadalajara",
+        "address": "Avenida Circunvalacion 2208 Guadalajara, Col. Circunvalación Oblatos, Guadalajara, C.P. 44716"
+    },
+    {
+        "name": "HGZ 89 Guadalajara",
+        "address": "Avenida Agustin Yañez 1930 Guadalajara, Col. Moderna, Guadalajara, C.P. 44190"
+    },
+    {
+        "name": "UMF 50 Atotonilquillo",
+        "address": "Calle Miguel Hidalgo 432 Atotonilquillo, Col. Atotonilquillo, Chapala, C.P. 45930"
+    },
+    {
+        "name": "UMF 70 Careyes",
+        "address": "Calle Pintores Km 52 Carretera Melaque Pto Vallarta 12 Pueblo Careyes, Col. Plan de Ayala, La Huerta, C.P. 48850"
+    },
+    {
+        "name": "UMF 84 Encarnación de Díaz",
+        "address": "Calle Allende Esq Ángel Anguiano. S\/n Encarnación de Díaz, Col. La Villita, Encarnación de Díaz, C.P. 47270"
+    },
+    {
+        "name": "UMF 57 Ixtlahuacan",
+        "address": "Calle Francisco Sarabia 52 Ixtlahuacán del Río, Col. Ixtlahuacán del Rio, Ixtlahuacán del Río, C.P. 45260"
+    },
+    {
+        "name": "UMF 59 Tlajomulco",
+        "address": "Calle Lerdo de Tejada 80 Tlajomulco de Zúñiga, Col. Rancho los Ocampo, Tlajomulco de Zúñiga, C.P. 45640"
+    },
+    {
+        "name": "HGR 180 Tlajomulco",
+        "address": "Carretera San. Sebastian-Santa Fe 1000 Tlajomulco de Zúñiga, Col. Los Encinos, Tlajomulco de Zuñiga, C.P. 45653"
+    },
+    {
+        "name": "UMF 58 Jocotepec",
+        "address": "Calle Donato Guerra 97 Jocotepec, Col. Cruz Verde, Jocotepec, C.P. 45803"
+    },
+    {
+        "name": "UMF 63 San Gabriel",
+        "address": "Calle Paseo de los Encinos S\/n San Gabriel, Col. San Gabriel, San Gabriel, C.P. 49700"
+    },
+    {
+        "name": "UMF 67 Tototlán",
+        "address": "Calle Miguel Hidalgo 190 Totatiche, Col. Tototlan Centro, Tototlan, C.P. 47730"
+    },
+    {
+        "name": "UMF 66 Ayotlán",
+        "address": "Calle José de Jesús Jiménez 3 Ayotlán, Col. Ayotlán, Ayotlán, C.P. 47930"
+    },
+    {
+        "name": "UMF 74 Talpa Allende",
+        "address": "Calle Independencia 118a Talpa de Allende, Col. Talpa de Allende Centro, Talpa de Allende, C.P. 48200"
+    },
+    {
+        "name": "UMF 76 Teocuitatlán",
+        "address": "Calle Vicente Guerrero 100 Teocuitatlán de Corona, Col. Teocuitatlán de Corona, Teocuitatlán de Corona, C.P. 49250"
+    },
+    {
+        "name": "UMF 86 S. Miguel Alto",
+        "address": "Calle Dr. José Trinidad Martínez 287 San Miguel el Alto, Col. Aguacaliente, San Miguel el Alto, C.P. 47147"
+    },
+    {
+        "name": "UMF 80 Cihuatlán",
+        "address": "Calle Primero de Mayo 10 Cihuatlán, Col. Cihuatlán Centro, Cihuatlán, C.P. 48970"
+    },
+    {
+        "name": "UMF 96 Mascota",
+        "address": "Calle Francisco I. Madero 295 Mascota, Col. Mascota, Mascota, C.P. 46900"
+    },
+    {
+        "name": "UMF 100 Jamay",
+        "address": "Calle Negrete 129 Jamay, Col. Jamay Centro, Jamay, C.P. 47900"
+    },
+    {
+        "name": "UMF 114 Gómez Farías",
+        "address": "Calle Francisco Javier Mina 28 San Sebastián del Sur, Col. San Sebastian del Sur, Gómez Farías, C.P. 49120"
+    },
+    {
+        "name": "UMF 106 San Martín",
+        "address": "Calle Emeterio Jiménez 9 San Martín de Bolaños, Col. San Martin de Bolaños, San Martín de Bolaños, C.P. 46350"
+    },
+    {
+        "name": "UMF 160 Capilla Gpe.",
+        "address": "Avenida Antonio Aceves 321 Capilla de Guadalupe, Col. Capilla de Guadalupe, Tepatitlán de Morelos, C.P. 47700"
+    },
+    {
+        "name": "UMF 165 Degollado",
+        "address": "Prolongación Reforma 160 Degollado, Col. Degollado, Degollado, C.P. 47980"
+    },
+    {
+        "name": "UMF 71 Ayutla",
+        "address": "Prolongación 5 de Mayo 201 Ayutla, Col. Ayutla, Ayutla, C.P. 48050"
+    },
+    {
+        "name": "HGZ 21 Tepatitlán",
+        "address": "Circuito Su Santidad Juan Pablo Ii 100 Tepatitlán de Morelos, Col. Fraccionamiento los Sauzes, Tepatitlán de Morelos, C.P. 47639"
+    },
+    {
+        "name": "HGZ-UMAA 7 Lagos de Moreno",
+        "address": "Calle Av. El Tepeyac Esq Juan Diego 768 Lagos de Moreno, Col. Tepeyac 2 Sección, Lagos de Moreno, C.P. 47410"
+    },
+    {
+        "name": "UMFH 40 Chapala",
+        "address": "Avenida Estación 95 Chapala, Col. Chapala Centro, Chapala, C.P. 45900"
+    },
+    {
+        "name": "HGZMF 20 Autlan Navarro",
+        "address": "Calle Jaime Llamas 5 Autlán de Navarro, Col. Puerta de la Costa, Autlán de Navarro, C.P. 48900"
+    },
+    {
+        "name": "HGSMF 28 Casimiro Castillo",
+        "address": "Calle Autlan 5 la Resolana, Col. Casimiro Castillo Centro, Casimiro Castillo, C.P. 48930"
+    },
+    {
+        "name": "UMFH 10 Tequila",
+        "address": "Avenida Sixto Gijon 223 Tequila, Col. Tequila Centro, Tequila, C.P. 46400"
+    },
+    {
+        "name": "UMFH 24 Ameca",
+        "address": "Calzada Gobernador Flavio Romero de Velasco Esq. López Mateos 178 Ameca, Col. Ameca Centro, Ameca, C.P. 46600"
+    },
+    {
+        "name": "UMFH 31 Ahualulco",
+        "address": "Calle José María Mercado 262 Ahualulco de Mercado, Col. Ahualulco de Mercado Centro, Ahualulco de Mercado, C.P. 46730"
+    },
+    {
+        "name": "UMF 168 Tepatitlán",
+        "address": "Calle Hidalgo Esq Aztecas 360 Tepatitlán de Morelos, Col. Libramiento Sur, Tepatitlán de Morelos, C.P. 47655"
+    },
+    {
+        "name": "UMFH 18 Zapotiltic",
+        "address": "Calle Mariano Escobedo 134 Zapotiltic, Col. Zapotiltic Centro, Zapotiltic, C.P. 49600"
+    },
+    {
+        "name": "UMF 77 Zacoalco",
+        "address": "Calle Abasolo 20 Zacoalco de Torres, Col. El Calvario, Zacoalco de Torres, C.P. 45754"
+    },
+    {
+        "name": "UMF 68 Bolaños",
+        "address": "Calle Menores S\/n Bolaños, Col. Bolaños, Bolaños, C.P. 46130"
+    },
+    {
+        "name": "UMF 64 Tapalapa",
+        "address": "Calle Federico Gálvez 19 Tapalpa, Col. Tapalpa, Tapalpa, C.P. 49340"
+    },
+    {
+        "name": "UMF-UMAA 52 Guadalajara",
+        "address": "Boulevard Marcelino Garcia Barragan Entre Rio Suchiate y Rio Mezcala 1596 Guadalajara, Col. Olimpica, Guadalajara, C.P. 44430"
+    },
+    {
+        "name": "UMF 51 Guadalajara",
+        "address": "Calle Magisterio Esq Zacatecas 1425 Guadalajara, Col. Observatorio, Guadalajara, C.P. 44266"
+    },
+    {
+        "name": "UMF 78 Guadalajara",
+        "address": "Avenida San Jacinto Esq Av del Paque 588 Guadalajara, Col. San Rafael, Guadalajara, C.P. 44810"
+    },
+    {
+        "name": "UMF 34 Guadalajara",
+        "address": "Avenida López de Legaspi. 1722 Guadalajara, Col. 18 de Marzo, Guadalajara, C.P. 44960"
+    },
+    {
+        "name": "UMF 79 Guadalajara",
+        "address": "Calle de Veracruz Esq Mariano Barcena 1251 Guadalajara, Col. Artesanos, Guadalajara, C.P. 44200"
+    },
+    {
+        "name": "UMF 91 el Fresno",
+        "address": "Calle Cerezo 1476 Guadalajara, Col. Del Fresno 1a Seccion, Guadalajara, C.P. 44900"
+    },
+    {
+        "name": "UMF 88 Guadalajara",
+        "address": "Avenida Jaime Torres Bodet Esq Zanzibar 3070 Guadalajara, Col. El Sauz Infonavit, Guadalajara, C.P. 44987"
+    },
+    {
+        "name": "UMF 55 Guadalajara",
+        "address": "Calle Purísima 3131 Guadalajara, Col. Chapalita, Guadalajara, C.P. 44520"
+    },
+    {
+        "name": "UMF 167 H. Provincia",
+        "address": "Calle San Lorenzo 360 Guadalajara, Col. Agustin Yañez (la Florida), Guadalajara, C.P. 44790"
+    },
+    {
+        "name": "HGR 46 Guadalajara",
+        "address": "Avenida Lázaro Cárdenas 1060 Guadalajara, Col. 8 de Julio, Guadalajara, C.P. 44910"
+    },
+    {
+        "name": "Laboratorio Citología Exfoliativa",
+        "address": "Calle Magisterio Esq Mar Rojo 1433 Guadalajara, Col. Observatorio, Guadalajara, C.P. 44266"
+    },
+    {
+        "name": "UMF 49 Guadalajara",
+        "address": "Calle Cuitlahuac 769 Guadalajara, Col. Obrera, Guadalajara, C.P. 44420"
+    },
+    {
+        "name": "UMF 30 Bella Vista",
+        "address": "Calle José Isabel Villanueva 38 Bellavista, Col. Bellavista, Acatlán de Juárez, C.P. 45720"
+    },
+    {
+        "name": "HGZMF 26 Tala",
+        "address": "Calle Simon Bolivar 20 Tala, Col. Tala Centro, Tala, C.P. 45300"
+    },
+    {
+        "name": "UMF 11 Amatitan",
+        "address": "Calle Nebulosa 10 Amatitán, Col. Puerta del Sol, Amatitán, C.P. 45380"
+    },
+    {
+        "name": "UMF 128 Acatic",
+        "address": "Calle Benito Juárez 239 Acatic, Col. Acatic, Acatic, C.P. 45470"
+    },
+    {
+        "name": "UMF 159 Jesús María",
+        "address": "Avenida González Gallo 220 Tepatitlán de Morelos, Col. Jesús Maria, Tepatitlán de Morelos, C.P. 47950"
+    },
+    {
+        "name": "UMFH 22 Atotonilco",
+        "address": "Calle Lic. Adolfo Ruiz Cortinez Esq Independencia 42 Atotonilco el Alto, Col. San Felipe, Atotonilco el Alto, C.P. 47750"
+    },
+    {
+        "name": "UMFH 23 la Barca",
+        "address": "Calle Lazáro Cárdenas Entre Guillermo Prieto y Felipe Angeles 84 la Barca, Col. La Barca Centro, La Barca, C.P. 47910"
+    },
+    {
+        "name": "HGZMF 6 Ocotlán",
+        "address": "Calle Delgadillo Araujo 60 Ocotlán, Col. Florida, Ocotlán, C.P. 47820"
+    },
+    {
+        "name": "UMF 169 Ocotlán",
+        "address": "Calle Zaragoza 602 Ocotlán, Col. Rivera de Zula, Ocotlán, C.P. 47890"
+    },
+    {
+        "name": "UMF 177 Lagos de Moreno",
+        "address": "Calle Hernando de Martell 65 Lagos de Moreno, Col. Lagos de Moreno Centro, Lagos de Moreno, C.P. 47400"
+    },
+    {
+        "name": "HGSMF 15 Tamazula",
+        "address": "Avenida José María Martínez 1463 Tamazula de Gordiano, Col. Tamazula de Gordiano Centro, Tamazula de Gordiano, C.P. 49650"
+    },
+    {
+        "name": "UMFH 16 Tecalitlán",
+        "address": "Calle Benito Juárez 258 Tecalitlán, Col. Tecalitlán Centro, Tecalitlán, C.P. 49900"
+    },
+    {
+        "name": "UMF 29 Estipac",
+        "address": "Avenida Hidalgo 344 Estipac, Col. Villa Corona Centro, Villa Corona, C.P. 45730"
+    },
+    {
+        "name": "UMF 33 S. Marcos",
+        "address": "Calle Morelos 1 San Marcos, Col. San Marcos, Tonila, C.P. 46540"
+    },
+    {
+        "name": "UMF 8 Experiencia",
+        "address": "Calle Imperio Norte (sur) Esq. Callejon Dr. Baeza Alzaga 134 Zapopan, Col. La Experiencia, Zapopan, C.P. 45198"
+    },
+    {
+        "name": "UMF 43 Tomatlán",
+        "address": "Avenida del Campesino 95 Tomatlán, Col. Tomatlán, Tomatlán, C.P. 48450"
+    },
+    {
+        "name": "CCSM 1 Oblatos",
+        "address": "Avenida Laureles 55 Zapopan, Col. Zapopan Centro, Zapopan, C.P. 45100"
+    },
+    {
+        "name": "UMF 181 los Sabinos",
+        "address": "Avenida Valle de los Sabinos 1 Ixtlahuacan de los Membrillos, Col. La Capilla, Ixtlahuacan de los Membrillos, C.P. 45870"
+    },
+    {
+        "name": "UMF 155 Tizapan Alto",
+        "address": "Calle Colon 94 Tizapán el Alto, Col. Tizapan el Alto, Tizapán el Alto, C.P. 49400"
+    },
+    {
+        "name": "UMF 130 Ojuelos",
+        "address": "Calle Guadalupe Victoria 38 Ojuelos de Jalisco, Col. Ojuelos de Jalisco, Ojuelos de Jalisco, C.P. 47540"
+    },
+    {
+        "name": "UMF 133 Unión",
+        "address": "Calle Iturbide 9 Unión de San Antonio, Col. Union de San Antonio Centro, Unión de San Antonio, C.P. 47570"
+    },
+    {
+        "name": "UMF 132 San Julián",
+        "address": "Calle Zaragoza Poniente 106 San Julián, Col. San Julian Centro, San Julián, C.P. 47170"
+    },
+    {
+        "name": "UMF 137 Antonio",
+        "address": "Calle Hidalgo 73 Antonio Escobedo, Col. Antonio Escobedo, San Juanito de Escobedo, C.P. 46560"
+    },
+    {
+        "name": "UMF 41 S. Juan Lagos",
+        "address": "Calle Moreno Valle 160 San Juan de los Lagos, Col. San Juan de los Lagos Centro, San Juan de los Lagos, C.P. 47000"
+    },
+    {
+        "name": "UMF 94 Yahualica",
+        "address": "Calle Allende 97 Yahualica de González Gallo, Col. Yahualica de Gonzalez Gallo Centro, Yahualica de González Gallo, C.P. 47300"
+    },
+    {
+        "name": "UMF 72 Cocula",
+        "address": "Calle Elias Nandino Vallarta 83 Cocula, Col. Cocula Centro, Cocula, C.P. 48500"
+    },
+    {
+        "name": "UMF 83 la Huerta",
+        "address": "Calle Hermanos Flores Magón 32 la Huerta, Col. La Huerta, La Huerta, C.P. 48850"
+    },
+    {
+        "name": "UMF 162 Melaque",
+        "address": "Calle Hidalgo 44 Cihuatlan, Col. San Patricio o Melaque, Cihuatlán, C.P. 48980"
+    },
+    {
+        "name": "HP Cmn Occidente",
+        "address": "Calle Belizario Domínguez 735 Guadalajara, Col. Independencia Oriente, Guadalajara, C.P. 44340"
+    },
+    {
+        "name": "HGO Cmn Occidente",
+        "address": "Calle Belisario Domínguez Entre Salvador Quevedo y Sierra Morena 771 Guadalajara, Col. Independencia Oriente, Guadalajara, C.P. 44340"
+    },
+    {
+        "name": "UMF 3 Guadalajara",
+        "address": "Calle Belizario Domínguez 815 Guadalajara, Col. Independencia Oriente, Guadalajara, C.P. 44340"
+    },
+    {
+        "name": "UMF 60 Colotlán",
+        "address": "Calle I. Zaragoza 15 Colotlán, Col. Colotlán Centro, Colotlán, C.P. 46200"
+    },
+    {
+        "name": "UMF 61 Masamitla",
+        "address": "Avenida 16 de Septiembre Esq Xicontencatl 69 Mazamitla, Col. Mazamitla, Mazamitla, C.P. 49500"
+    },
+    {
+        "name": "UMF 81 Grullo",
+        "address": "Calle Marcelino Hernández 700 el Grullo, Col. Santa Cecilia, El Grullo, C.P. 48744"
+    },
+    {
+        "name": "UMF 82 Unión de Tula",
+        "address": "Avenida Mexico Norte 323 Unión de San Antonio, Col. Unión de San Antonio, Unión de San Antonio, C.P. 47570"
+    },
+    {
+        "name": "UMF 75 Tecolotlán",
+        "address": "Avenida Juárez 496 Tecolotlán, Col. Tecolotlan, Tecolotlán, C.P. 48540"
+    },
+    {
+        "name": "UMF 69 Etzatlán",
+        "address": "Calle Puebla Esq Ocampo 69 Etzatlán, Col. Etzatlan Centro, Etzatlán, C.P. 46500"
+    },
+    {
+        "name": "UMF 85 Jalostitlán",
+        "address": "Calle Río Soto la Marina 42 Jalostotitlán, Col. Lago del Sol, Jalostotitlán, C.P. 47124"
+    },
+    {
+        "name": "UMF 182 Tesistán",
+        "address": "Calle Capulín S\/n Zapopan, Col. Tesistán, Zapopan, C.P. 45200"
+    },
+    {
+        "name": "UMF 183 San Ignacio Cerro Gordo",
+        "address": "Calle Niños Heroes 182 San Ignacio Cerro Gordo, Col. San Ignacio Cerro Gordo, San Ignacio Cerro Gordo, C.P. 47190"
+    },
+    {
+        "name": "UMF 65 Techaluta",
+        "address": "Calle Emiliano Zapata 37 Techaluta, Col. Techaluta, Techaluta, C.P. 49230"
+    },
+    {
+        "name": "UMF 184 Cerro de la Reina",
+        "address": "Avenida Juárez 663 Tonalá, Col. Coyula, Tonalá, C.P. 45410"
+    }
+]
