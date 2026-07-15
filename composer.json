@@ -13,9 +13,11 @@
         "ext-uri": "*",
         "inertiajs/inertia-laravel": "^3.3",
         "laravel/framework": "^13.17",
+        "laravel/scout": "^11.8",
         "laravel/socialite": "^5.31",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.21",
+        "meilisearch/meilisearch-php": "^1.17",
         "spatie/laravel-permission": "^8.3"
     },
     "require-dev": {
