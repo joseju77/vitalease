@@ -23,14 +23,14 @@ class MedicalConsultationFactory extends Factory
      * Only the core `medical_consultations` row is created by default; the
      * required `vitalSigns`/`physicalExamination` children (and the optional
      * `regulation`) are attached by the `withoutRegulation()`/
-     * `withRegulation()` states below.
+     * `withRegulation()` states below. `code` is intentionally omitted: the
+     * model's `creating` hook generates it via `MedicalConsultationCode`.
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
-            'code' => $this->uniqueCode(),
             'current_condition' => fake()->sentence(),
             'diagnosis' => fake()->sentence(),
             'condition' => fake()->randomElement(MedicalState::cases()),
@@ -65,17 +65,5 @@ class MedicalConsultationFactory extends Factory
             PhysicalExamination::factory()->create(['medical_consultation_id' => $consultation->id]);
             MedicalRegulation::factory()->create(['medical_consultation_id' => $consultation->id]);
         });
-    }
-
-    /**
-     * Generate a unique code matching `MC-YYMMDD-NNNN` (14 chars).
-     *
-     * This is a factory-only placeholder: the server-side daily sequence
-     * generator does not exist yet and is wired into the model's `creating`
-     * hook in a later work unit.
-     */
-    private function uniqueCode(): string
-    {
-        return sprintf('MC-%s-%04d', now()->format('ymd'), fake()->unique()->numberBetween(1, 9999));
     }
 }

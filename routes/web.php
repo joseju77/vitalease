@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MedicalConsultationController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
@@ -38,4 +39,13 @@ Route::middleware('auth')
         Route::post('/roles', 'store')->name('store')->middleware('can:create,Spatie\Permission\Models\Role');
         Route::patch('/roles/{role}', 'update')->name('update')->middleware('can:update,role');
         Route::delete('/roles/{role}', 'destroy')->name('destroy')->middleware('can:delete,role');
+    });
+
+Route::middleware('auth')
+    ->controller(MedicalConsultationController::class)
+    ->name('consultations.')
+    ->group(function () {
+        Route::post('/consultations', 'store')->name('store')->middleware('can:create,App\Models\MedicalConsultation');
+        Route::put('/consultations/{consultation}', 'update')->name('update')->middleware('can:update,consultation');
+        Route::delete('/consultations/{consultation}', 'destroy')->name('destroy')->middleware('can:delete,consultation');
     });

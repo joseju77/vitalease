@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MedicalClassification;
 use App\Enums\MedicalState;
+use App\Support\MedicalConsultationCode;
 use Database\Factories\MedicalConsultationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 #[Fillable([
-    'code',
     'current_condition',
     'diagnosis',
     'condition',
@@ -60,6 +60,7 @@ class MedicalConsultation extends Model
     {
         static::creating(function (MedicalConsultation $consultation) {
             $consultation->uuid ??= (string) Str::uuid7();
+            $consultation->code ??= MedicalConsultationCode::next();
         });
     }
 
