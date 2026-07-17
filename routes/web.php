@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MedicalConsultationController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\RoleController;
@@ -48,4 +49,19 @@ Route::middleware('auth')
         Route::post('/consultations', 'store')->name('store')->middleware('can:create,App\Models\MedicalConsultation');
         Route::put('/consultations/{consultation}', 'update')->name('update')->middleware('can:update,consultation');
         Route::delete('/consultations/{consultation}', 'destroy')->name('destroy')->middleware('can:delete,consultation');
+    });
+
+Route::middleware('auth')
+    ->controller(DashboardController::class)
+    ->name('dashboard.')
+    ->group(function () {
+        Route::get('/dashboard/patients/search', 'searchPatients')
+            ->name('patients.search')
+            ->middleware(['can:viewAny,App\Models\Patient']);
+        Route::get('/dashboard/patients/{patient}', 'patientSummary')
+            ->name('patients.summary')
+            ->middleware(['can:view,patient', 'can:viewAny,App\Models\MedicalConsultation']);
+        Route::get('/dashboard/consultations', 'latestConsultations')
+            ->name('consultations.latest')
+            ->middleware('can:viewAny,App\Models\MedicalConsultation');
     });
