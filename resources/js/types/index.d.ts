@@ -1,4 +1,5 @@
 import '@inertiajs/core';
+import type { ConsultationFlash } from '@/types/consultations';
 
 declare module '@inertiajs/core' {
     export interface InertiaConfig {
@@ -9,6 +10,13 @@ declare module '@inertiajs/core' {
              * carries patient or medical data.
              */
             registrationSuccess?: boolean;
+            /**
+             * One-time confirmation flashed by
+             * `MedicalConsultationController::{store,update,destroy}` on
+             * redirect to `dashboard.index`; the dashboard renders a toast
+             * from it.
+             */
+            consultation?: ConsultationFlash;
         };
     }
 }

@@ -55,6 +55,10 @@ Route::middleware('auth')
     ->controller(DashboardController::class)
     ->name('dashboard.')
     ->group(function () {
+        Route::get('/dashboard', 'index')
+            ->name('index')
+            ->middleware(['can:viewAny,App\Models\MedicalConsultation']);
+
         Route::get('/dashboard/patients/search', 'searchPatients')
             ->name('patients.search')
             ->middleware(['can:viewAny,App\Models\Patient']);

@@ -9,6 +9,80 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\CollectionEngine;
 
+describe('dashboard index', function () {
+    it('redirects a guest to login', function () {
+        $response = $this->get(route('dashboard.index'));
+
+        $response->assertRedirect(route('auth.login'));
+    });
+
+    it('rejects a user without consultations.view', function () {
+        $caller = User::factory()->create();
+
+        $response = $this->actingAs($caller)->get(route('dashboard.index'));
+
+        $response->assertForbidden();
+    });
+
+    it('renders the dashboard page with the ability flags and the latest consultations', function () {
+        $caller = User::factory()->withPermissions(
+            Permission::ConsultationsView,
+            Permission::PatientsView,
+            Permission::ConsultationsCreate,
+        )->create();
+        MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $caller->id]);
+
+        $response = $this->actingAs($caller)->get(route('dashboard.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('dashboard/Index', false)
+            ->has('latestConsultations', 1)
+            ->where('can.searchPatients', true)
+            ->where('can.createConsultation', true)
+        );
+    });
+
+    it('reflects false ability flags without patients.view or consultations.create', function () {
+        $caller = User::factory()->withPermissions(Permission::ConsultationsView)->create();
+
+        $response = $this->actingAs($caller)->get(route('dashboard.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('dashboard/Index', false)
+            ->where('can.searchPatients', false)
+            ->where('can.createConsultation', false)
+        );
+    });
+
+    it("returns only the authenticated user's own consultations, newest first, capped at 10", function () {
+        $caller = User::factory()->withPermissions(Permission::ConsultationsView)->create();
+        $otherPhysician = User::factory()->create();
+
+        $base = now();
+        $ownConsultations = collect(range(0, 11))->map(function (int $minute) use ($base, $caller) {
+            $this->travelTo($base->copy()->addMinutes($minute));
+
+            return MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $caller->id]);
+        });
+
+        $this->travelTo($base->copy()->addMinutes(100));
+        MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $otherPhysician->id]);
+        $this->travelBack();
+
+        $response = $this->actingAs($caller)->get(route('dashboard.index'));
+
+        $expectedUuids = $ownConsultations->reverse()->take(10)->pluck('uuid')->values()->all();
+
+        $response->assertInertia(fn ($page) => $page
+            ->component('dashboard/Index', false)
+            ->has('latestConsultations', 10)
+            ->where('latestConsultations.0.uuid', $expectedUuids[0])
+        );
+    });
+});
+
 describe('guest access', function () {
     it('redirects a guest to login on patient search', function () {
         $response = $this->get(route('dashboard.patients.search', ['query' => 'ab']));

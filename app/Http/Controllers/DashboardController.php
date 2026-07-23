@@ -7,9 +7,29 @@ use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    /**
+     * Render the staff dashboard: the authenticated physician's latest
+     * consultations plus the ability flags the page needs to gate the
+     * patient search bar and the "new consultation" entry points.
+     */
+    public function index(Request $request): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('dashboard/Index', [
+            'latestConsultations' => $this->latestConsultationItems($user),
+            'can' => [
+                'searchPatients' => $user->can('viewAny', Patient::class),
+                'createConsultation' => $user->can('create', MedicalConsultation::class),
+            ],
+        ]);
+    }
+
     /**
      * Look up patients by name or enrollment number for the staff search
      * bar, restricted to the Scout-indexed fields.
@@ -60,16 +80,26 @@ class DashboardController extends Controller
      */
     public function latestConsultations(Request $request): JsonResponse
     {
-        $consultations = MedicalConsultation::query()
-            ->where('physician_id', $request->user()->id)
+        return response()->json($this->latestConsultationItems($request->user()));
+    }
+
+    /**
+     * Shared query behind the dashboard page's `latestConsultations` prop and
+     * the JSON endpoint of the same name: the authenticated user's own
+     * consultations, newest first, capped at 10.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function latestConsultationItems(User $user): array
+    {
+        return MedicalConsultation::query()
+            ->where('physician_id', $user->id)
             ->with(['patient', 'physician'])
             ->latest()
             ->take(10)
-            ->get();
-
-        return response()->json(
-            $consultations->map(fn (MedicalConsultation $consultation): array => $this->mapConsultationItem($consultation, $request->user()))->all()
-        );
+            ->get()
+            ->map(fn (MedicalConsultation $consultation): array => $this->mapConsultationItem($consultation, $user))
+            ->all();
     }
 
     /**
