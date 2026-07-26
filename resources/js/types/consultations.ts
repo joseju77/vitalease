@@ -54,14 +54,83 @@ export interface PatientSummary {
     latest_consultations: ConsultationListItem[];
 }
 
-/**
- * The one-time flash payload sent by `MedicalConsultationController::{store,update,destroy}`
- * on redirect to `dashboard.index`. `action` is only sent starting in Work
- * Unit 2 (today `store` still flashes `{uuid, code}` without it), so the
- * dashboard toast falls back to `created` when it is absent.
- */
+/** The one-time consultation mutation flash payload. */
 export interface ConsultationFlash {
     uuid: string;
     code: string;
-    action?: 'created' | 'updated' | 'deleted';
+    action: 'created' | 'updated' | 'deleted';
+}
+
+export interface ConsultationPatient {
+    uuid: string;
+    full_name: string;
+    enrollment_number: string | null;
+}
+
+export interface TreatmentRow {
+    medication: string;
+    dose: string;
+    frequency: string;
+    duration: string;
+}
+
+/** Vital-sign inputs start as strings and become numbers once edited (`type="number"` + `v-model`). */
+export interface VitalSignsForm {
+    weight: string | number;
+    height: string | number;
+    blood_pressure_systolic: string | number;
+    blood_pressure_diastolic: string | number;
+    heart_rate: string | number;
+    respiratory_rate: string | number;
+    temperature: string | number;
+    oxygen_saturation: string | number;
+    glasgow: string | number;
+    glucose: string | number;
+}
+
+export interface PhysicalExaminationForm {
+    neurological: string;
+    head_neck: string;
+    thorax_cardiopulmonary: string;
+    abdomen: string;
+    extremities: string;
+    cabinet_laboratory: string;
+}
+
+export interface RegulationForm {
+    transfer_type: number | null;
+    regulated_at: string;
+    ambulance_registration: string;
+    regulation_number: string;
+    clinic_id: string;
+    receiver_physician: string;
+}
+
+export interface ConsultationFormPayload {
+    patient_uuid?: string;
+    consultation: { current_condition: string; diagnosis: string };
+    condition: number | null;
+    prognosis: number | null;
+    medical_classification: number | null;
+    treatment: TreatmentRow[];
+    vital_signs: VitalSignsForm;
+    physical_examination: PhysicalExaminationForm;
+    regulation: RegulationForm | null;
+}
+
+export interface ConsultationAggregate extends Omit<ConsultationFormPayload, 'patient_uuid'> {
+    uuid: string;
+    code: string;
+    created_at: string;
+    patient: ConsultationPatient;
+    physician: { name: string };
+    vital_signs: VitalSignsForm;
+    regulation: RegulationForm | null;
+    can: { update: boolean; delete: boolean };
+}
+
+export interface ConsultationFormOptions {
+    medicalStateOptions: number[];
+    medicalClassificationOptions: number[];
+    transferTypeOptions: number[];
 }

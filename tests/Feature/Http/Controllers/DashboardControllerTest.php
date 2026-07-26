@@ -165,13 +165,14 @@ describe('patient search', function () {
         }
     });
 
-    it('rejects a query shorter than 2 characters', function () {
+    it('accepts a single-character query', function () {
         $caller = User::factory()->withPermissions(Permission::PatientsView)->create();
+        $patient = Patient::factory()->create(['first_name' => 'Zoe', 'last_name' => 'Quintero']);
 
-        $response = $this->actingAs($caller)->getJson(route('dashboard.patients.search', ['query' => 'a']));
+        $response = $this->actingAs($caller)->getJson(route('dashboard.patients.search', ['query' => 'Z']));
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors('query');
+        $response->assertOk();
+        expect(collect($response->json())->pluck('uuid'))->toContain($patient->uuid);
     });
 
     it('rejects a missing query', function () {

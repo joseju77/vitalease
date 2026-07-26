@@ -46,7 +46,10 @@ Route::middleware('auth')
     ->controller(MedicalConsultationController::class)
     ->name('consultations.')
     ->group(function () {
+        Route::get('/consultations/create', 'create')->name('create')->middleware('can:create,App\Models\MedicalConsultation');
         Route::post('/consultations', 'store')->name('store')->middleware('can:create,App\Models\MedicalConsultation');
+        Route::get('/consultations/{consultation}', 'show')->name('show')->middleware('can:view,consultation');
+        Route::get('/consultations/{consultation}/edit', 'edit')->name('edit')->middleware('can:update,consultation');
         Route::put('/consultations/{consultation}', 'update')->name('update')->middleware('can:update,consultation');
         Route::delete('/consultations/{consultation}', 'destroy')->name('destroy')->middleware('can:delete,consultation');
     });

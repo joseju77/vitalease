@@ -37,7 +37,7 @@ class DashboardController extends Controller
     public function searchPatients(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'query' => ['required', 'string', 'min:2', 'max:100'],
+            'query' => ['required', 'string', 'max:100'],
         ]);
 
         $patients = Patient::search($validated['query'])->take(10)->get();

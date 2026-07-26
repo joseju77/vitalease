@@ -1,23 +1,13 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core';
-import { SearchIcon } from '@lucide/vue';
-import { ListboxFilter } from 'reka-ui';
-import { onBeforeUnmount, ref, watch } from 'vue';
+import { Search } from '@lucide/vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { searchPatients as searchPatientsAction } from '@/actions/App/Http/Controllers/DashboardController';
-import { Command, CommandItem, CommandList } from '@/components/ui/command';
+import SearchResultsField from '@/components/form/SearchResultsField.vue';
 import type { PatientSearchResult } from '@/types/consultations';
 
-/**
- * Built on the vendored `Command`/`ListboxItem` primitives, but binds
- * `reka-ui`'s raw `ListboxFilter` to a local `query` ref instead of the
- * vendored `CommandInput` (which writes into the shared `filterState.search`
- * and re-filters the already-server-filtered results client-side — see the
- * 04b design decision). Results come entirely from the server; the command
- * context's own filter state is intentionally left untouched.
- */
-
-const MIN_QUERY_LENGTH = 2;
-const DEBOUNCE_MS = 300;
+const MIN_QUERY_LENGTH = 1;
+const DEBOUNCE_MS = 50;
 
 const emit = defineEmits<{
     select: [patient: PatientSearchResult];
@@ -32,6 +22,14 @@ let abortController: AbortController | null = null;
 function fullName(patient: PatientSearchResult): string {
     return [patient.first_name, patient.last_name, patient.second_last_name].filter(Boolean).join(' ');
 }
+
+const options = computed(() =>
+    results.value.map((patient) => ({
+        value: patient.uuid,
+        label: fullName(patient),
+        description: patient.enrollment_number,
+    })),
+);
 
 async function runSearch(term: string) {
     abortController?.abort();
@@ -55,7 +53,11 @@ async function runSearch(term: string) {
             return;
         }
 
-        results.value = (await response.json()) as PatientSearchResult[];
+        const matches = (await response.json()) as PatientSearchResult[];
+        if (controller.signal.aborted) {
+            return;
+        }
+        results.value = matches;
     } catch {
         if (controller.signal.aborted) {
             return;
@@ -75,12 +77,13 @@ const debouncedSearch = useDebounceFn(runSearch, DEBOUNCE_MS);
 watch(query, (value) => {
     const term = value.trim();
 
+    debouncedSearch.cancel();
+    abortController?.abort();
+    isLoading.value = false;
+    hasSearched.value = false;
+    results.value = [];
+
     if (term.length < MIN_QUERY_LENGTH) {
-        debouncedSearch.cancel();
-        abortController?.abort();
-        isLoading.value = false;
-        hasSearched.value = false;
-        results.value = [];
         return;
     }
 
@@ -92,38 +95,33 @@ onBeforeUnmount(() => {
     abortController?.abort();
 });
 
-function select(patient: PatientSearchResult) {
+function select(value: string) {
+    const patient = results.value.find((result) => result.uuid === value);
+    if (!patient) return;
+
     emit('select', patient);
     query.value = '';
     results.value = [];
     hasSearched.value = false;
 }
-
-const showEmptyState = () => hasSearched.value && !isLoading.value && results.value.length === 0;
 </script>
 
 <template>
-    <Command class="rounded-lg border shadow-sm">
-        <div class="flex items-center border-b px-3">
-            <SearchIcon class="mr-2 h-4 w-4 shrink-0 opacity-50" />
-            <ListboxFilter
-                v-model="query"
-                placeholder="Buscar paciente por nombre o número de inscripción..."
-                class="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
-            />
-        </div>
-        <CommandList>
-            <p v-if="showEmptyState()" class="px-3 py-6 text-center text-sm text-muted-foreground">
-                No se encontraron pacientes.
-            </p>
-            <CommandItem v-for="patient in results" :key="patient.uuid" :value="patient.uuid" @select="select(patient)">
-                <div class="flex flex-col">
-                    <span class="font-medium">{{ fullName(patient) }}</span>
-                    <span v-if="patient.enrollment_number" class="text-xs text-muted-foreground">
-                        {{ patient.enrollment_number }}
-                    </span>
-                </div>
-            </CommandItem>
-        </CommandList>
-    </Command>
+    <SearchResultsField
+        v-model="query"
+        label="Paciente"
+        placeholder="Buscar paciente por nombre o número de inscripción..."
+        empty-message="No se encontraron pacientes."
+        loading-message="Buscando pacientes..."
+        :options="options"
+        :loading="isLoading"
+        :searched="hasSearched"
+        :min-query-length="MIN_QUERY_LENGTH"
+        input-class="h-10 bg-background shadow-xs dark:bg-input/30"
+        @select="select"
+    >
+        <template #leading>
+            <Search />
+        </template>
+    </SearchResultsField>
 </template>

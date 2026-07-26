@@ -5,11 +5,12 @@ import { toast } from 'vue-sonner';
 import ConsultationList from '@/components/consultations/ConsultationList.vue';
 import PatientSearch from '@/components/consultations/PatientSearch.vue';
 import PatientSummaryDialog from '@/components/consultations/PatientSummaryDialog.vue';
+import { Card, CardContent } from '@/components/ui/card';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { ConsultationListItem, PatientSearchResult } from '@/types/consultations';
 
 defineOptions({
-    layout: (h: any, page: any) => h(AppLayout, { title: 'Panel' }, () => page),
+    layout: (h: any, page: any) => h(AppLayout, { title: 'Consultas' }, () => page),
 });
 
 defineProps<{
@@ -30,7 +31,6 @@ function openSummary(patient: PatientSearchResult) {
     summaryOpen.value = true;
 }
 
-/** `action` defaults to `created` because today only `store` flashes, and without the field yet (see `types/consultations.ts`). */
 const CONSULTATION_ACTION_LABELS: Record<string, string> = {
     created: 'registrada',
     updated: 'actualizada',
@@ -44,7 +44,7 @@ watch(
             return;
         }
 
-        const actionLabel = CONSULTATION_ACTION_LABELS[consultation.action ?? 'created'] ?? 'registrada';
+        const actionLabel = CONSULTATION_ACTION_LABELS[consultation.action] ?? 'registrada';
         toast.success(`Consulta ${consultation.code} ${actionLabel}`);
     },
     { immediate: true },
@@ -52,12 +52,21 @@ watch(
 </script>
 
 <template>
-    <Head title="Panel" />
+    <Head title="Consultas" />
 
-    <div class="space-y-6">
-        <h1 class="text-2xl font-semibold">Panel</h1>
+    <div class="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <div class="space-y-1">
+            <h1 class="text-2xl font-semibold">Consultas</h1>
+            <p class="text-sm text-muted-foreground">
+                Busca un paciente para ver su historial o registrar una nueva consulta.
+            </p>
+        </div>
 
-        <PatientSearch v-if="can.searchPatients" @select="openSummary" />
+        <Card v-if="can.searchPatients" class="overflow-visible ring-primary/25">
+            <CardContent>
+                <PatientSearch @select="openSummary" />
+            </CardContent>
+        </Card>
 
         <ConsultationList :consultations="latestConsultations" />
     </div>

@@ -14,6 +14,8 @@ use App\Support\MedicalConsultationCode;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia as Assert;
 
 /**
  * Build the consultation aggregate fields shared by the create and update
@@ -78,10 +80,85 @@ function validConsultationUpdatePayload(array $overrides = []): array
 }
 
 dataset('consultationRoutes', [
+    'opening the create page' => ['get', 'consultations.create', false],
     'creating a consultation' => ['post', 'consultations.store', false],
+    'viewing a consultation' => ['get', 'consultations.show', true],
+    'editing a consultation' => ['get', 'consultations.edit', true],
     'updating a consultation' => ['put', 'consultations.update', true],
     'deleting a consultation' => ['delete', 'consultations.destroy', true],
 ]);
+
+describe('consultation pages and mutation navigation', function () {
+    it('renders the create page with the selected patient and enum options', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $patient = Patient::factory()->create();
+
+        $this->actingAs($physician)->get(route('consultations.create', ['patient' => $patient->uuid]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('consultations/Create', false)
+                ->where('patient.uuid', $patient->uuid)
+                ->has('medicalStateOptions')
+                ->has('medicalClassificationOptions')
+                ->has('transferTypeOptions'));
+    });
+
+    it('rejects a create page without a valid patient', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $this->actingAs($physician)->get(route('consultations.create'))->assertUnprocessable();
+        $this->actingAs($physician)->get(route('consultations.create', ['patient' => 'not-found']))->assertUnprocessable();
+        $this->actingAs($physician)->get(route('consultations.create', ['patient' => (string) Str::uuid()]))->assertNotFound();
+    });
+
+    it('rejects a create page when create permission is missing', function () {
+        $patient = Patient::factory()->create();
+        $this->actingAs(User::factory()->create())->get(route('consultations.create', ['patient' => $patient->uuid]))->assertForbidden();
+    });
+
+    it('allows a non-owner with view permission to read the complete detail without an edit action', function () {
+        $consultation = MedicalConsultation::factory()->withRegulation()->create();
+        $viewer = User::factory()->withPermissions(Permission::ConsultationsView)->create();
+
+        $this->actingAs($viewer)->get(route('consultations.show', $consultation))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('consultations/Show', false)
+                ->where('consultation.uuid', $consultation->uuid)
+                ->where('consultation.can.update', false)
+                ->where('consultation.can.delete', false)
+                ->has('consultation.vital_signs')
+                ->has('consultation.physical_examination')
+                ->has('consultation.regulation'));
+    });
+
+    it('prefills the edit page for the owner and blocks a non-owner', function () {
+        $owner = User::factory()->withPermissions(Permission::ConsultationsUpdate)->create();
+        $consultation = MedicalConsultation::factory()->withRegulation()->create(['physician_id' => $owner->id]);
+        $other = User::factory()->withPermissions(Permission::ConsultationsUpdate)->create();
+
+        $this->actingAs($owner)->get(route('consultations.edit', $consultation))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('consultations/Edit', false)
+                ->where('consultation.uuid', $consultation->uuid)
+                ->where('consultation.can.update', true)
+                ->has('consultation.regulation')
+                ->has('consultation.treatment'));
+        $this->actingAs($other)->get(route('consultations.edit', $consultation))->assertForbidden();
+    });
+
+    it('redirects update and delete to the dashboard with action-specific flash', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsUpdate, Permission::ConsultationsDelete)->create();
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
+
+        $this->actingAs($physician)->put(route('consultations.update', $consultation), validConsultationUpdatePayload())
+            ->assertRedirect(route('dashboard.index'))
+            ->assertInertiaFlash('consultation', ['uuid' => $consultation->uuid, 'code' => $consultation->code, 'action' => 'updated']);
+        $this->actingAs($physician)->delete(route('consultations.destroy', $consultation))
+            ->assertRedirect(route('dashboard.index'))
+            ->assertInertiaFlash('consultation', ['uuid' => $consultation->uuid, 'code' => $consultation->code, 'action' => 'deleted']);
+    });
+});
 
 describe('creating a consultation', function () {
     it('persists the consultation with its vital signs and physical examination when no regulation is submitted', function () {
@@ -90,7 +167,7 @@ describe('creating a consultation', function () {
 
         $response = $this->actingAs($physician)->post(route('consultations.store'), validConsultationPayload($patient));
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('dashboard.index'));
         $consultation = MedicalConsultation::query()->sole();
         expect($consultation->patient_id)->toBe($patient->id)
             ->and($consultation->physician_id)->toBe($physician->id)
@@ -142,7 +219,7 @@ describe('creating a consultation', function () {
         $response = $this->actingAs($physician)->post(route('consultations.store'), validConsultationPayload($patient));
 
         $consultation = MedicalConsultation::query()->sole();
-        $response->assertInertiaFlash('consultation', ['uuid' => $consultation->uuid, 'code' => $consultation->code]);
+        $response->assertInertiaFlash('consultation', ['uuid' => $consultation->uuid, 'code' => $consultation->code, 'action' => 'created']);
     });
 
     it('accepts an empty treatment array', function () {
@@ -311,7 +388,7 @@ describe('updating a consultation', function () {
 
         $response = $this->actingAs($physician)->put(route('consultations.update', $consultation), $payload);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('dashboard.index'));
         $consultation->refresh();
         expect($consultation->current_condition)->toBe('Updated condition')
             ->and($consultation->diagnosis)->toBe('Updated diagnosis')
@@ -413,7 +490,7 @@ describe('deleting a consultation', function () {
 
         $response = $this->actingAs($physician)->delete(route('consultations.destroy', $consultation));
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('dashboard.index'));
         expect(MedicalConsultation::query()->count())->toBe(0)
             ->and(VitalSigns::query()->count())->toBe(0)
             ->and(PhysicalExamination::query()->count())->toBe(0)
@@ -490,7 +567,7 @@ describe('permission and ownership boundary', function () {
 
         $response = $this->actingAs($admin)->put(route('consultations.update', $consultation), validConsultationUpdatePayload());
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('dashboard.index'));
         $response->assertSessionHasNoErrors();
     });
 
@@ -501,7 +578,7 @@ describe('permission and ownership boundary', function () {
 
         $response = $this->actingAs($admin)->delete(route('consultations.destroy', $consultation));
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('dashboard.index'));
         expect(MedicalConsultation::query()->count())->toBe(0);
     });
 });

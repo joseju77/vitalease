@@ -2,21 +2,13 @@
 import { Link } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { patientSummary as patientSummaryAction } from '@/actions/App/Http/Controllers/DashboardController';
+import { create, show } from '@/actions/App/Http/Controllers/MedicalConsultationController';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { medicalClassificationLabel } from '@/lib/consultationLabels';
 import { formatDateTime } from '@/lib/formatDateTime';
 import type { PatientSearchResult, PatientSummary } from '@/types/consultations';
-
-/**
- * `consultations.show` and `consultations.create` are only registered
- * starting in Work Unit 2. This dialog builds plain URLs matching those
- * future routes' patterns (`/consultations/{uuid}`,
- * `/consultations/create?patient={uuid}`) instead of Wayfinder actions, so it
- * compiles and its tests pass in Unit 1; both start working the moment
- * those routes land.
- */
 
 const props = defineProps<{
     patient: PatientSearchResult;
@@ -86,14 +78,18 @@ async function fetchSummary() {
     }
 }
 
-watch(open, (isOpen) => {
-    if (isOpen) {
-        fetchSummary();
-        return;
-    }
+watch(
+    open,
+    (isOpen) => {
+        if (isOpen) {
+            fetchSummary();
+            return;
+        }
 
-    abortController?.abort();
-});
+        abortController?.abort();
+    },
+    { immediate: true },
+);
 
 function fullName(): string {
     if (!summary.value) {
@@ -106,10 +102,10 @@ function fullName(): string {
 }
 
 function consultationHref(uuid: string): string {
-    return `/consultations/${uuid}`;
+    return show.url(uuid);
 }
 
-const createConsultationHref = `/consultations/create?patient=${props.patient.uuid}`;
+const createConsultationHref = create.url({ query: { patient: props.patient.uuid } });
 </script>
 
 <template>
