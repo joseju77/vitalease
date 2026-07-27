@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import TextField from '@/components/form/TextField.vue';
+import { KINSHIP_TYPE_LABELS } from '@/lib/patientLabels';
 import type { PatientEmergencyContact } from '@/types/patients';
 
 const props = defineProps<{
@@ -12,16 +13,6 @@ const props = defineProps<{
 }>();
 
 const emergencyContacts = defineModel<PatientEmergencyContact[]>({ required: true });
-
-/** Spanish labels for `App\Enums\KinshipType`; the backend only sends raw enum values. */
-const KINSHIP_TYPE_LABELS: Record<number, string> = {
-    1: 'Padre/Madre',
-    2: 'Hermano(a)',
-    3: 'Cónyuge',
-    4: 'Hijo(a)',
-    5: 'Amigo(a)',
-    6: 'Otro',
-};
 
 function emptyContact(): PatientEmergencyContact {
     return { name: '', phone_number: '', kinship_type: null };

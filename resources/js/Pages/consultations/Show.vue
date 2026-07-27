@@ -5,13 +5,14 @@ import { index as dashboard } from '@/actions/App/Http/Controllers/DashboardCont
 import { edit } from '@/actions/App/Http/Controllers/MedicalConsultationController';
 import ConsultationDetail from '@/components/consultations/ConsultationDetail.vue';
 import ConsultationPageHeader from '@/components/consultations/ConsultationPageHeader.vue';
+import PatientProfileCard from '@/components/consultations/PatientProfileCard.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatDateTime } from '@/lib/formatDateTime';
-import type { ConsultationAggregate } from '@/types/consultations';
+import type { ConsultationAggregate, PatientProfile } from '@/types/consultations';
 
 defineOptions({ layout: (h: any, page: any) => h(AppLayout, { title: 'Detalle de consulta' }, () => page) });
-defineProps<{ consultation: ConsultationAggregate }>();
+defineProps<{ consultation: ConsultationAggregate; patientProfile: PatientProfile }>();
 </script>
 
 <template>
@@ -30,7 +31,8 @@ defineProps<{ consultation: ConsultationAggregate }>();
                 </Button>
             </template>
         </ConsultationPageHeader>
-        <div class="mx-auto w-full max-w-5xl">
+        <div class="mx-auto flex w-full max-w-5xl flex-col gap-6">
+            <PatientProfileCard :profile="patientProfile" />
             <ConsultationDetail :consultation="consultation" />
         </div>
     </div>

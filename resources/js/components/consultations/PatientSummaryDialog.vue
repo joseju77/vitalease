@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Skeleton } from '@/components/ui/skeleton';
 import { medicalClassificationLabel } from '@/lib/consultationLabels';
 import { formatDateTime } from '@/lib/formatDateTime';
+import { BLOOD_TYPE_LABELS, SEX_AT_BIRTH_LABELS } from '@/lib/patientLabels';
 import type { PatientSearchResult, PatientSummary } from '@/types/consultations';
 
 const props = defineProps<{
@@ -16,24 +17,6 @@ const props = defineProps<{
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
-
-/** Spanish labels for `App\Enums\SexAtBirth`; single consumer here (Stage 3 `DemographicsStep.vue` precedent for inline enum maps). */
-const SEX_AT_BIRTH_LABELS: Record<number, string> = {
-    1: 'Masculino',
-    2: 'Femenino',
-};
-
-/** Spanish labels for `App\Enums\BloodType`; single consumer here. */
-const BLOOD_TYPE_LABELS: Record<number, string> = {
-    1: 'A+',
-    2: 'A-',
-    3: 'B+',
-    4: 'B-',
-    5: 'AB+',
-    6: 'AB-',
-    7: 'O+',
-    8: 'O-',
-};
 
 const summary = ref<PatientSummary | null>(null);
 const isLoading = ref(false);

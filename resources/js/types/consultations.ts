@@ -134,3 +134,58 @@ export interface ConsultationFormOptions {
     medicalClassificationOptions: number[];
     transferTypeOptions: number[];
 }
+
+/**
+ * The read-only patient profile shown on the consultation create, show, and
+ * edit pages (`patientProfile` prop, built by
+ * `MedicalConsultationController::mapPatientProfile`). Enum fields are raw
+ * integers labeled via `lib/patientLabels.ts`; dates are `Y-m-d` strings.
+ * Optional one-to-one blocks are `null` and one-to-many blocks are empty
+ * arrays when the patient did not register them.
+ */
+export interface PatientProfile {
+    first_name: string;
+    last_name: string;
+    second_last_name: string | null;
+    birth_date: string;
+    age: number;
+    sex_at_birth: number;
+    marital_status: number;
+    blood_type: number;
+    /** Catalog enrollment name, when the patient has a registered enrollment. */
+    enrollment: string | null;
+    enrollment_number: string | null;
+    external_enrollment: string | null;
+    family_medical_unit: { name: string; address: string } | null;
+    other_family_medical_unit: string | null;
+    social_security_number: string;
+    contact_information: {
+        address: string;
+        phone_number: string;
+        personal_email: string;
+        institutional_email: string | null;
+        neighborhood: string | null;
+        zip_code: string | null;
+        municipality: string | null;
+    } | null;
+    emergency_contacts: { name: string; phone_number: string; kinship_type: number }[];
+    ailments: { ailment_type: number; diagnosed_at: string; treatment_notes: string | null }[];
+    other_ailments: { surgeries: string | null; allergies: string | null; others: string | null } | null;
+    gynecological_history: {
+        menarche: number;
+        has_cramps: boolean;
+        is_cycle_regular: boolean;
+        cycle_intensity: number;
+        cycle_duration: number;
+        cycle_flow_level: number;
+        last_cycle_date: string;
+        sexual_activity_start_age: number | null;
+        contraceptive_method: number | null;
+        last_pap_smear_date: string | null;
+        last_pap_smear_was_positive: boolean | null;
+        pregnancies: number;
+        vaginal_deliveries: number;
+        cesareans: number;
+        abortions: number;
+    } | null;
+}

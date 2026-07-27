@@ -10,6 +10,7 @@ import DemographicsStep from '@/components/patients/DemographicsStep.vue';
 import EmergencyContactsStep from '@/components/patients/EmergencyContactsStep.vue';
 import GynecologicalHistoryStep from '@/components/patients/GynecologicalHistoryStep.vue';
 import { store } from '@/actions/App/Http/Controllers/PatientController';
+import { SEX_AT_BIRTH_FEMALE } from '@/lib/patientLabels';
 import type {
     PatientGynecologicalHistory,
     PatientRegistrationMetadata,
@@ -17,9 +18,6 @@ import type {
 } from '@/types/patients';
 
 defineProps<PatientRegistrationMetadata>();
-
-/** Raw `App\Enums\SexAtBirth::Female` value; the backend only sends raw enum values. */
-const SEX_AT_BIRTH_FEMALE = 2;
 
 /**
  * The gynecological history step only joins the sequence for Female

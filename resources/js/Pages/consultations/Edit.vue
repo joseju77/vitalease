@@ -2,13 +2,14 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { show } from '@/actions/App/Http/Controllers/MedicalConsultationController';
 import ConsultationForm from '@/components/consultations/ConsultationForm.vue';
+import PatientProfileCard from '@/components/consultations/PatientProfileCard.vue';
 import DeleteConsultationDialog from '@/components/consultations/DeleteConsultationDialog.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { ConsultationAggregate, ConsultationFormOptions } from '@/types/consultations';
+import type { ConsultationAggregate, ConsultationFormOptions, PatientProfile } from '@/types/consultations';
 
 defineOptions({ layout: (h: any, page: any) => h(AppLayout, { title: 'Editar consulta' }, () => page) });
-defineProps<ConsultationFormOptions & { consultation: ConsultationAggregate }>();
+defineProps<ConsultationFormOptions & { consultation: ConsultationAggregate; patientProfile: PatientProfile }>();
 </script>
 
 <template>
@@ -22,6 +23,9 @@ defineProps<ConsultationFormOptions & { consultation: ConsultationAggregate }>()
         :medical-classification-options="medicalClassificationOptions"
         :transfer-type-options="transferTypeOptions"
     >
+        <template #before-sections>
+            <PatientProfileCard :profile="patientProfile" />
+        </template>
         <template #header-actions>
             <Button variant="outline" as-child><Link :href="show.url(consultation.uuid)">Ver detalle</Link></Button>
         </template>

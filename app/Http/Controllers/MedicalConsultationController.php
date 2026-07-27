@@ -9,6 +9,9 @@ use App\Http\Requests\MedicalConsultations\StoreMedicalConsultationRequest;
 use App\Http\Requests\MedicalConsultations\UpdateMedicalConsultationRequest;
 use App\Models\MedicalConsultation;
 use App\Models\Patient;
+use App\Models\PatientAilment;
+use App\Models\PatientEmergencyContact;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +30,7 @@ class MedicalConsultationController extends Controller
 
         return Inertia::render('consultations/Create', [
             'patient' => $this->mapPatient($patient),
+            'patientProfile' => $this->mapPatientProfile($patient),
             ...$this->formOptions(),
         ]);
     }
@@ -37,6 +41,7 @@ class MedicalConsultationController extends Controller
 
         return Inertia::render('consultations/Show', [
             'consultation' => $this->mapConsultationAggregate($consultation, $request),
+            'patientProfile' => $this->mapPatientProfile($consultation->patient),
         ]);
     }
 
@@ -46,6 +51,7 @@ class MedicalConsultationController extends Controller
 
         return Inertia::render('consultations/Edit', [
             'consultation' => $this->mapConsultationAggregate($consultation, $request),
+            'patientProfile' => $this->mapPatientProfile($consultation->patient),
             ...$this->formOptions(),
         ]);
     }
@@ -155,6 +161,83 @@ class MedicalConsultationController extends Controller
             'uuid' => $patient->uuid,
             'full_name' => trim(implode(' ', array_filter([$patient->first_name, $patient->last_name, $patient->second_last_name]))),
             'enrollment_number' => $patient->enrollment_number,
+        ];
+    }
+
+    /**
+     * Build the read-only patient profile shown above the consultation
+     * create, show, and edit pages. Every relation is eager loaded here in one
+     * pass (already-loaded relations are skipped), enum values are sent as
+     * raw integers for the frontend to label, and dates use `Y-m-d`.
+     *
+     * @return array<string, mixed>
+     */
+    private function mapPatientProfile(Patient $patient): array
+    {
+        $patient->loadMissing([
+            'enrollment',
+            'familyMedicalUnit',
+            'contactInformation.neighborhood.zipCode.municipality',
+            'emergencyContacts' => fn (HasMany $query) => $query->orderBy('id'),
+            'ailments' => fn (HasMany $query) => $query->orderBy('ailment_type'),
+            'otherAilments',
+            'gynecologicalHistory',
+        ]);
+
+        $contactInformation = $patient->contactInformation;
+        $neighborhood = $contactInformation?->neighborhood;
+        $otherAilments = $patient->otherAilments;
+        $gynecologicalHistory = $patient->gynecologicalHistory;
+
+        return [
+            'first_name' => $patient->first_name,
+            'last_name' => $patient->last_name,
+            'second_last_name' => $patient->second_last_name,
+            'birth_date' => $patient->birth_date->format('Y-m-d'),
+            'age' => $patient->birth_date->age,
+            'sex_at_birth' => $patient->sex_at_birth->value,
+            'marital_status' => $patient->marital_status->value,
+            'blood_type' => $patient->blood_type->value,
+            'enrollment' => $patient->enrollment?->name,
+            'enrollment_number' => $patient->enrollment_number,
+            'external_enrollment' => $patient->external_enrollment,
+            'family_medical_unit' => $patient->familyMedicalUnit?->only(['name', 'address']),
+            'other_family_medical_unit' => $patient->other_family_medical_unit,
+            'social_security_number' => $patient->social_security_number,
+            'contact_information' => $contactInformation ? [
+                'address' => $contactInformation->address,
+                'phone_number' => $contactInformation->phone_number,
+                'personal_email' => $contactInformation->personal_email,
+                'institutional_email' => $contactInformation->institutional_email,
+                'neighborhood' => $neighborhood?->name,
+                'zip_code' => $neighborhood?->zip_code,
+                'municipality' => $neighborhood?->zipCode?->municipality?->name,
+            ] : null,
+            'emergency_contacts' => $patient->emergencyContacts
+                ->map(fn (PatientEmergencyContact $contact): array => [
+                    'name' => $contact->name,
+                    'phone_number' => $contact->phone_number,
+                    'kinship_type' => $contact->kinship_type->value,
+                ])
+                ->all(),
+            'ailments' => $patient->ailments
+                ->map(fn (PatientAilment $ailment): array => [
+                    'ailment_type' => $ailment->ailment_type->value,
+                    'diagnosed_at' => $ailment->diagnosed_at->format('Y-m-d'),
+                    'treatment_notes' => $ailment->treatment_notes,
+                ])
+                ->all(),
+            'other_ailments' => $otherAilments?->only(['surgeries', 'allergies', 'others']),
+            'gynecological_history' => $gynecologicalHistory ? [
+                ...$gynecologicalHistory->only([
+                    'menarche', 'has_cramps', 'is_cycle_regular', 'cycle_intensity', 'cycle_duration',
+                    'cycle_flow_level', 'sexual_activity_start_age', 'last_pap_smear_was_positive',
+                    'pregnancies', 'vaginal_deliveries', 'cesareans', 'abortions',
+                ]),
+                'last_cycle_date' => $gynecologicalHistory->last_cycle_date->format('Y-m-d'),
+                'contraceptive_method' => $gynecologicalHistory->contraceptive_method?->value,
+                'last_pap_smear_date' => $gynecologicalHistory->last_pap_smear_date?->format('Y-m-d'),
+            ] : null,
         ];
     }
 

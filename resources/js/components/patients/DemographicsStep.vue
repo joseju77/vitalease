@@ -5,6 +5,7 @@ import ComboboxField from '@/components/form/ComboboxField.vue';
 import DatePickerField from '@/components/form/DatePickerField.vue';
 import SelectField from '@/components/form/SelectField.vue';
 import TextField from '@/components/form/TextField.vue';
+import { BLOOD_TYPE_LABELS, MARITAL_STATUS_LABELS, SEX_AT_BIRTH_LABELS } from '@/lib/patientLabels';
 import type { Enrollment, FamilyMedicalUnit, PatientDemographics } from '@/types/patients';
 
 const props = defineProps<{
@@ -17,32 +18,6 @@ const props = defineProps<{
 }>();
 
 const patient = defineModel<PatientDemographics>({ required: true });
-
-/** Spanish labels for `App\Enums\SexAtBirth`; the backend only sends raw enum values. */
-const SEX_AT_BIRTH_LABELS: Record<number, string> = {
-    1: 'Masculino',
-    2: 'Femenino',
-};
-
-/** Spanish labels for `App\Enums\MaritalStatus`. */
-const MARITAL_STATUS_LABELS: Record<number, string> = {
-    1: 'Soltero(a)',
-    2: 'Casado(a)',
-    3: 'Divorciado(a)',
-    4: 'Viudo(a)',
-};
-
-/** Spanish labels for `App\Enums\BloodType`. */
-const BLOOD_TYPE_LABELS: Record<number, string> = {
-    1: 'A+',
-    2: 'A-',
-    3: 'B+',
-    4: 'B-',
-    5: 'AB+',
-    6: 'AB-',
-    7: 'O+',
-    8: 'O-',
-};
 
 const sexAtBirthSelectOptions = computed(() =>
     props.sexAtBirthOptions.map((option) => ({

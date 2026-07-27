@@ -3,10 +3,13 @@
 use App\Enums\MedicalClassification;
 use App\Enums\MedicalState;
 use App\Enums\Permission;
+use App\Enums\SexAtBirth;
 use App\Enums\TransferType;
 use App\Models\MedicalConsultation;
 use App\Models\MedicalRegulation;
+use App\Models\Neighborhood;
 use App\Models\Patient;
+use App\Models\PatientAilment;
 use App\Models\PhysicalExamination;
 use App\Models\User;
 use App\Models\VitalSigns;
@@ -79,6 +82,53 @@ function validConsultationUpdatePayload(array $overrides = []): array
     return array_replace_recursive(consultationAggregatePayload(), $overrides);
 }
 
+/**
+ * Build a Female patient with every optional block of the registration
+ * aggregate populated, including a catalog enrollment, family medical unit,
+ * and a neighborhood for `withCompleteProfile()` to link the contact to.
+ */
+function patientWithCompleteProfile(): Patient
+{
+    Neighborhood::factory()->create();
+
+    return Patient::factory()
+        ->withEnrollment()
+        ->withFamilyMedicalUnit()
+        ->withCompleteProfile()
+        ->create(['sex_at_birth' => SexAtBirth::Female]);
+}
+
+/**
+ * Assert the `patientProfile` prop mirrors the patient's complete profile.
+ */
+function assertCompletePatientProfile(Assert $page, Patient $patient): Assert
+{
+    $patient->load(['enrollment', 'familyMedicalUnit', 'contactInformation.neighborhood.zipCode.municipality', 'otherAilments', 'gynecologicalHistory']);
+
+    return $page
+        ->where('patientProfile.first_name', $patient->first_name)
+        ->where('patientProfile.birth_date', $patient->birth_date->format('Y-m-d'))
+        ->where('patientProfile.age', $patient->birth_date->age)
+        ->where('patientProfile.sex_at_birth', SexAtBirth::Female->value)
+        ->where('patientProfile.marital_status', $patient->marital_status->value)
+        ->where('patientProfile.blood_type', $patient->blood_type->value)
+        ->where('patientProfile.enrollment', $patient->enrollment->name)
+        ->where('patientProfile.enrollment_number', $patient->enrollment_number)
+        ->where('patientProfile.external_enrollment', null)
+        ->where('patientProfile.family_medical_unit.name', $patient->familyMedicalUnit->name)
+        ->where('patientProfile.other_family_medical_unit', null)
+        ->where('patientProfile.social_security_number', $patient->social_security_number)
+        ->where('patientProfile.contact_information.personal_email', $patient->contactInformation->personal_email)
+        ->where('patientProfile.contact_information.neighborhood', $patient->contactInformation->neighborhood->name)
+        ->where('patientProfile.contact_information.zip_code', $patient->contactInformation->neighborhood->zip_code)
+        ->where('patientProfile.contact_information.municipality', $patient->contactInformation->neighborhood->zipCode->municipality->name)
+        ->has('patientProfile.emergency_contacts', $patient->emergencyContacts()->count())
+        ->has('patientProfile.ailments', $patient->ailments()->count())
+        ->where('patientProfile.other_ailments', $patient->otherAilments?->only(['surgeries', 'allergies', 'others']))
+        ->where('patientProfile.gynecological_history.menarche', $patient->gynecologicalHistory->menarche)
+        ->where('patientProfile.gynecological_history.last_cycle_date', $patient->gynecologicalHistory->last_cycle_date->format('Y-m-d'));
+}
+
 dataset('consultationRoutes', [
     'opening the create page' => ['get', 'consultations.create', false],
     'creating a consultation' => ['post', 'consultations.store', false],
@@ -145,6 +195,63 @@ describe('consultation pages and mutation navigation', function () {
                 ->has('consultation.regulation')
                 ->has('consultation.treatment'));
         $this->actingAs($other)->get(route('consultations.edit', $consultation))->assertForbidden();
+    });
+
+    it('includes the complete patient profile on the create page', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $patient = patientWithCompleteProfile();
+
+        $this->actingAs($physician)->get(route('consultations.create', ['patient' => $patient->uuid]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => assertCompletePatientProfile(
+                $page->component('consultations/Create', false)->where('patient.uuid', $patient->uuid),
+                $patient,
+            ));
+    });
+
+    it('includes the complete patient profile on the consultation pages', function (string $routeName, string $component) {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsView, Permission::ConsultationsUpdate)->create();
+        $patient = patientWithCompleteProfile();
+        $ailment = $patient->ailments()->orderBy('ailment_type')->first() ?? PatientAilment::factory()->for($patient)->create();
+        $emergencyContact = $patient->emergencyContacts()->orderBy('id')->first();
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['patient_id' => $patient->id, 'physician_id' => $physician->id]);
+
+        $this->actingAs($physician)->get(route($routeName, $consultation))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => assertCompletePatientProfile($page->component($component, false), $patient)
+                ->where('patientProfile.emergency_contacts.0', [
+                    'name' => $emergencyContact->name,
+                    'phone_number' => $emergencyContact->phone_number,
+                    'kinship_type' => $emergencyContact->kinship_type->value,
+                ])
+                ->where('patientProfile.ailments.0', [
+                    'ailment_type' => $ailment->ailment_type->value,
+                    'diagnosed_at' => $ailment->diagnosed_at->format('Y-m-d'),
+                    'treatment_notes' => $ailment->treatment_notes,
+                ]));
+    })->with([
+        'viewing a consultation' => ['consultations.show', 'consultations/Show'],
+        'editing a consultation' => ['consultations.edit', 'consultations/Edit'],
+    ]);
+
+    it('sends empty profile blocks for a patient without optional data', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $patient = Patient::factory()->create(['sex_at_birth' => SexAtBirth::Male]);
+
+        $this->actingAs($physician)->get(route('consultations.create', ['patient' => $patient->uuid]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('consultations/Create', false)
+                ->where('patientProfile.enrollment', null)
+                ->where('patientProfile.enrollment_number', null)
+                ->where('patientProfile.external_enrollment', $patient->external_enrollment)
+                ->where('patientProfile.family_medical_unit', null)
+                ->where('patientProfile.other_family_medical_unit', $patient->other_family_medical_unit)
+                ->where('patientProfile.contact_information', null)
+                ->where('patientProfile.emergency_contacts', [])
+                ->where('patientProfile.ailments', [])
+                ->where('patientProfile.other_ailments', null)
+                ->where('patientProfile.gynecological_history', null));
     });
 
     it('redirects update and delete to the dashboard with action-specific flash', function () {
