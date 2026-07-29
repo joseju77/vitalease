@@ -5,6 +5,7 @@ import CheckboxField from '@/components/form/CheckboxField.vue';
 import DatePickerField from '@/components/form/DatePickerField.vue';
 import SelectField from '@/components/form/SelectField.vue';
 import TextField from '@/components/form/TextField.vue';
+import { CONTRACEPTIVE_METHOD_LABELS } from '@/lib/patientLabels';
 import type { PatientGynecologicalHistory } from '@/types/patients';
 
 const props = defineProps<{
@@ -13,21 +14,6 @@ const props = defineProps<{
 }>();
 
 const history = defineModel<PatientGynecologicalHistory>({ required: true });
-
-/** Spanish labels for `App\Enums\ContraceptiveMethod`; the backend only sends raw enum values. */
-const CONTRACEPTIVE_METHOD_LABELS: Record<number, string> = {
-    1: 'Condón',
-    2: 'Píldoras orales',
-    3: 'DIU',
-    4: 'Implante',
-    5: 'Inyección',
-    6: 'Parche',
-    7: 'Anillo',
-    8: 'Métodos de barrera',
-    9: 'Esterilización',
-    10: 'Otro',
-    11: 'Ninguno',
-};
 
 const contraceptiveMethodSelectOptions = computed(() =>
     props.contraceptiveMethodOptions.map((option) => ({

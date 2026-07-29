@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MedicalConsultationController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
@@ -38,4 +40,35 @@ Route::middleware('auth')
         Route::post('/roles', 'store')->name('store')->middleware('can:create,Spatie\Permission\Models\Role');
         Route::patch('/roles/{role}', 'update')->name('update')->middleware('can:update,role');
         Route::delete('/roles/{role}', 'destroy')->name('destroy')->middleware('can:delete,role');
+    });
+
+Route::middleware('auth')
+    ->controller(MedicalConsultationController::class)
+    ->name('consultations.')
+    ->group(function () {
+        Route::get('/consultations/create', 'create')->name('create')->middleware('can:create,App\Models\MedicalConsultation');
+        Route::post('/consultations', 'store')->name('store')->middleware('can:create,App\Models\MedicalConsultation');
+        Route::get('/consultations/{consultation}', 'show')->name('show')->middleware('can:view,consultation');
+        Route::get('/consultations/{consultation}/edit', 'edit')->name('edit')->middleware('can:update,consultation');
+        Route::put('/consultations/{consultation}', 'update')->name('update')->middleware('can:update,consultation');
+        Route::delete('/consultations/{consultation}', 'destroy')->name('destroy')->middleware('can:delete,consultation');
+    });
+
+Route::middleware('auth')
+    ->controller(DashboardController::class)
+    ->name('dashboard.')
+    ->group(function () {
+        Route::get('/dashboard', 'index')
+            ->name('index')
+            ->middleware(['can:viewAny,App\Models\MedicalConsultation']);
+
+        Route::get('/dashboard/patients/search', 'searchPatients')
+            ->name('patients.search')
+            ->middleware(['can:viewAny,App\Models\Patient']);
+        Route::get('/dashboard/patients/{patient}', 'patientSummary')
+            ->name('patients.summary')
+            ->middleware(['can:view,patient', 'can:viewAny,App\Models\MedicalConsultation']);
+        Route::get('/dashboard/consultations', 'latestConsultations')
+            ->name('consultations.latest')
+            ->middleware('can:viewAny,App\Models\MedicalConsultation');
     });

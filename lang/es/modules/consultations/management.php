@@ -1,0 +1,43 @@
+<?php
+
+return [
+    'attributes' => [
+        'patient_uuid' => 'paciente',
+        'consultation.current_condition' => 'condición actual',
+        'consultation.diagnosis' => 'diagnóstico',
+        'condition' => 'estado',
+        'prognosis' => 'pronóstico',
+        'medical_classification' => 'clasificación médica',
+        'treatment' => 'tratamiento',
+        'treatment.*.medication' => 'medicamento',
+        'treatment.*.dose' => 'dosis',
+        'treatment.*.frequency' => 'frecuencia',
+        'treatment.*.duration' => 'duración',
+        'vital_signs.weight' => 'peso',
+        'vital_signs.height' => 'estatura',
+        'vital_signs.blood_pressure_systolic' => 'presión arterial sistólica',
+        'vital_signs.blood_pressure_diastolic' => 'presión arterial diastólica',
+        'vital_signs.heart_rate' => 'frecuencia cardiaca',
+        'vital_signs.respiratory_rate' => 'frecuencia respiratoria',
+        'vital_signs.temperature' => 'temperatura',
+        'vital_signs.oxygen_saturation' => 'saturación de oxígeno',
+        'vital_signs.glasgow' => 'escala de Glasgow',
+        'vital_signs.glucose' => 'glucosa',
+        'physical_examination.neurological' => 'exploración neurológica',
+        'physical_examination.head_neck' => 'cabeza y cuello',
+        'physical_examination.thorax_cardiopulmonary' => 'tórax cardiopulmonar',
+        'physical_examination.abdomen' => 'abdomen',
+        'physical_examination.extremities' => 'extremidades',
+        'physical_examination.cabinet_laboratory' => 'gabinete y laboratorio',
+        'regulation.transfer_type' => 'tipo de traslado',
+        'regulation.regulated_at' => 'fecha de regulación',
+        'regulation.ambulance_registration' => 'registro de ambulancia',
+        'regulation.regulation_number' => 'número de regulación',
+        'regulation.clinic_id' => 'clínica',
+        'regulation.receiver_physician' => 'médico receptor',
+    ],
+
+    'custom' => [
+        'diastolic_not_less_than_systolic' => 'La presión arterial diastólica debe ser menor que la sistólica.',
+    ],
+];

@@ -27,6 +27,7 @@
 /storage/pail
 /storage/postgres_data
 /storage/redis_data
+/storage/meilisearch_data
 /docker/ssh
 /vendor
 _ide_helper.php

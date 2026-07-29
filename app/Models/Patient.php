@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 
 #[Fillable([
     'first_name',
@@ -33,6 +34,8 @@ class Patient extends Model
 {
     /** @use HasFactory<PatientFactory> */
     use HasFactory;
+
+    use Searchable;
 
     /**
      * Get the route key for the model.
@@ -123,5 +126,28 @@ class Patient extends Model
     public function gynecologicalHistory(): HasOne
     {
         return $this->hasOne(PatientGynecologicalHistory::class);
+    }
+
+    /**
+     * @return HasMany<MedicalConsultation, $this>
+     */
+    public function medicalConsultations(): HasMany
+    {
+        return $this->hasMany(MedicalConsultation::class);
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'second_last_name' => $this->second_last_name,
+            'enrollment_number' => $this->enrollment_number,
+        ];
     }
 }

@@ -2,12 +2,19 @@
 
 namespace Database\Factories;
 
+use App\Enums\AilmentType;
 use App\Enums\BloodType;
 use App\Enums\MaritalStatus;
 use App\Enums\SexAtBirth;
 use App\Models\Enrollment;
 use App\Models\FamilyMedicalUnit;
+use App\Models\Neighborhood;
 use App\Models\Patient;
+use App\Models\PatientAilment;
+use App\Models\PatientContactInformation;
+use App\Models\PatientEmergencyContact;
+use App\Models\PatientGynecologicalHistory;
+use App\Models\PatientOtherAilment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -86,5 +93,43 @@ class PatientFactory extends Factory
             'family_medical_unit_id' => null,
             'other_family_medical_unit' => fake()->company(),
         ]);
+    }
+
+    /**
+     * Build the full registration aggregate a self-registration produces:
+     * one contact information record (linked to an existing neighborhood
+     * when the location catalog is seeded), 1-2 emergency contacts, 0-3
+     * distinct ailment types, optional other ailments, and a gynecological
+     * history only for Female patients, mirroring
+     * StorePatientRegistrationRequest and the registration form.
+     */
+    public function withCompleteProfile(): static
+    {
+        return $this->afterCreating(function (Patient $patient) {
+            PatientContactInformation::factory()
+                ->for($patient)
+                ->create([
+                    'neighborhood_id' => Neighborhood::query()->inRandomOrder()->value('id'),
+                ]);
+
+            PatientEmergencyContact::factory()
+                ->count(fake()->numberBetween(1, 2))
+                ->for($patient)
+                ->create();
+
+            foreach (fake()->randomElements(AilmentType::cases(), fake()->numberBetween(0, 3)) as $ailmentType) {
+                PatientAilment::factory()
+                    ->for($patient)
+                    ->create(['ailment_type' => $ailmentType]);
+            }
+
+            if (fake()->boolean(40)) {
+                PatientOtherAilment::factory()->for($patient)->create();
+            }
+
+            if ($patient->sex_at_birth === SexAtBirth::Female) {
+                PatientGynecologicalHistory::factory()->for($patient)->create();
+            }
+        });
     }
 }

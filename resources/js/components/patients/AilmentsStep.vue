@@ -6,6 +6,7 @@ import CheckboxField from '@/components/form/CheckboxField.vue';
 import SelectField from '@/components/form/SelectField.vue';
 import DatePickerField from '@/components/form/DatePickerField.vue';
 import TextField from '@/components/form/TextField.vue';
+import { AILMENT_TYPE_LABELS } from '@/lib/patientLabels';
 import type { PatientAilment, PatientOtherAilments } from '@/types/patients';
 
 const props = defineProps<{
@@ -15,16 +16,6 @@ const props = defineProps<{
 
 const ailments = defineModel<PatientAilment[]>('ailments', { required: true });
 const otherAilments = defineModel<PatientOtherAilments | null>('otherAilments', { required: true });
-
-/** Spanish labels for `App\Enums\AilmentType`; the backend only sends raw enum values. */
-const AILMENT_TYPE_LABELS: Record<number, string> = {
-    1: 'Diabetes',
-    2: 'Hipertensión',
-    3: 'Epilepsia',
-    4: 'Neumopatías',
-    5: 'Cardiopatías',
-    6: 'Cáncer',
-};
 
 const ailmentTypeSelectOptions = computed(() =>
     props.ailmentTypeOptions.map((option) => ({

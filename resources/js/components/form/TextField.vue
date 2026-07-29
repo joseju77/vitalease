@@ -10,7 +10,8 @@ defineOptions({
 
 type BaseField = {
     id?: string;
-    modelValue?: string;
+    /** `type="number"` inputs emit numbers through `v-model`, so both are accepted. */
+    modelValue?: string | number;
     label?: string;
     errors?: string[] | string | undefined;
     subLabel?: string;

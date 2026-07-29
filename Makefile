@@ -17,6 +17,8 @@ setup: up ## First-time setup: install dependencies, generate app key, run migra
 	@docker compose exec -T -u www-data laravel npm install
 	@docker compose exec -T -u www-data laravel sh -c 'grep -q "^APP_KEY=base64" .env || php artisan key:generate'
 	@docker compose exec -T -u www-data laravel php artisan migrate
+	@docker compose exec -T -u www-data laravel php artisan scout:sync-index-settings
+	@docker compose exec -T -u www-data laravel php artisan scout:import "App\Models\Patient"
 
 # --- Build, Start, Stop, Restart, Recreate ---
 build: ## Build docker containers
