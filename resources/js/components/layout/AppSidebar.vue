@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { ShieldCheck, Stethoscope, Users } from '@lucide/vue';
 import { computed } from 'vue';
 import NavMain from '@/components/layout/NavMain.vue';
 import NavUser from '@/components/layout/NavUser.vue';
@@ -15,20 +14,14 @@ import {
     SidebarRail,
 } from '@/components/ui/sidebar';
 import { usePermissions } from '@/composables/usePermissions';
-import { index as dashboardIndex } from '@/routes/dashboard';
-import { index as rolesIndex } from '@/routes/roles';
-import { index as usersIndex } from '@/routes/users';
+import { NAV_GROUPS, visibleNavGroups } from '@/lib/navigation';
 import type { AppPageProps } from '@/types';
 import appLogo from '@resources/img/logos/vitalease.svg';
 
 const page = usePage<AppPageProps>();
 const { can } = usePermissions();
 
-const navMain = computed(() => [
-    ...(can('consultations.view') ? [{ title: 'Consultas', url: dashboardIndex().url, icon: Stethoscope }] : []),
-    ...(can('users.manage') ? [{ title: 'Usuarios', url: usersIndex().url, icon: Users }] : []),
-    ...(can('roles.manage') ? [{ title: 'Roles', url: rolesIndex().url, icon: ShieldCheck }] : []),
-]);
+const navGroups = computed(() => visibleNavGroups(NAV_GROUPS, can));
 </script>
 
 <template>
@@ -48,7 +41,7 @@ const navMain = computed(() => [
             </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>
-            <NavMain :items="navMain" />
+            <NavMain :groups="navGroups" />
         </SidebarContent>
         <SidebarFooter>
             <NavUser v-if="page.props.auth.user" :user="page.props.auth.user" />
