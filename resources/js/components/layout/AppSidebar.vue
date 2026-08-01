@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import { usePermissions } from '@/composables/usePermissions';
 import { NAV_GROUPS, visibleNavGroups } from '@/lib/navigation';
+import { home } from '@/routes';
 import type { AppPageProps } from '@/types';
 import appLogo from '@resources/img/logos/vitalease.svg';
 
@@ -30,7 +31,7 @@ const navGroups = computed(() => visibleNavGroups(NAV_GROUPS, can));
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link href="/">
+                        <Link :href="home().url">
                             <img :src="appLogo" alt="Logo de VitalEase" class="size-8 rounded-lg" />
                             <div class="grid flex-1 text-left text-sm leading-tight">
                                 <span class="truncate font-semibold">VitalEase</span>
