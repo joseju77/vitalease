@@ -9,8 +9,8 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use RuntimeException;
 
-#[Signature('demo:seed {--users=8 : Total demo users, including the 3 fixed accounts} {--patients=80 : Number of demo patients}')]
-#[Description('Seed realistic demo users and patients for local/staging demonstrations (fresh database only)')]
+#[Signature('demo:seed {--users=8 : Total demo users, including the 3 fixed accounts} {--patients=80 : Number of demo patients} {--consultations=250 : Number of demo consultations}')]
+#[Description('Seed realistic demo users, patients and consultations for local/staging demonstrations (fresh database only)')]
 class DemoSeedCommand extends Command
 {
     /**
@@ -26,6 +26,7 @@ class DemoSeedCommand extends Command
 
         $users = filter_var($this->option('users'), FILTER_VALIDATE_INT);
         $patients = filter_var($this->option('patients'), FILTER_VALIDATE_INT);
+        $consultations = filter_var($this->option('consultations'), FILTER_VALIDATE_INT);
 
         if ($users === false || $users < 3) {
             $this->components->error('The --users option must be an integer of at least 3 (super-admin, demo physician, and administrador).');
@@ -39,13 +40,19 @@ class DemoSeedCommand extends Command
             return self::FAILURE;
         }
 
+        if ($consultations === false || $consultations < 0) {
+            $this->components->error('The --consultations option must be a non-negative integer.');
+
+            return self::FAILURE;
+        }
+
         $this->call('db:seed', ['--no-interaction' => true]);
 
         try {
             app(DemoSeeder::class)
                 ->setContainer($this->laravel)
                 ->setCommand($this)
-                ->__invoke(['users' => $users, 'patients' => $patients]);
+                ->__invoke(['users' => $users, 'patients' => $patients, 'consultations' => $consultations]);
         } catch (RuntimeException $exception) {
             $this->components->error($exception->getMessage());
 
@@ -55,7 +62,7 @@ class DemoSeedCommand extends Command
         $this->call('scout:sync-index-settings');
         $this->call('scout:import', ['model' => 'App\Models\Patient']);
 
-        $this->components->info("Seeded {$users} demo users and {$patients} demo patients.");
+        $this->components->info("Seeded {$users} demo users, {$patients} demo patients and {$consultations} demo consultations.");
         $this->components->twoColumnDetail('Demo physician login', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL);
 
         return self::SUCCESS;

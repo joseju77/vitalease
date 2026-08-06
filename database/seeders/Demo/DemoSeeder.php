@@ -15,7 +15,8 @@ class DemoSeeder extends Seeder
     /**
      * Orchestrate realistic demo data for local/staging demonstrations:
      * `$users` users covering every role (including the 3 fixed accounts),
-     * and `$patients` realistic patients.
+     * `$patients` realistic patients, and `$consultations` realistic
+     * medical consultations spread over the last 90 days.
      *
      * Not idempotent by design: run once against a fresh database, after
      * the catalog seeders (RolePermissionSeeder, LocationSeeder,
@@ -23,12 +24,13 @@ class DemoSeeder extends Seeder
      *
      * @throws RuntimeException
      */
-    public function run(int $users = 8, int $patients = 80): void
+    public function run(int $users = 8, int $patients = 80, int $consultations = 250): void
     {
         $this->guardAgainstUnsafeRun();
 
         $this->call(DemoUserSeeder::class, parameters: ['users' => $users]);
         $this->call(DemoPatientSeeder::class, parameters: ['count' => $patients]);
+        $this->call(DemoConsultationSeeder::class, parameters: ['consultations' => $consultations]);
     }
 
     /**
