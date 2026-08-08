@@ -1,23 +1,30 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import type { LucideIcon } from '@lucide/vue';
-import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import {
+    SidebarGroup,
+    SidebarGroupLabel,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import type { NavGroup } from '@/lib/navigation';
 
 defineProps<{
-    items: {
-        title: string;
-        url: string;
-        icon: LucideIcon;
-    }[];
+    groups: NavGroup[];
 }>();
 </script>
 
 <template>
-    <SidebarGroup v-if="items.length">
+    <SidebarGroup v-for="(group, index) in groups" :key="group.label ?? `group-${index}`">
+        <SidebarGroupLabel v-if="group.label">{{ group.label }}</SidebarGroupLabel>
         <SidebarMenu>
-            <SidebarMenuItem v-for="item in items" :key="item.title">
+            <SidebarMenuItem v-for="item in group.items" :key="item.title">
                 <SidebarMenuButton as-child :tooltip="item.title">
-                    <Link :href="item.url">
+                    <a v-if="item.href === '#'" href="#">
+                        <component :is="item.icon" />
+                        <span>{{ item.title }}</span>
+                    </a>
+                    <Link v-else :href="item.href">
                         <component :is="item.icon" />
                         <span>{{ item.title }}</span>
                     </Link>

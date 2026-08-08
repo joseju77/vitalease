@@ -66,6 +66,40 @@ Los más usados:
 | `make test` | Corre la suite de tests del backend (Pest) |
 | `make test-frontend` | Corre la suite de tests del frontend (Vitest) |
 | `make test-all` | Corre ambas suites |
+| `make seed-demo` | Carga datos de demostración (ver [Datos de demostración](#datos-de-demostración)) |
+
+## Datos de demostración
+
+Para tener la aplicación poblada con datos realistas (usuarios, pacientes y consultas médicas en español), sobre una
+base de datos recién creada:
+
+```bash
+make seed-demo
+```
+
+Por defecto crea 8 usuarios, 80 pacientes y 250 consultas repartidas en los últimos 90 días. Las cantidades se pueden
+ajustar ejecutando el comando de Artisan directamente (desde `make laravel-shell`):
+
+```bash
+php artisan demo:seed --users=8 --patients=80 --consultations=250
+```
+
+- `--users` incluye las 3 cuentas fijas (superadministrador, médico demo y administrador), por lo que el mínimo es 3;
+  el resto se crean como médicos.
+- El comando carga primero los catálogos, luego los datos de demostración y al final importa los pacientes al índice
+  de búsqueda.
+- No es idempotente: se niega a ejecutarse si los datos de demostración ya existen. Para volver a cargarlos, recrea la
+  base de datos (`php artisan migrate:fresh --seed`) antes de ejecutarlo de nuevo.
+- Se niega a ejecutarse en producción.
+
+Cuentas de acceso (**solo para demostración**, contraseña `password` en todas):
+
+| Correo                                                | Rol                                 |
+|-------------------------------------------------------|-------------------------------------|
+| `superadmin@vitalease.test`                           | Superadministrador (acceso total)   |
+| `medico.demo@vitalease.test`                          | Médico demo (pacientes y consultas) |
+| `medico1@vitalease.test`, `medico2@vitalease.test`, … | Médico                              |
+| `administrador@vitalease.test`                        | Administrador (usuarios y roles)    |
 
 ## Desarrollo
 

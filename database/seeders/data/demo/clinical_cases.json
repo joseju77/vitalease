@@ -1,0 +1,1119 @@
+[
+    {
+        "key": "esguince_tobillo_grado_ii",
+        "medical_classification": "Trauma",
+        "current_condition": "Acude tras torcedura de tobillo derecho al bajar una banqueta, con dolor e inflamación inmediata; niega haber escuchado un chasquido.",
+        "diagnosis": "Esguince de tobillo grado II (lesión del ligamento peroneoastragalino anterior).",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [58, 92],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [110, 128],
+            "blood_pressure_diastolic": [70, 84],
+            "heart_rate": [76, 96],
+            "respiratory_rate": [14, 19],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado en las tres esferas, sin déficit motor ni sensitivo, reflejos osteotendinosos conservados.",
+            "head_neck": "Cráneo normocéfalo, cuello sin adenomegalias ni rigidez.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos sin soplos, campos pulmonares con murmullo vesicular conservado.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación, ruidos peristálticos presentes.",
+            "extremities": "Tobillo derecho con aumento de volumen y equimosis perimaleolar externa, dolor a la palpación del ligamento peroneoastragalino anterior, prueba del cajón anterior positiva leve, pulsos distales conservados.",
+            "cabinet_laboratory": "Radiografía de tobillo AP y lateral sin datos de fractura; reglas de Ottawa negativas para estudio adicional."
+        },
+        "treatment": [
+            { "medication": "Diclofenaco", "dose": "50 mg", "frequency": "Cada 8 horas", "duration": "5 días" },
+            {
+                "medication": "Paracetamol",
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas si dolor",
+                "duration": "3 días"
+            }
+        ]
+    },
+    {
+        "key": "fractura_muneca_no_desplazada",
+        "medical_classification": "Trauma",
+        "current_condition": "Sufrió caída sobre mano extendida al tropezar en la calle; refiere dolor intenso en muñeca izquierda con limitación funcional.",
+        "diagnosis": "Fractura no desplazada del radio distal izquierdo.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 88],
+            "height": [1.55, 1.82],
+            "blood_pressure_systolic": [112, 132],
+            "blood_pressure_diastolic": [72, 86],
+            "heart_rate": [82, 102],
+            "respiratory_rate": [15, 20],
+            "temperature": [36.3, 37.1],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin focalización neurológica, sensibilidad conservada en dedos de la mano afectada.",
+            "head_neck": "Sin alteraciones, cuello con movilidad completa.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios bilateralmente.",
+            "abdomen": "Blando, depresible, no doloroso, sin visceromegalias.",
+            "extremities": "Muñeca izquierda con deformidad leve en dorso de tenedor, edema y dolor a la palpación del radio distal, pulso radial presente, llenado capilar menor a 2 segundos.",
+            "cabinet_laboratory": "Radiografía de muñeca AP y lateral con trazo de fractura no desplazada del radio distal."
+        },
+        "treatment": [
+            { "medication": "Paracetamol", "dose": "500 mg", "frequency": "Cada 8 horas", "duration": "5 días" },
+            { "medication": "Naproxeno", "dose": "250 mg", "frequency": "Cada 12 horas", "duration": "5 días" }
+        ]
+    },
+    {
+        "key": "politraumatismo_grave",
+        "medical_classification": "Trauma",
+        "current_condition": "Ingresa referido de accidente automovilístico con impacto lateral; presenta dolor torácico y abdominal, disminución del estado de alerta.",
+        "diagnosis": "Politraumatismo con sospecha de contusión pulmonar y hemoperitoneo, choque hipovolémico incipiente.",
+        "condition": "Critical",
+        "prognosis": "Guarded",
+        "vital_signs": {
+            "weight": [60, 95],
+            "height": [1.58, 1.88],
+            "blood_pressure_systolic": [80, 98],
+            "blood_pressure_diastolic": [50, 64],
+            "heart_rate": [118, 145],
+            "respiratory_rate": [26, 33],
+            "temperature": [35.6, 36.9],
+            "oxygen_saturation": [85, 92],
+            "glasgow": [9, 13]
+        },
+        "physical_examination": {
+            "neurological": "Somnoliento, responde a estímulos verbales, orientación parcial, sin lateralización motora evidente.",
+            "head_neck": "Herida cortante superficial en región frontal, cuello con collarín cervical, sin ingurgitación yugular evidente.",
+            "thorax_cardiopulmonary": "Hipoventilación en hemitórax izquierdo, equimosis en parrilla costal, ruidos cardiacos taquicárdicos rítmicos.",
+            "abdomen": "Distendido, doloroso difusamente, con signo de rebote positivo en cuadrante superior izquierdo, ruidos peristálticos disminuidos.",
+            "extremities": "Pulsos distales filiformes, llenado capilar mayor a 3 segundos, sin deformidades óseas evidentes.",
+            "cabinet_laboratory": "FAST positivo con líquido libre en espacio esplenorrenal; tomografía de tórax y abdomen en proceso."
+        },
+        "treatment": [
+            {
+                "medication": "Solución Hartmann",
+                "dose": "1000 mL",
+                "frequency": "Infusión rápida",
+                "duration": "Según respuesta hemodinámica"
+            },
+            { "medication": "Ketorolaco", "dose": "30 mg", "frequency": "Cada 8 horas", "duration": "Según evolución" }
+        ],
+        "regulation": {
+            "transfer_type": "MunicipalHealthServices",
+            "clinic": "Hospital Civil de Guadalajara Fray Antonio Alcalde"
+        }
+    },
+    {
+        "key": "lumbalgia_mecanica_aguda",
+        "medical_classification": "Trauma",
+        "current_condition": "Refiere dolor lumbar de dos días de evolución tras levantar objeto pesado en su trabajo, sin irradiación a miembros pélvicos.",
+        "diagnosis": "Lumbalgia mecánica aguda sin datos de compromiso radicular.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [60, 98],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [112, 132],
+            "blood_pressure_diastolic": [72, 88],
+            "heart_rate": [74, 96],
+            "respiratory_rate": [14, 19],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, fuerza muscular 5/5 en miembros pélvicos, sensibilidad conservada, reflejos rotulianos simétricos.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor, sin masas palpables.",
+            "extremities": "Contractura paravertebral lumbar bilateral, dolor a la palpación de musculatura paraespinal, maniobra de Lasègue negativa bilateral.",
+            "cabinet_laboratory": "No se solicitan estudios de imagen por ausencia de banderas rojas."
+        },
+        "treatment": [
+            { "medication": "Naproxeno", "dose": "250 mg", "frequency": "Cada 12 horas", "duration": "7 días" },
+            { "medication": "Metocarbamol", "dose": "750 mg", "frequency": "Cada 8 horas", "duration": "5 días" }
+        ]
+    },
+    {
+        "key": "faringoamigdalitis_aguda",
+        "medical_classification": "Otolaryngology",
+        "current_condition": "Presenta dolor faríngeo intenso de tres días de evolución, fiebre y dificultad para deglutir alimentos sólidos.",
+        "diagnosis": "Faringoamigdalitis aguda de probable origen bacteriano.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 90],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [105, 122],
+            "blood_pressure_diastolic": [65, 80],
+            "heart_rate": [88, 108],
+            "respiratory_rate": [16, 21],
+            "temperature": [37.9, 39.1],
+            "oxygen_saturation": [95, 98],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin datos de focalización.",
+            "head_neck": "Amígdalas hiperémicas con exudado blanquecino bilateral, adenopatías cervicales anteriores dolorosas a la palpación.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos taquicárdicos, campos pulmonares con murmullo vesicular conservado.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin edema, pulsos distales presentes y simétricos.",
+            "cabinet_laboratory": "Prueba rápida de estreptococo positiva."
+        },
+        "treatment": [
+            { "medication": "Amoxicilina", "dose": "500 mg", "frequency": "Cada 8 horas", "duration": "7 días" },
+            {
+                "medication": "Paracetamol",
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas si fiebre",
+                "duration": "5 días"
+            }
+        ]
+    },
+    {
+        "key": "otitis_media_aguda",
+        "medical_classification": "Otolaryngology",
+        "current_condition": "Refiere dolor de oído derecho de dos días de evolución, sensación de plenitud ótica y disminución de la audición.",
+        "diagnosis": "Otitis media aguda derecha.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 90],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [105, 122],
+            "blood_pressure_diastolic": [65, 80],
+            "heart_rate": [82, 102],
+            "respiratory_rate": [15, 20],
+            "temperature": [37.6, 38.8],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin datos de focalización.",
+            "head_neck": "Otoscopia derecha con membrana timpánica eritematosa y abombada; oído izquierdo sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios adicionales; diagnóstico clínico."
+        },
+        "treatment": [
+            {
+                "medication": "Amoxicilina/Ácido clavulánico",
+                "dose": "875/125 mg",
+                "frequency": "Cada 12 horas",
+                "duration": "7 días"
+            },
+            {
+                "medication": "Paracetamol",
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas si dolor",
+                "duration": "3 días"
+            }
+        ]
+    },
+    {
+        "key": "sinusitis_aguda",
+        "medical_classification": "Otolaryngology",
+        "current_condition": "Presenta congestión nasal, dolor facial de predominio en mejillas y cefalea frontal de cinco días de evolución.",
+        "diagnosis": "Rinosinusitis aguda bacteriana.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 90],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [108, 126],
+            "blood_pressure_diastolic": [68, 82],
+            "heart_rate": [76, 96],
+            "respiratory_rate": [15, 20],
+            "temperature": [36.9, 37.8],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin déficit focal.",
+            "head_neck": "Dolor a la palpación de senos maxilares y frontales, mucosa nasal congestiva con rinorrea mucopurulenta.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares con murmullo vesicular conservado.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios de imagen por presentación no complicada."
+        },
+        "treatment": [
+            {
+                "medication": "Amoxicilina/Ácido clavulánico",
+                "dose": "875/125 mg",
+                "frequency": "Cada 12 horas",
+                "duration": "7 días"
+            },
+            { "medication": "Loratadina", "dose": "10 mg", "frequency": "Cada 24 horas", "duration": "7 días" }
+        ]
+    },
+    {
+        "key": "laringitis_aguda",
+        "medical_classification": "Otolaryngology",
+        "current_condition": "Refiere disfonía y tos seca de tres días de evolución, precedida por cuadro catarral leve.",
+        "diagnosis": "Laringitis aguda de origen viral.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 90],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [105, 122],
+            "blood_pressure_diastolic": [65, 80],
+            "heart_rate": [74, 94],
+            "respiratory_rate": [14, 19],
+            "temperature": [36.6, 37.5],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin alteraciones.",
+            "head_neck": "Faringe con eritema leve, voz ronca, sin estridor ni dificultad respiratoria.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios sin estertores.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios; diagnóstico clínico."
+        },
+        "treatment": [
+            {
+                "medication": "Paracetamol",
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas si molestia",
+                "duration": "3 días"
+            },
+            { "medication": "Ambroxol", "dose": "30 mg", "frequency": "Cada 8 horas", "duration": "5 días" }
+        ]
+    },
+    {
+        "key": "resfriado_comun",
+        "medical_classification": "Respiratory",
+        "current_condition": "Presenta congestión nasal, estornudos y tos leve de dos días de evolución, sin fiebre.",
+        "diagnosis": "Infección de vías respiratorias altas de origen viral (resfriado común).",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 90],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [105, 122],
+            "blood_pressure_diastolic": [65, 80],
+            "heart_rate": [70, 92],
+            "respiratory_rate": [14, 18],
+            "temperature": [36.5, 37.4],
+            "oxygen_saturation": [97, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin alteraciones.",
+            "head_neck": "Mucosa nasal congestiva con rinorrea hialina, faringe levemente eritematosa.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares con murmullo vesicular conservado sin agregados.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios; cuadro autolimitado."
+        },
+        "treatment": [
+            {
+                "medication": "Paracetamol",
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas si molestia",
+                "duration": "3 días"
+            },
+            { "medication": "Loratadina", "dose": "10 mg", "frequency": "Cada 24 horas", "duration": "5 días" }
+        ]
+    },
+    {
+        "key": "crisis_asmatica_moderada",
+        "medical_classification": "Respiratory",
+        "current_condition": "Acude por dificultad respiratoria y sibilancias de inicio súbito tras exposición a polvo, con antecedente de asma diagnosticada.",
+        "diagnosis": "Crisis asmática moderada.",
+        "condition": "Serious",
+        "prognosis": "Fair",
+        "vital_signs": {
+            "weight": [50, 88],
+            "height": [1.52, 1.82],
+            "blood_pressure_systolic": [112, 135],
+            "blood_pressure_diastolic": [72, 88],
+            "heart_rate": [98, 118],
+            "respiratory_rate": [23, 29],
+            "temperature": [36.4, 37.2],
+            "oxygen_saturation": [90, 94],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, ansioso por dificultad respiratoria.",
+            "head_neck": "Sin alteraciones, uso leve de músculos accesorios del cuello.",
+            "thorax_cardiopulmonary": "Sibilancias espiratorias audibles bilaterales, tiraje intercostal leve, ruidos cardiacos taquicárdicos rítmicos.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin cianosis distal, pulsos presentes.",
+            "cabinet_laboratory": "Pico flujo espiratorio disminuido, mejoría parcial tras nebulización."
+        },
+        "treatment": [
+            {
+                "medication": "Salbutamol",
+                "dose": "2 disparos (200 mcg)",
+                "frequency": "Cada 4-6 horas",
+                "duration": "3 días"
+            },
+            { "medication": "Prednisona", "dose": "50 mg", "frequency": "Cada 24 horas", "duration": "5 días" }
+        ]
+    },
+    {
+        "key": "neumonia_comunidad_grave",
+        "medical_classification": "Respiratory",
+        "current_condition": "Refiere fiebre, tos productiva y dificultad respiratoria progresiva de cuatro días de evolución, con deterioro en las últimas horas.",
+        "diagnosis": "Neumonía adquirida en la comunidad grave con datos de sepsis incipiente.",
+        "condition": "Critical",
+        "prognosis": "Guarded",
+        "vital_signs": {
+            "weight": [55, 92],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [85, 102],
+            "blood_pressure_diastolic": [55, 68],
+            "heart_rate": [112, 138],
+            "respiratory_rate": [27, 35],
+            "temperature": [38.6, 40.0],
+            "oxygen_saturation": [82, 89],
+            "glasgow": [13, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta pero confuso intermitentemente, orientación parcial en tiempo.",
+            "head_neck": "Mucosas secas, sin ingurgitación yugular.",
+            "thorax_cardiopulmonary": "Estertores crepitantes en base pulmonar derecha, taquipnea con tiraje intercostal, ruidos cardiacos taquicárdicos rítmicos.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación, ruidos peristálticos presentes.",
+            "extremities": "Llenado capilar de 3 segundos, extremidades frías distalmente.",
+            "cabinet_laboratory": "Radiografía de tórax con consolidación en lóbulo inferior derecho; lactato elevado en gasometría."
+        },
+        "treatment": [
+            {
+                "medication": "Ceftriaxona",
+                "dose": "1 g",
+                "frequency": "Cada 24 horas",
+                "duration": "Según evolución hospitalaria"
+            },
+            {
+                "medication": "Solución Hartmann",
+                "dose": "1000 mL",
+                "frequency": "Infusión inicial",
+                "duration": "Según respuesta hemodinámica"
+            }
+        ],
+        "regulation": {
+            "transfer_type": "Institute",
+            "clinic": "Centro Médico Nacional de Occidente (IMSS)"
+        }
+    },
+    {
+        "key": "gastroenteritis_aguda",
+        "medical_classification": "Gastroenterology",
+        "current_condition": "Presenta evacuaciones líquidas frecuentes, náusea y dolor abdominal tipo cólico de dos días de evolución, posterior a consumo de alimentos en la calle.",
+        "diagnosis": "Gastroenteritis aguda de probable origen infeccioso con deshidratación leve.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [52, 88],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [96, 115],
+            "blood_pressure_diastolic": [60, 74],
+            "heart_rate": [92, 112],
+            "respiratory_rate": [16, 21],
+            "temperature": [37.3, 38.4],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin alteraciones.",
+            "head_neck": "Mucosas orales ligeramente secas.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos taquicárdicos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, doloroso difusamente a la palpación, ruidos peristálticos aumentados, sin signos de irritación peritoneal.",
+            "extremities": "Sin edema, llenado capilar menor a 2 segundos.",
+            "cabinet_laboratory": "No se solicitan estudios; manejo ambulatorio con hidratación oral."
+        },
+        "treatment": [
+            {
+                "medication": "Vida Suero Oral",
+                "dose": "1 sobre disuelto en 1 L",
+                "frequency": "Fraccionado durante el día",
+                "duration": "3 días"
+            },
+            {
+                "medication": "Butilhioscina",
+                "dose": "10 mg",
+                "frequency": "Cada 8 horas si dolor",
+                "duration": "3 días"
+            }
+        ]
+    },
+    {
+        "key": "gastritis_aguda",
+        "medical_classification": "Gastroenterology",
+        "current_condition": "Refiere dolor epigástrico urente de tres días de evolución, relacionado con la ingesta de alimentos irritantes, sin datos de sangrado digestivo.",
+        "diagnosis": "Gastritis aguda.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 92],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [108, 128],
+            "blood_pressure_diastolic": [68, 84],
+            "heart_rate": [76, 98],
+            "respiratory_rate": [14, 19],
+            "temperature": [36.3, 37.1],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin alteraciones.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, doloroso a la palpación en epigastrio, sin rebote, ruidos peristálticos presentes.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios; respuesta favorable a manejo inicial."
+        },
+        "treatment": [
+            {
+                "medication": "Omeprazol",
+                "dose": "20 mg",
+                "frequency": "Cada 24 horas en ayuno",
+                "duration": "14 días"
+            },
+            { "medication": "Sucralfato", "dose": "1 g", "frequency": "Cada 8 horas", "duration": "7 días" }
+        ]
+    },
+    {
+        "key": "colico_renal",
+        "medical_classification": "Gastroenterology",
+        "current_condition": "Presenta dolor súbito e intenso en flanco derecho irradiado a región inguinal, acompañado de náusea, de inicio hace seis horas.",
+        "diagnosis": "Cólico renoureteral derecho por litiasis probable.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [58, 95],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [122, 145],
+            "blood_pressure_diastolic": [78, 95],
+            "heart_rate": [98, 120],
+            "respiratory_rate": [18, 23],
+            "temperature": [36.5, 37.6],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, inquieto por el dolor.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos taquicárdicos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, doloroso a la palpación profunda en flanco derecho, puñopercusión renal derecha positiva, sin datos de irritación peritoneal.",
+            "extremities": "Sin alteraciones, pulsos distales conservados.",
+            "cabinet_laboratory": "Examen general de orina con microhematuria; ultrasonido renal con dilatación pielocalicial leve derecha."
+        },
+        "treatment": [
+            { "medication": "Ketorolaco", "dose": "30 mg", "frequency": "Cada 8 horas", "duration": "3 días" },
+            { "medication": "Butilhioscina", "dose": "20 mg", "frequency": "Cada 8 horas", "duration": "3 días" }
+        ]
+    },
+    {
+        "key": "ivu_no_complicada",
+        "medical_classification": "Gastroenterology",
+        "sex": "Female",
+        "current_condition": "Refiere ardor al orinar, aumento en la frecuencia urinaria y dolor suprapúbico de dos días de evolución, sin fiebre.",
+        "diagnosis": "Infección de vías urinarias bajas no complicada.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [52, 85],
+            "height": [1.5, 1.75],
+            "blood_pressure_systolic": [105, 124],
+            "blood_pressure_diastolic": [65, 82],
+            "heart_rate": [78, 100],
+            "respiratory_rate": [15, 20],
+            "temperature": [36.8, 38.1],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientada, sin alteraciones.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, doloroso a la palpación suprapúbica, sin datos de irritación peritoneal, puñopercusión renal bilateral negativa.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "Examen general de orina con leucocituria y nitritos positivos."
+        },
+        "treatment": [
+            { "medication": "Nitrofurantoína", "dose": "100 mg", "frequency": "Cada 12 horas", "duration": "5 días" },
+            {
+                "medication": "Paracetamol",
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas si dolor",
+                "duration": "3 días"
+            }
+        ]
+    },
+    {
+        "key": "cervicovaginitis_candidiasica",
+        "medical_classification": "Gastroenterology",
+        "sex": "Female",
+        "current_condition": "Presenta prurito vulvar y secreción vaginal blanquecina de una semana de evolución, sin fiebre ni dolor abdominal.",
+        "diagnosis": "Cervicovaginitis candidiásica.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [50, 82],
+            "height": [1.5, 1.75],
+            "blood_pressure_systolic": [102, 122],
+            "blood_pressure_diastolic": [64, 80],
+            "heart_rate": [70, 92],
+            "respiratory_rate": [14, 18],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [97, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientada, sin alteraciones.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "Exudado vaginal con presencia de seudohifas compatibles con Candida spp."
+        },
+        "treatment": [
+            { "medication": "Fluconazol", "dose": "150 mg", "frequency": "Dosis única", "duration": "1 día" },
+            {
+                "medication": "Clotrimazol óvulos",
+                "dose": "500 mg",
+                "frequency": "Dosis única vaginal",
+                "duration": "1 día"
+            }
+        ]
+    },
+    {
+        "key": "dismenorrea_primaria",
+        "medical_classification": "Gastroenterology",
+        "sex": "Female",
+        "current_condition": "Refiere dolor pélvico tipo cólico coincidente con el inicio de su periodo menstrual, de intensidad moderada, sin otros síntomas asociados.",
+        "diagnosis": "Dismenorrea primaria.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [48, 80],
+            "height": [1.5, 1.72],
+            "blood_pressure_systolic": [100, 120],
+            "blood_pressure_diastolic": [62, 78],
+            "heart_rate": [76, 98],
+            "respiratory_rate": [14, 19],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [97, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientada, sin alteraciones.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, doloroso a la palpación en hipogastrio, sin datos de irritación peritoneal.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios; presentación típica sin banderas rojas."
+        },
+        "treatment": [
+            { "medication": "Ácido mefenámico", "dose": "500 mg", "frequency": "Cada 8 horas", "duration": "3 días" },
+            {
+                "medication": "Butilhioscina",
+                "dose": "10 mg",
+                "frequency": "Cada 8 horas si dolor",
+                "duration": "3 días"
+            }
+        ]
+    },
+    {
+        "key": "conjuntivitis_bacteriana",
+        "medical_classification": "Ophthalmology",
+        "current_condition": "Presenta ojo rojo con secreción purulenta y sensación de cuerpo extraño en ojo izquierdo de dos días de evolución.",
+        "diagnosis": "Conjuntivitis bacteriana del ojo izquierdo.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 90],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [105, 124],
+            "blood_pressure_diastolic": [65, 80],
+            "heart_rate": [72, 92],
+            "respiratory_rate": [14, 18],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [97, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin alteraciones.",
+            "head_neck": "Conjuntiva bulbar izquierda hiperémica con secreción mucopurulenta, párpados con costras matutinas, sin adenopatía preauricular.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios; diagnóstico clínico."
+        },
+        "treatment": [
+            {
+                "medication": "Ciprofloxacino oftálmico",
+                "dose": "1 gota",
+                "frequency": "Cada 4 horas",
+                "duration": "7 días"
+            }
+        ]
+    },
+    {
+        "key": "orzuelo_externo",
+        "medical_classification": "Ophthalmology",
+        "current_condition": "Refiere aumento de volumen doloroso en párpado superior derecho de tres días de evolución.",
+        "diagnosis": "Orzuelo externo del párpado superior derecho.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 90],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [105, 124],
+            "blood_pressure_diastolic": [65, 80],
+            "heart_rate": [70, 90],
+            "respiratory_rate": [14, 18],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [97, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin alteraciones.",
+            "head_neck": "Párpado superior derecho con nódulo eritematoso y doloroso a la palpación en el borde ciliar, sin compromiso de la agudeza visual.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios; diagnóstico clínico."
+        },
+        "treatment": [
+            {
+                "medication": "Compresas tibias",
+                "dose": "No aplica",
+                "frequency": "Cada 8 horas",
+                "duration": "5 días"
+            },
+            {
+                "medication": "Cloranfenicol oftálmico",
+                "dose": "1 gota",
+                "frequency": "Cada 8 horas",
+                "duration": "5 días"
+            }
+        ]
+    },
+    {
+        "key": "hipertension_arterial_descontrolada",
+        "medical_classification": "Cardiology",
+        "current_condition": "Paciente con antecedente de hipertensión arterial con apego irregular al tratamiento, refiere cefalea occipital y mareo de dos días de evolución.",
+        "diagnosis": "Hipertensión arterial sistémica descontrolada.",
+        "condition": "Fair",
+        "prognosis": "Fair",
+        "vital_signs": {
+            "weight": [65, 105],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [155, 178],
+            "blood_pressure_diastolic": [95, 112],
+            "heart_rate": [82, 104],
+            "respiratory_rate": [16, 21],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [95, 98],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin déficit motor ni sensitivo, sin datos de focalización.",
+            "head_neck": "Sin ingurgitación yugular, sin soplos carotídeos.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos con S4 audible, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación, sin soplos abdominales.",
+            "extremities": "Sin edema, pulsos periféricos simétricos.",
+            "cabinet_laboratory": "Electrocardiograma con hipertrofia ventricular izquierda leve; función renal dentro de parámetros normales."
+        },
+        "treatment": [
+            {
+                "medication": "Losartán",
+                "dose": "50 mg",
+                "frequency": "Cada 24 horas",
+                "duration": "Tratamiento continuo"
+            },
+            {
+                "medication": "Amlodipino",
+                "dose": "5 mg",
+                "frequency": "Cada 24 horas",
+                "duration": "Tratamiento continuo"
+            }
+        ]
+    },
+    {
+        "key": "crisis_hipertensiva_urgencia",
+        "medical_classification": "Cardiology",
+        "current_condition": "Refiere cefalea intensa, visión borrosa y náusea de inicio súbito, con antecedente de hipertensión mal controlada.",
+        "diagnosis": "Urgencia hipertensiva sin daño a órgano blanco documentado.",
+        "condition": "Serious",
+        "prognosis": "Guarded",
+        "vital_signs": {
+            "weight": [68, 108],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [188, 218],
+            "blood_pressure_diastolic": [112, 128],
+            "heart_rate": [92, 115],
+            "respiratory_rate": [18, 24],
+            "temperature": [36.3, 37.1],
+            "oxygen_saturation": [94, 98],
+            "glasgow": [14, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin déficit motor focal, refiere cefalea pulsátil intensa.",
+            "head_neck": "Fondo de ojo con estrechamiento arteriolar leve, sin papiledema.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios, sin datos de congestión.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin edema, pulsos periféricos presentes y simétricos.",
+            "cabinet_laboratory": "Electrocardiograma sin datos de isquemia aguda; química sanguínea con función renal conservada."
+        },
+        "treatment": [
+            {
+                "medication": "Captopril",
+                "dose": "25 mg",
+                "frequency": "Dosis inicial sublingual",
+                "duration": "Según respuesta"
+            },
+            {
+                "medication": "Losartán",
+                "dose": "50 mg",
+                "frequency": "Cada 24 horas",
+                "duration": "Tratamiento continuo"
+            }
+        ],
+        "regulation": {
+            "transfer_type": "Institute",
+            "clinic": "Hospital General de Occidente"
+        }
+    },
+    {
+        "key": "dermatitis_contacto",
+        "medical_classification": "Dermatology",
+        "current_condition": "Presenta lesiones cutáneas pruriginosas en antebrazo tras contacto con producto de limpieza, de un día de evolución.",
+        "diagnosis": "Dermatitis de contacto irritativa en antebrazo derecho.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 90],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [105, 122],
+            "blood_pressure_diastolic": [65, 80],
+            "heart_rate": [70, 90],
+            "respiratory_rate": [14, 18],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [97, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin alteraciones.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Placa eritematosa con bordes bien definidos en cara anterior de antebrazo derecho, sin vesículas ni datos de sobreinfección.",
+            "cabinet_laboratory": "No se solicitan estudios; diagnóstico clínico."
+        },
+        "treatment": [
+            { "medication": "Hidrocortisona crema", "dose": "1%", "frequency": "Cada 12 horas", "duration": "7 días" },
+            { "medication": "Loratadina", "dose": "10 mg", "frequency": "Cada 24 horas", "duration": "5 días" }
+        ]
+    },
+    {
+        "key": "celulitis_miembro_inferior",
+        "medical_classification": "Dermatology",
+        "current_condition": "Refiere aumento de volumen, calor y enrojecimiento en pierna izquierda de tres días de evolución, con fiebre asociada.",
+        "diagnosis": "Celulitis de miembro pélvico izquierdo.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [60, 100],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [108, 128],
+            "blood_pressure_diastolic": [68, 84],
+            "heart_rate": [88, 108],
+            "respiratory_rate": [16, 21],
+            "temperature": [37.6, 38.7],
+            "oxygen_saturation": [95, 98],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin alteraciones.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos taquicárdicos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Pierna izquierda con eritema, edema y aumento de temperatura local en cara anterior, límites imprecisos, dolor a la palpación, sin fluctuación.",
+            "cabinet_laboratory": "Biometría hemática con leucocitosis leve; ultrasonido de tejidos blandos sin colección."
+        },
+        "treatment": [
+            { "medication": "Cefalexina", "dose": "500 mg", "frequency": "Cada 6 horas", "duration": "7 días" },
+            {
+                "medication": "Paracetamol",
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas si fiebre",
+                "duration": "5 días"
+            }
+        ]
+    },
+    {
+        "key": "migrana_con_aura",
+        "medical_classification": "Neurology",
+        "current_condition": "Refiere cefalea pulsátil hemicraneal derecha precedida de escotomas centelleantes, con fotofobia y náusea asociadas.",
+        "diagnosis": "Migraña con aura visual.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [50, 88],
+            "height": [1.52, 1.82],
+            "blood_pressure_systolic": [108, 132],
+            "blood_pressure_diastolic": [68, 86],
+            "heart_rate": [70, 94],
+            "respiratory_rate": [14, 19],
+            "temperature": [36.2, 36.9],
+            "oxygen_saturation": [97, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin déficit motor ni sensitivo, fondo de ojo sin alteraciones, molestia con la luz ambiental.",
+            "head_neck": "Sin rigidez de nuca, sin datos meníngeos.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios de imagen por presentación típica y exploración neurológica normal."
+        },
+        "treatment": [
+            {
+                "medication": "Sumatriptán",
+                "dose": "50 mg",
+                "frequency": "Dosis única, repetir si persiste tras 2 horas",
+                "duration": "Según necesidad"
+            },
+            {
+                "medication": "Metoclopramida",
+                "dose": "10 mg",
+                "frequency": "Cada 8 horas si náusea",
+                "duration": "2 días"
+            }
+        ]
+    },
+    {
+        "key": "cefalea_tension",
+        "medical_classification": "Neurology",
+        "current_condition": "Presenta cefalea opresiva bilateral de tres días de evolución, relacionada con estrés laboral, sin síntomas neurológicos asociados.",
+        "diagnosis": "Cefalea tensional episódica.",
+        "condition": "Good",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 92],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [108, 128],
+            "blood_pressure_diastolic": [68, 84],
+            "heart_rate": [72, 94],
+            "respiratory_rate": [14, 19],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [97, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin déficit motor ni sensitivo, dolor a la palpación de musculatura pericraneal.",
+            "head_neck": "Sin rigidez de nuca, sin adenopatías.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "No se solicitan estudios; exploración neurológica normal."
+        },
+        "treatment": [
+            {
+                "medication": "Paracetamol",
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas si dolor",
+                "duration": "3 días"
+            }
+        ]
+    },
+    {
+        "key": "vertigo_periferico_bppv",
+        "medical_classification": "Neurology",
+        "current_condition": "Refiere episodios breves de vértigo rotatorio al girar la cabeza, con náusea asociada, de dos días de evolución.",
+        "diagnosis": "Vértigo posicional paroxístico benigno.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 90],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [112, 138],
+            "blood_pressure_diastolic": [72, 90],
+            "heart_rate": [78, 100],
+            "respiratory_rate": [15, 20],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin déficit motor ni sensitivo, maniobra de Dix-Hallpike positiva con nistagmo rotatorio transitorio.",
+            "head_neck": "Sin rigidez de nuca, otoscopia sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones, marcha con leve inestabilidad transitoria.",
+            "cabinet_laboratory": "No se solicitan estudios de imagen; presentación compatible con causa periférica."
+        },
+        "treatment": [
+            { "medication": "Betahistina", "dose": "24 mg", "frequency": "Cada 12 horas", "duration": "10 días" },
+            {
+                "medication": "Dimenhidrinato",
+                "dose": "50 mg",
+                "frequency": "Cada 8 horas si náusea",
+                "duration": "3 días"
+            }
+        ]
+    },
+    {
+        "key": "diabetes_mellitus2_descompensada",
+        "medical_classification": "Endocrinology",
+        "current_condition": "Paciente con diagnóstico previo de diabetes tipo 2 refiere poliuria, polidipsia y fatiga de una semana de evolución, con apego irregular al tratamiento.",
+        "diagnosis": "Diabetes mellitus tipo 2 descompensada.",
+        "condition": "Fair",
+        "prognosis": "Fair",
+        "vital_signs": {
+            "weight": [70, 110],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [115, 142],
+            "blood_pressure_diastolic": [72, 92],
+            "heart_rate": [88, 112],
+            "respiratory_rate": [17, 23],
+            "temperature": [36.4, 37.3],
+            "oxygen_saturation": [95, 98],
+            "glasgow": [15, 15],
+            "glucose": [280, 470]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, sin déficit motor ni sensitivo, refiere fatiga generalizada.",
+            "head_neck": "Mucosas orales secas.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos taquicárdicos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin edema, sensibilidad distal conservada, pulsos pedios presentes.",
+            "cabinet_laboratory": "Glucemia capilar elevada; hemoglobina glucosilada por arriba de meta, sin cetonas en orina."
+        },
+        "treatment": [
+            {
+                "medication": "Metformina",
+                "dose": "850 mg",
+                "frequency": "Cada 12 horas",
+                "duration": "Tratamiento continuo"
+            },
+            {
+                "medication": "Insulina glargina",
+                "dose": "10 UI",
+                "frequency": "Cada 24 horas",
+                "duration": "Tratamiento continuo"
+            }
+        ]
+    },
+    {
+        "key": "hipotiroidismo_no_controlado",
+        "medical_classification": "Endocrinology",
+        "current_condition": "Refiere fatiga, intolerancia al frío y aumento de peso progresivo en los últimos meses, con antecedente de hipotiroidismo en tratamiento irregular.",
+        "diagnosis": "Hipotiroidismo primario no controlado.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [65, 105],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [100, 122],
+            "blood_pressure_diastolic": [64, 80],
+            "heart_rate": [52, 68],
+            "respiratory_rate": [12, 17],
+            "temperature": [35.7, 36.5],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, bradipsiquia leve, reflejos osteotendinosos con relajación enlentecida.",
+            "head_neck": "Piel seca, sin bocio palpable.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos bradicárdicos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Edema leve pretibial bilateral, piel seca y fría al tacto.",
+            "cabinet_laboratory": "TSH elevada con T4 libre por debajo de rango normal."
+        },
+        "treatment": [
+            {
+                "medication": "Levotiroxina",
+                "dose": "75 mcg",
+                "frequency": "Cada 24 horas en ayuno",
+                "duration": "Tratamiento continuo"
+            }
+        ]
+    },
+    {
+        "key": "trastorno_ansiedad_generalizada",
+        "medical_classification": "Psychiatry",
+        "current_condition": "Refiere preocupación excesiva, insomnio y tensión muscular de varias semanas de evolución, que interfiere con sus actividades diarias.",
+        "diagnosis": "Trastorno de ansiedad generalizada.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 92],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [118, 140],
+            "blood_pressure_diastolic": [75, 90],
+            "heart_rate": [88, 110],
+            "respiratory_rate": [18, 24],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, afecto ansioso, sin déficit motor ni sensitivo, sin ideación de daño a sí mismo o a terceros.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos taquicárdicos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Temblor fino distal leve, sin otras alteraciones.",
+            "cabinet_laboratory": "Perfil tiroideo dentro de límites normales, descartando causa orgánica."
+        },
+        "treatment": [
+            {
+                "medication": "Sertralina",
+                "dose": "50 mg",
+                "frequency": "Cada 24 horas",
+                "duration": "Tratamiento continuo"
+            },
+            {
+                "medication": "Clonazepam",
+                "dose": "0.5 mg",
+                "frequency": "Cada 24 horas por la noche",
+                "duration": "14 días"
+            }
+        ]
+    },
+    {
+        "key": "episodio_depresivo_moderado",
+        "medical_classification": "Psychiatry",
+        "current_condition": "Refiere ánimo bajo persistente, anhedonia y alteraciones del sueño de más de un mes de evolución, con afectación de su desempeño laboral.",
+        "diagnosis": "Episodio depresivo moderado.",
+        "condition": "Fair",
+        "prognosis": "Good",
+        "vital_signs": {
+            "weight": [55, 92],
+            "height": [1.55, 1.85],
+            "blood_pressure_systolic": [105, 125],
+            "blood_pressure_diastolic": [68, 82],
+            "heart_rate": [68, 90],
+            "respiratory_rate": [14, 19],
+            "temperature": [36.3, 37.0],
+            "oxygen_saturation": [96, 99],
+            "glasgow": [15, 15]
+        },
+        "physical_examination": {
+            "neurological": "Alerta, orientado, afecto disminuido, discurso enlentecido, sin ideación suicida activa ni déficit motor.",
+            "head_neck": "Sin alteraciones.",
+            "thorax_cardiopulmonary": "Ruidos cardiacos rítmicos, campos pulmonares limpios.",
+            "abdomen": "Blando, depresible, sin dolor a la palpación.",
+            "extremities": "Sin alteraciones.",
+            "cabinet_laboratory": "Perfil tiroideo y biometría hemática dentro de límites normales, descartando causa orgánica."
+        },
+        "treatment": [
+            {
+                "medication": "Fluoxetina",
+                "dose": "20 mg",
+                "frequency": "Cada 24 horas",
+                "duration": "Tratamiento continuo"
+            }
+        ]
+    }
+]
