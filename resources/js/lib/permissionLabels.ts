@@ -12,6 +12,7 @@ export const RESOURCE_LABELS: Record<string, string> = {
     patients: 'Pacientes',
     consultations: 'Consultas',
     roles: 'Roles',
+    inventory: 'Inventario',
 };
 
 /** Label for the action suffix (segment after the dot) of a `resource.action` permission. */

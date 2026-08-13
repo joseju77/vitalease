@@ -15,6 +15,10 @@ enum Permission: string
     case ConsultationsUpdate = 'consultations.update';
     case ConsultationsDelete = 'consultations.delete';
     case RolesManage = 'roles.manage';
+    case InventoryView = 'inventory.view';
+    case InventoryCreate = 'inventory.create';
+    case InventoryUpdate = 'inventory.update';
+    case InventoryDelete = 'inventory.delete';
 
     /**
      * @return list<string>

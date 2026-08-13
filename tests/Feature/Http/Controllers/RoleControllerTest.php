@@ -198,7 +198,7 @@ describe('authorization boundary on roles.* routes', function () {
 });
 
 describe('seeding', function () {
-    it('seeds exactly the 11-permission catalog and exactly one permissionless super-admin role', function () {
+    it('seeds exactly the full permission catalog and exactly one permissionless super-admin role', function () {
         $this->seed(RolePermissionSeeder::class);
 
         expect(PermissionModel::query()->pluck('name')->all())
