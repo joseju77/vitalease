@@ -63,4 +63,12 @@ class Medication extends Model
     {
         return $this->hasMany(InventoryMovement::class);
     }
+
+    /**
+     * @return HasMany<MedicalConsultationTreatment, $this>
+     */
+    public function treatments(): HasMany
+    {
+        return $this->hasMany(MedicalConsultationTreatment::class);
+    }
 }

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
@@ -102,5 +103,13 @@ class MedicalConsultation extends Model
     public function regulation(): HasOne
     {
         return $this->hasOne(MedicalRegulation::class);
+    }
+
+    /**
+     * @return HasMany<MedicalConsultationTreatment, $this>
+     */
+    public function treatments(): HasMany
+    {
+        return $this->hasMany(MedicalConsultationTreatment::class);
     }
 }
