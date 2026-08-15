@@ -35,7 +35,6 @@ class MedicalConsultationFactory extends Factory
             'diagnosis' => fake()->sentence(),
             'condition' => fake()->randomElement(MedicalState::cases()),
             'prognosis' => fake()->randomElement(MedicalState::cases()),
-            'treatment' => [],
             'medical_classification' => fake()->randomElement(MedicalClassification::cases()),
             'physician_id' => User::factory(),
             'patient_id' => Patient::factory(),

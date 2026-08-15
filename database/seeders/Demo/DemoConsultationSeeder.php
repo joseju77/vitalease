@@ -178,12 +178,15 @@ class DemoConsultationSeeder extends Seeder
      */
     private function createConsultation(array $case, int $patientId, User $physician, Generator $faker, array $people, Carbon $at, Carbon $now): void
     {
+        // Treatment lines are seeded from the medication catalog in a later
+        // stage (see ADR 0007 / Stage 06a Blocks D-E); this interim seeder
+        // still creates consultations with zero treatment lines so the
+        // ledger stays consistent.
         $consultation = MedicalConsultation::query()->create([
             'current_condition' => $case['current_condition'],
             'diagnosis' => $case['diagnosis'],
             'condition' => $this->resolveEnumCase(MedicalState::class, $case['condition']),
             'prognosis' => $this->resolveEnumCase(MedicalState::class, $case['prognosis']),
-            'treatment' => $case['treatment'],
             'medical_classification' => $this->resolveEnumCase(MedicalClassification::class, $case['medical_classification']),
             'physician_id' => $physician->id,
             'patient_id' => $patientId,

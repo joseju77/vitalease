@@ -19,7 +19,6 @@ use Illuminate\Support\Str;
     'diagnosis',
     'condition',
     'prognosis',
-    'treatment',
     'medical_classification',
     'physician_id',
     'patient_id',
@@ -48,7 +47,6 @@ class MedicalConsultation extends Model
             'condition' => MedicalState::class,
             'prognosis' => MedicalState::class,
             'medical_classification' => MedicalClassification::class,
-            'treatment' => 'array',
             'created_at' => 'immutable_datetime',
             'updated_at' => 'immutable_datetime',
         ];
