@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\MedicalConsultationController;
+use App\Http\Controllers\MedicationController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
@@ -52,6 +54,31 @@ Route::middleware('auth')
         Route::get('/consultations/{consultation}/edit', 'edit')->name('edit')->middleware('can:update,consultation');
         Route::put('/consultations/{consultation}', 'update')->name('update')->middleware('can:update,consultation');
         Route::delete('/consultations/{consultation}', 'destroy')->name('destroy')->middleware('can:delete,consultation');
+    });
+
+Route::middleware('auth')
+    ->controller(MedicationController::class)
+    ->name('inventory.')
+    ->group(function () {
+        Route::get('/inventory', 'index')->name('index')->middleware('can:viewAny,App\Models\Medication');
+        Route::post('/inventory/medications', 'store')->name('store')->middleware('can:create,App\Models\Medication');
+        Route::get('/inventory/medications/{medication}', 'show')->name('show')->middleware('can:view,medication');
+        Route::patch('/inventory/medications/{medication}', 'update')->name('update')->middleware('can:update,medication');
+        Route::patch('/inventory/medications/{medication}/activate', 'activate')->name('activate')->middleware('can:update,medication');
+        Route::patch('/inventory/medications/{medication}/deactivate', 'deactivate')->name('deactivate')->middleware('can:update,medication');
+        Route::delete('/inventory/medications/{medication}', 'destroy')->name('destroy')->middleware('can:delete,medication');
+    });
+
+Route::middleware('auth')
+    ->controller(InventoryMovementController::class)
+    ->name('inventory.')
+    ->group(function () {
+        Route::post('/inventory/medications/{medication}/entries', 'storeEntry')
+            ->name('entries.store')
+            ->middleware('can:recordEntry,medication');
+        Route::post('/inventory/medications/{medication}/adjustments', 'storeAdjustment')
+            ->name('adjustments.store')
+            ->middleware('can:recordAdjustment,medication');
     });
 
 Route::middleware('auth')

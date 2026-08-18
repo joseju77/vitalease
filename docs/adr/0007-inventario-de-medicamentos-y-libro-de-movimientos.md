@@ -46,6 +46,16 @@ explican, y que dos consultas simultáneas entreguen el mismo medicamento y deje
    activarlos o desactivarlos y registrar ajustes; y `delete`, eliminar un medicamento solo mientras no tenga
    movimientos ni líneas de tratamiento. Un ajuste siempre exige una nota que explique el motivo. El único rol
    sembrado sigue siendo `super-admin`, con acceso total mediante `Gate::before()`.
+8. **Búsqueda de medicamentos con Scout y Meilisearch.** Igual que ADR-0006 hizo con `Patient`, el catálogo de
+   medicamentos usa `Laravel\Scout\Searchable`. `Medication::toSearchableArray()` indexa `id`, `name`,
+   `presentation`, `concentration`, `is_active` e `is_low_stock`; este último es un valor calculado
+   (`current_stock <= minimum_stock`) porque Meilisearch no puede comparar dos atributos de un mismo documento
+   entre sí dentro de un filtro. `name`, `presentation` y `concentration` quedan como atributos de búsqueda;
+   `is_active` e `is_low_stock`, como atributos filtrables. El listado de medicamentos consulta Postgres
+   directamente cuando no hay término de búsqueda, y usa `Medication::search()` solo cuando el usuario escribe uno,
+   aplicando el mismo filtro de stock bajo en ambos caminos. Cada cambio de stock reindexa el medicamento después
+   del commit, igual que ADR-0006 hace con los pacientes; la siembra de datos de demostración importa el catálogo
+   al final del proceso (`scout:import`), después de terminar de registrar movimientos.
 
 ## Alternativas consideradas
 
@@ -74,6 +84,8 @@ explican, y que dos consultas simultáneas entreguen el mismo medicamento y deje
   `medications.current_stock` por otro camino rompería la consistencia del libro.
 - Los bloqueos por fila serializan las consultas que entregan los mismos medicamentos al mismo tiempo.
 - Al eliminar una consulta, sus movimientos quedan sin referencia navegable, solo con la copia del código.
+- El catálogo de medicamentos suma un segundo índice de Meilisearch junto al de pacientes (ADR-0006); el catálogo
+  existente debe reindexarse (`scout:import`) al aplicar esta etapa, igual que ya ocurre con `Patient`.
 
 ### Compromisos aceptados
 

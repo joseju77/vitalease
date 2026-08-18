@@ -19,6 +19,7 @@ setup: up ## First-time setup: install dependencies, generate app key, run migra
 	@docker compose exec -T -u www-data laravel php artisan migrate
 	@docker compose exec -T -u www-data laravel php artisan scout:sync-index-settings
 	@docker compose exec -T -u www-data laravel php artisan scout:import "App\Models\Patient"
+	@docker compose exec -T -u www-data laravel php artisan scout:import "App\Models\Medication"
 
 # --- Build, Start, Stop, Restart, Recreate ---
 build: ## Build docker containers

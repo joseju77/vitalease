@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Medication;
 use App\Models\Patient;
 
 return [
@@ -151,6 +152,20 @@ return [
                 ],
                 'filterableAttributes' => [],
                 'sortableAttributes' => [],
+            ],
+            Medication::class => [
+                'searchableAttributes' => [
+                    'name',
+                    'presentation',
+                    'concentration',
+                ],
+                'filterableAttributes' => [
+                    'is_active',
+                    'is_low_stock',
+                ],
+                'sortableAttributes' => [
+                    'name',
+                ],
             ],
         ],
         'model-settings' => [

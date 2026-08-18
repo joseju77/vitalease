@@ -61,6 +61,7 @@ class DemoSeedCommand extends Command
 
         $this->call('scout:sync-index-settings');
         $this->call('scout:import', ['model' => 'App\Models\Patient']);
+        $this->call('scout:import', ['model' => 'App\Models\Medication']);
 
         $this->components->info("Seeded {$users} demo users, {$patients} demo patients and {$consultations} demo consultations.");
         $this->components->twoColumnDetail('Demo physician login', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL);
