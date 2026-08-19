@@ -1,10 +1,12 @@
 <?php
 
+use App\Enums\Permission;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\MedicalConsultationController;
 use App\Http\Controllers\MedicationController;
+use App\Http\Controllers\MedicationDemandProjectionController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
@@ -99,3 +101,7 @@ Route::middleware('auth')
             ->name('consultations.latest')
             ->middleware('can:viewAny,App\Models\MedicalConsultation');
     });
+
+Route::get('/reports/medication-demand', MedicationDemandProjectionController::class)
+    ->middleware(['auth', 'can:'.Permission::ReportsGenerate->value])
+    ->name('reports.medication-demand');
