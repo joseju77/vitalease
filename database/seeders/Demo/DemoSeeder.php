@@ -4,6 +4,7 @@ namespace Database\Seeders\Demo;
 
 use App\Models\Enrollment;
 use App\Models\FamilyMedicalUnit;
+use App\Models\Medication;
 use App\Models\Neighborhood;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -15,8 +16,11 @@ class DemoSeeder extends Seeder
     /**
      * Orchestrate realistic demo data for local/staging demonstrations:
      * `$users` users covering every role (including the 3 fixed accounts),
-     * `$patients` realistic patients, and `$consultations` realistic
-     * medical consultations spread over the last 90 days.
+     * `$patients` realistic patients, a demo medication catalog with its
+     * starting stock, and `$consultations` realistic medical consultations
+     * (with treatment lines dispensing that stock) spread over the last
+     * {@see DemoConsultationSeeder::LOOKBACK_DAYS}
+     * days.
      *
      * Not idempotent by design: run once against a fresh database, after
      * the catalog seeders (RolePermissionSeeder, LocationSeeder,
@@ -30,6 +34,7 @@ class DemoSeeder extends Seeder
 
         $this->call(DemoUserSeeder::class, parameters: ['users' => $users]);
         $this->call(DemoPatientSeeder::class, parameters: ['count' => $patients]);
+        $this->call(DemoMedicationSeeder::class);
         $this->call(DemoConsultationSeeder::class, parameters: ['consultations' => $consultations]);
     }
 
@@ -55,6 +60,10 @@ class DemoSeeder extends Seeder
 
         if (User::query()->where('email', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL)->exists()) {
             throw new RuntimeException('Demo data already appears to be seeded: the demo physician account already exists.');
+        }
+
+        if (Medication::query()->exists()) {
+            throw new RuntimeException('Demo data already appears to be seeded: medications already exist.');
         }
     }
 }

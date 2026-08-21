@@ -1,0 +1,353 @@
+[
+    {
+        "key": "diclofenaco",
+        "name": "Diclofenaco",
+        "presentation": "Tableta",
+        "concentration": "50 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "paracetamol",
+        "name": "Paracetamol",
+        "presentation": "Tableta",
+        "concentration": "500 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 150,
+        "target_stock": 600
+    },
+    {
+        "key": "naproxeno",
+        "name": "Naproxeno",
+        "presentation": "Tableta",
+        "concentration": "250 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 40,
+        "target_stock": 160
+    },
+    {
+        "key": "solucion_hartmann",
+        "name": "Solución Hartmann",
+        "presentation": "Solución para infusión IV",
+        "concentration": "1000 mL",
+        "dispensing_unit": "bolsa",
+        "minimum_stock": 40,
+        "target_stock": 160
+    },
+    {
+        "key": "ketorolaco",
+        "name": "Ketorolaco",
+        "presentation": "Solución inyectable",
+        "concentration": "30 mg/mL",
+        "dispensing_unit": "ampolleta",
+        "minimum_stock": 40,
+        "target_stock": 160
+    },
+    {
+        "key": "metocarbamol",
+        "name": "Metocarbamol",
+        "presentation": "Tableta",
+        "concentration": "750 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "amoxicilina",
+        "name": "Amoxicilina",
+        "presentation": "Cápsula",
+        "concentration": "500 mg",
+        "dispensing_unit": "cápsula",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "amoxicilina_acido_clavulanico",
+        "name": "Amoxicilina/Ácido clavulánico",
+        "presentation": "Tableta",
+        "concentration": "875/125 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 40,
+        "target_stock": 160
+    },
+    {
+        "key": "loratadina",
+        "name": "Loratadina",
+        "presentation": "Tableta",
+        "concentration": "10 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 55,
+        "target_stock": 220
+    },
+    {
+        "key": "ambroxol",
+        "name": "Ambroxol",
+        "presentation": "Tableta",
+        "concentration": "30 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "salbutamol",
+        "name": "Salbutamol",
+        "presentation": "Inhalador de dosis medida",
+        "concentration": "100 mcg/disparo",
+        "dispensing_unit": "inhalador",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "prednisona",
+        "name": "Prednisona",
+        "presentation": "Tableta",
+        "concentration": "50 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "ceftriaxona",
+        "name": "Ceftriaxona",
+        "presentation": "Solución inyectable",
+        "concentration": "1 g",
+        "dispensing_unit": "frasco ámpula",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "vida_suero_oral",
+        "name": "Vida Suero Oral",
+        "presentation": "Sobre para solución oral",
+        "concentration": "Sales de rehidratación oral",
+        "dispensing_unit": "sobre",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "butilhioscina",
+        "name": "Butilhioscina",
+        "presentation": "Tableta",
+        "concentration": "10 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 55,
+        "target_stock": 220
+    },
+    {
+        "key": "omeprazol",
+        "name": "Omeprazol",
+        "presentation": "Cápsula",
+        "concentration": "20 mg",
+        "dispensing_unit": "cápsula",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "sucralfato",
+        "name": "Sucralfato",
+        "presentation": "Tableta",
+        "concentration": "1 g",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "nitrofurantoina",
+        "name": "Nitrofurantoína",
+        "presentation": "Tableta",
+        "concentration": "100 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "fluconazol",
+        "name": "Fluconazol",
+        "presentation": "Cápsula",
+        "concentration": "150 mg",
+        "dispensing_unit": "cápsula",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "clotrimazol_ovulos",
+        "name": "Clotrimazol",
+        "presentation": "Óvulo vaginal",
+        "concentration": "500 mg",
+        "dispensing_unit": "óvulo",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "acido_mefenamico",
+        "name": "Ácido mefenámico",
+        "presentation": "Tableta",
+        "concentration": "500 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "ciprofloxacino_oftalmico",
+        "name": "Ciprofloxacino oftálmico",
+        "presentation": "Solución oftálmica",
+        "concentration": "0.3%",
+        "dispensing_unit": "frasco gotero",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "compresas_tibias",
+        "name": "Compresas térmicas reutilizables",
+        "presentation": "Compresa reutilizable",
+        "concentration": "N/A",
+        "dispensing_unit": "pieza",
+        "minimum_stock": 20,
+        "target_stock": 80
+    },
+    {
+        "key": "cloranfenicol_oftalmico",
+        "name": "Cloranfenicol oftálmico",
+        "presentation": "Solución oftálmica",
+        "concentration": "0.5%",
+        "dispensing_unit": "frasco gotero",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "losartan",
+        "name": "Losartán",
+        "presentation": "Tableta",
+        "concentration": "50 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 40,
+        "target_stock": 160
+    },
+    {
+        "key": "amlodipino",
+        "name": "Amlodipino",
+        "presentation": "Tableta",
+        "concentration": "5 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "captopril",
+        "name": "Captopril",
+        "presentation": "Tableta",
+        "concentration": "25 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "hidrocortisona_crema",
+        "name": "Hidrocortisona",
+        "presentation": "Crema tópica",
+        "concentration": "1%",
+        "dispensing_unit": "tubo",
+        "minimum_stock": 20,
+        "target_stock": 80
+    },
+    {
+        "key": "cefalexina",
+        "name": "Cefalexina",
+        "presentation": "Cápsula",
+        "concentration": "500 mg",
+        "dispensing_unit": "cápsula",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "sumatriptan",
+        "name": "Sumatriptán",
+        "presentation": "Tableta",
+        "concentration": "50 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "metoclopramida",
+        "name": "Metoclopramida",
+        "presentation": "Tableta",
+        "concentration": "10 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "betahistina",
+        "name": "Betahistina",
+        "presentation": "Tableta",
+        "concentration": "24 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "dimenhidrinato",
+        "name": "Dimenhidrinato",
+        "presentation": "Tableta",
+        "concentration": "50 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "metformina",
+        "name": "Metformina",
+        "presentation": "Tableta",
+        "concentration": "850 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "insulina_glargina",
+        "name": "Insulina glargina",
+        "presentation": "Solución inyectable en pluma precargada",
+        "concentration": "100 UI/mL",
+        "dispensing_unit": "pluma",
+        "minimum_stock": 20,
+        "target_stock": 80
+    },
+    {
+        "key": "levotiroxina",
+        "name": "Levotiroxina",
+        "presentation": "Tableta",
+        "concentration": "75 mcg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "sertralina",
+        "name": "Sertralina",
+        "presentation": "Tableta",
+        "concentration": "50 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "clonazepam",
+        "name": "Clonazepam",
+        "presentation": "Tableta",
+        "concentration": "0.5 mg",
+        "dispensing_unit": "tableta",
+        "minimum_stock": 25,
+        "target_stock": 100
+    },
+    {
+        "key": "fluoxetina",
+        "name": "Fluoxetina",
+        "presentation": "Cápsula",
+        "concentration": "20 mg",
+        "dispensing_unit": "cápsula",
+        "minimum_stock": 25,
+        "target_stock": 100
+    }
+]

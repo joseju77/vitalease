@@ -38,9 +38,11 @@ class DemoConsultationSeeder extends Seeder
     private const int WEEKDAY_SHARE_PERCENT = 90;
 
     /**
-     * How many days back from today consultations may be dated.
+     * How many days back from today consultations may be dated. Public so
+     * {@see DemoMedicationSeeder} can anchor its
+     * initial stock entries before the earliest possible consultation.
      */
-    private const int LOOKBACK_DAYS = 90;
+    public const int LOOKBACK_DAYS = 90;
 
     /**
      * Earliest and latest attention hour, in `America/Mexico_City`.
