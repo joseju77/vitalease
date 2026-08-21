@@ -2,12 +2,16 @@
 
 namespace Database\Seeders\Demo;
 
+use App\Enums\InventoryMovementType;
 use App\Enums\MedicalClassification;
 use App\Enums\MedicalState;
 use App\Enums\TransferType;
 use App\Models\MedicalConsultation;
+use App\Models\Medication;
 use App\Models\Patient;
 use App\Models\User;
+use App\Services\Inventory\StockLedger;
+use App\Services\Inventory\TreatmentDispensation;
 use BackedEnum;
 use Database\Seeders\Concerns\LoadsCatalog;
 use Faker\Generator;
@@ -20,6 +24,11 @@ use JsonException;
 class DemoConsultationSeeder extends Seeder
 {
     use LoadsCatalog;
+
+    public function __construct(
+        private readonly TreatmentDispensation $treatmentDispensation,
+        private readonly StockLedger $stockLedger,
+    ) {}
 
     /**
      * Default number of demo consultations to seed.
@@ -70,9 +79,11 @@ class DemoConsultationSeeder extends Seeder
      * `MedicalConsultationCode::next()` generates a code whose date
      * segment matches the consultation's actual Mexico City calendar day.
      *
-     * Requires `DemoUserSeeder` and `DemoPatientSeeder` to have already
-     * run: consultations reference the demo physician, the other seeded
-     * physicians (role `Médico`), and the seeded patients.
+     * Requires `DemoUserSeeder`, `DemoPatientSeeder`, and
+     * `DemoMedicationSeeder` to have already run: consultations reference
+     * the demo physician, the other seeded physicians (role `Médico`), the
+     * seeded patients, and treatment lines dispense stock from the seeded
+     * medication catalog via {@see TreatmentDispensation}.
      *
      * @throws JsonException
      */
@@ -89,6 +100,7 @@ class DemoConsultationSeeder extends Seeder
             fn (Patient $patient): string => $patient->sex_at_birth->name
         );
         $allPatients = Patient::query()->pluck('id');
+        $medicationIndex = $this->buildMedicationIndex();
 
         $now = Carbon::now('America/Mexico_City');
         $datetimes = $this->generateDatetimes($consultations, $faker, $now);
@@ -105,12 +117,48 @@ class DemoConsultationSeeder extends Seeder
                 ? $demoPhysician
                 : $otherPhysicians->random();
 
-            Carbon::withTestNow($at, function () use ($case, $patientId, $physician, $faker, $people, $at, $now): void {
-                DB::transaction(function () use ($case, $patientId, $physician, $faker, $people, $at, $now): void {
-                    $this->createConsultation($case, $patientId, $physician, $faker, $people, $at, $now);
+            Carbon::withTestNow($at, function () use ($case, $patientId, $physician, $faker, $people, $at, $now, $medicationIndex): void {
+                DB::transaction(function () use ($case, $patientId, $physician, $faker, $people, $at, $now, $medicationIndex): void {
+                    $this->createConsultation($case, $patientId, $physician, $faker, $people, $at, $now, $medicationIndex);
                 });
             });
         }
+    }
+
+    /**
+     * Map each catalog medication key to its database id, uuid, and target
+     * stock level, so treatment lines can be resolved and topped up without
+     * repeated per-line lookups.
+     *
+     * @return array<string, array{id: int, uuid: string, target_stock: int}>
+     *
+     * @throws JsonException
+     */
+    private function buildMedicationIndex(): array
+    {
+        $catalog = $this->loadCatalog('demo/medications.json');
+        $medications = Medication::query()
+            ->whereIn('name', array_column($catalog, 'name'))
+            ->get(['id', 'uuid', 'name'])
+            ->keyBy('name');
+
+        $index = [];
+
+        foreach ($catalog as $entry) {
+            $medication = $medications->get($entry['name']);
+
+            if ($medication === null) {
+                continue;
+            }
+
+            $index[$entry['key']] = [
+                'id' => $medication->id,
+                'uuid' => $medication->uuid,
+                'target_stock' => $entry['target_stock'],
+            ];
+        }
+
+        return $index;
     }
 
     /**
@@ -173,17 +221,15 @@ class DemoConsultationSeeder extends Seeder
 
     /**
      * Create the consultation aggregate (vital signs, physical
-     * examination, and optional regulation) for one catalog case.
+     * examination, dispensed treatment, and optional regulation) for one
+     * catalog case.
      *
      * @param  array<string, mixed>  $case
      * @param  array<string, mixed>  $people
+     * @param  array<string, array{id: int, uuid: string, target_stock: int}>  $medicationIndex
      */
-    private function createConsultation(array $case, int $patientId, User $physician, Generator $faker, array $people, Carbon $at, Carbon $now): void
+    private function createConsultation(array $case, int $patientId, User $physician, Generator $faker, array $people, Carbon $at, Carbon $now, array $medicationIndex): void
     {
-        // Treatment lines are seeded from the medication catalog in a later
-        // stage (see ADR 0007 / Stage 06a Blocks D-E); this interim seeder
-        // still creates consultations with zero treatment lines so the
-        // ledger stays consistent.
         $consultation = MedicalConsultation::query()->create([
             'current_condition' => $case['current_condition'],
             'diagnosis' => $case['diagnosis'],
@@ -196,9 +242,75 @@ class DemoConsultationSeeder extends Seeder
 
         $consultation->vitalSigns()->create($this->sampleVitalSigns($case['vital_signs'], $faker));
         $consultation->physicalExamination()->create($case['physical_examination']);
+        $this->dispenseTreatment($case, $consultation, $physician, $medicationIndex);
 
         if (isset($case['regulation'])) {
             $this->createRegulation($consultation, $case['regulation'], $faker, $people, $at, $now);
+        }
+    }
+
+    /**
+     * Build the consultation's treatment lines from the case's catalog
+     * medication keys and dispense them through {@see TreatmentDispensation},
+     * topping up any medication that would otherwise run short first.
+     *
+     * @param  array<string, mixed>  $case
+     * @param  array<string, array{id: int, uuid: string, target_stock: int}>  $medicationIndex
+     */
+    private function dispenseTreatment(array $case, MedicalConsultation $consultation, User $physician, array $medicationIndex): void
+    {
+        $lines = [];
+
+        foreach ($case['treatment'] as $item) {
+            $medication = $medicationIndex[$item['medication_key']] ?? null;
+
+            if ($medication === null) {
+                continue;
+            }
+
+            $this->ensureSufficientStock($medication, $item['quantity_dispensed'], $physician);
+
+            $lines[] = [
+                'medication_uuid' => $medication['uuid'],
+                'quantity_dispensed' => $item['quantity_dispensed'],
+                'dose' => $item['dose'],
+                'frequency' => $item['frequency'],
+                'duration' => $item['duration'],
+            ];
+        }
+
+        if ($lines !== []) {
+            $this->treatmentDispensation->sync($consultation, $lines, $physician);
+        }
+    }
+
+    /**
+     * Top up a medication with an emergency `Entry` movement when its
+     * current stock would not cover an upcoming dispensation. A simple
+     * safety net for the occasional demand spike; the chronological
+     * monthly-restock loop keeps stock topped up under normal demand.
+     *
+     * @param  array{id: int, uuid: string, target_stock: int}  $medication
+     */
+    private function ensureSufficientStock(array $medication, int $quantityNeeded, User $actor): void
+    {
+        $current = Medication::query()->findOrFail($medication['id'])->current_stock;
+
+        if ($current >= $quantityNeeded) {
+            return;
+        }
+
+        $locked = $this->stockLedger->lock([$medication['id']])->get($medication['id']);
+        $topUp = max($quantityNeeded, $medication['target_stock']) - $locked->current_stock;
+
+        if ($topUp > 0) {
+            $this->stockLedger->record(
+                $locked,
+                InventoryMovementType::Entry,
+                $topUp,
+                $actor,
+                notes: 'Reabastecimiento de emergencia por demanda inesperada.',
+            );
         }
     }
 
