@@ -33,7 +33,7 @@ class DemoConsultationSeeder extends Seeder
     /**
      * Default number of demo consultations to seed.
      */
-    private const int CONSULTATION_COUNT = 250;
+    private const int CONSULTATION_COUNT = 600;
 
     /**
      * Approximate share of consultations assigned to the demo physician;
@@ -47,11 +47,11 @@ class DemoConsultationSeeder extends Seeder
     private const int WEEKDAY_SHARE_PERCENT = 90;
 
     /**
-     * How many days back from today consultations may be dated. Public so
-     * {@see DemoMedicationSeeder} can anchor its
+     * How many days back from today consultations may be dated (roughly
+     * twelve months). Public so {@see DemoMedicationSeeder} can anchor its
      * initial stock entries before the earliest possible consultation.
      */
-    public const int LOOKBACK_DAYS = 90;
+    public const int LOOKBACK_DAYS = 365;
 
     /**
      * Earliest and latest attention hour, in `America/Mexico_City`.
@@ -69,21 +69,62 @@ class DemoConsultationSeeder extends Seeder
     private const int REGULATION_DELAY_MAX_MINUTES = 120;
 
     /**
+     * The lookback window is treated as {@see self::MONTHS_IN_WINDOW} equal
+     * months (for monthly restocks and demand-growth weighting) and
+     * {@see self::QUARTERS_IN_WINDOW} equal quarters (for inventory
+     * adjustments).
+     */
+    private const int MONTHS_IN_WINDOW = 12;
+
+    private const int QUARTERS_IN_WINDOW = 4;
+
+    /**
+     * Hour of day, in `America/Mexico_City`, at which monthly restocks and
+     * quarterly adjustments are recorded.
+     */
+    private const int RESTOCK_HOUR = 7;
+
+    private const int ADJUSTMENT_HOUR = 20;
+
+    /**
+     * How many medications are sampled for a quarterly adjustment, and the
+     * inclusive range (in absolute units) each sampled adjustment removes.
+     */
+    private const int QUARTERLY_ADJUSTMENT_SAMPLE_SIZE = 3;
+
+    private const int QUARTERLY_ADJUSTMENT_MIN = 1;
+
+    private const int QUARTERLY_ADJUSTMENT_MAX = 3;
+
+    /**
+     * Spanish reasons cited for a quarterly stock adjustment.
+     *
+     * @var list<string>
+     */
+    private const array ADJUSTMENT_NOTES = [
+        'Merma por caducidad detectada en revisión trimestral.',
+        'Ajuste por unidades dañadas durante el almacenamiento.',
+        'Diferencia detectada en el conteo físico de inventario.',
+    ];
+
+    /**
      * Seed `$consultations` realistic demo consultations from a curated
-     * Spanish clinical-case catalog, spread over the last
-     * {@see self::LOOKBACK_DAYS} days (mostly weekdays, business hours in
-     * `America/Mexico_City`, never after "now"), assigned to seeded
-     * patients and physicians. Each consultation is created with its
-     * `created_at` (and, when applicable, `regulated_at`) pinned to its
-     * assigned datetime via `Carbon::withTestNow()`, so
-     * `MedicalConsultationCode::next()` generates a code whose date
-     * segment matches the consultation's actual Mexico City calendar day.
+     * Spanish clinical-case catalog, interleaved chronologically with
+     * monthly restocks and quarterly inventory adjustments, all spread over
+     * the last {@see self::LOOKBACK_DAYS} days (consultations mostly on
+     * weekdays, business hours in `America/Mexico_City`, never after
+     * "now"). Cases with a `demand_growth` factor are weighted more heavily
+     * as the window progresses, producing a visible upward consumption
+     * trend for their medications. Every event is created with its
+     * timestamp pinned via `Carbon::withTestNow()`, so
+     * `MedicalConsultationCode::next()` generates consultation codes whose
+     * date segment matches the assigned Mexico City calendar day.
      *
      * Requires `DemoUserSeeder`, `DemoPatientSeeder`, and
      * `DemoMedicationSeeder` to have already run: consultations reference
      * the demo physician, the other seeded physicians (role `Médico`), the
-     * seeded patients, and treatment lines dispense stock from the seeded
-     * medication catalog via {@see TreatmentDispensation}.
+     * seeded patients, and every stock movement goes through
+     * {@see TreatmentDispensation} and {@see StockLedger}.
      *
      * @throws JsonException
      */
@@ -95,6 +136,7 @@ class DemoConsultationSeeder extends Seeder
 
         $demoPhysician = User::role('Médico')->where('email', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL)->firstOrFail();
         $otherPhysicians = User::role('Médico')->where('email', '!=', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL)->get();
+        $inventoryActor = User::role('Administrador')->first() ?? $demoPhysician;
 
         $patientsBySex = Patient::query()->get(['id', 'sex_at_birth'])->groupBy(
             fn (Patient $patient): string => $patient->sex_at_birth->name
@@ -103,25 +145,241 @@ class DemoConsultationSeeder extends Seeder
         $medicationIndex = $this->buildMedicationIndex();
 
         $now = Carbon::now('America/Mexico_City');
-        $datetimes = $this->generateDatetimes($consultations, $faker, $now);
+        $windowStart = $now->copy()->subDays(self::LOOKBACK_DAYS)->startOfDay();
 
-        foreach ($datetimes as $at) {
-            $case = $faker->randomElement($cases);
-            $patientId = $this->pickPatientId($case, $patientsBySex, $allPatients);
+        $events = [
+            ...$this->buildConsultationEvents($consultations, $faker, $now),
+            ...$this->buildRestockEvents($windowStart, $now),
+            ...$this->buildAdjustmentEvents($windowStart, $now),
+        ];
 
-            if ($patientId === null) {
+        usort($events, fn (array $a, array $b): int => $a['at']->timestamp <=> $b['at']->timestamp);
+
+        $context = [
+            'cases' => $cases,
+            'people' => $people,
+            'faker' => $faker,
+            'patientsBySex' => $patientsBySex,
+            'allPatients' => $allPatients,
+            'medicationIndex' => $medicationIndex,
+            'demoPhysician' => $demoPhysician,
+            'otherPhysicians' => $otherPhysicians,
+            'inventoryActor' => $inventoryActor,
+            'now' => $now,
+            'windowStart' => $windowStart,
+        ];
+
+        foreach ($events as $event) {
+            Carbon::withTestNow($event['at'], function () use ($event, $context): void {
+                DB::transaction(function () use ($event, $context): void {
+                    $this->processEvent($event, $context);
+                });
+            });
+        }
+    }
+
+    /**
+     * Dispatch one chronological-timeline event to its handler.
+     *
+     * @param  array{type: string, at: Carbon}  $event
+     * @param  array<string, mixed>  $context
+     */
+    private function processEvent(array $event, array $context): void
+    {
+        match ($event['type']) {
+            'consultation' => $this->processConsultationEvent($event, $context),
+            'restock' => $this->processMonthlyRestock($context['medicationIndex'], $context['inventoryActor']),
+            'adjustment' => $this->processQuarterlyAdjustment($context['medicationIndex'], $context['faker'], $context['inventoryActor']),
+        };
+    }
+
+    /**
+     * Pick a demand-weighted case and eligible patient/physician for a
+     * `consultation` event, then create the full consultation aggregate.
+     *
+     * @param  array{type: string, at: Carbon}  $event
+     * @param  array<string, mixed>  $context
+     */
+    private function processConsultationEvent(array $event, array $context): void
+    {
+        $monthIndex = $this->monthIndexFor($event['at'], $context['windowStart']);
+        $case = $this->pickWeightedCase($context['cases'], $monthIndex, $context['faker']);
+        $patientId = $this->pickPatientId($case, $context['patientsBySex'], $context['allPatients']);
+
+        if ($patientId === null) {
+            return;
+        }
+
+        $physician = $context['faker']->boolean(self::DEMO_PHYSICIAN_SHARE_PERCENT) || $context['otherPhysicians']->isEmpty()
+            ? $context['demoPhysician']
+            : $context['otherPhysicians']->random();
+
+        $this->createConsultation(
+            $case,
+            $patientId,
+            $physician,
+            $context['faker'],
+            $context['people'],
+            $event['at'],
+            $context['now'],
+            $context['medicationIndex'],
+        );
+    }
+
+    /**
+     * Build one `consultation` event per generated datetime.
+     *
+     * @return list<array{type: string, at: Carbon}>
+     */
+    private function buildConsultationEvents(int $count, Generator $faker, Carbon $now): array
+    {
+        return array_map(
+            fn (Carbon $at): array => ['type' => 'consultation', 'at' => $at],
+            $this->generateDatetimes($count, $faker, $now)
+        );
+    }
+
+    /**
+     * Build one monthly `restock` event per {@see self::MONTHS_IN_WINDOW}
+     * equal slice of the lookback window, never after "now".
+     *
+     * @return list<array{type: string, at: Carbon}>
+     */
+    private function buildRestockEvents(Carbon $windowStart, Carbon $now): array
+    {
+        $events = [];
+        $monthLength = max(1, intdiv(self::LOOKBACK_DAYS, self::MONTHS_IN_WINDOW));
+
+        for ($month = 0; $month < self::MONTHS_IN_WINDOW; $month++) {
+            $at = $windowStart->copy()->addDays($month * $monthLength)->setTime(self::RESTOCK_HOUR, 0, 0);
+
+            if ($at->greaterThan($now)) {
+                break;
+            }
+
+            $events[] = ['type' => 'restock', 'at' => $at];
+        }
+
+        return $events;
+    }
+
+    /**
+     * Build one quarterly `adjustment` event per {@see self::QUARTERS_IN_WINDOW}
+     * equal slice of the lookback window, never after "now".
+     *
+     * @return list<array{type: string, at: Carbon}>
+     */
+    private function buildAdjustmentEvents(Carbon $windowStart, Carbon $now): array
+    {
+        $events = [];
+        $quarterLength = max(1, intdiv(self::LOOKBACK_DAYS, self::QUARTERS_IN_WINDOW));
+
+        for ($quarter = 1; $quarter <= self::QUARTERS_IN_WINDOW; $quarter++) {
+            $at = $windowStart->copy()->addDays($quarter * $quarterLength)->setTime(self::ADJUSTMENT_HOUR, 0, 0);
+
+            if ($at->greaterThan($now)) {
+                break;
+            }
+
+            $events[] = ['type' => 'adjustment', 'at' => $at];
+        }
+
+        return $events;
+    }
+
+    /**
+     * The zero-based index (0..{@see self::MONTHS_IN_WINDOW}-1) of the
+     * equal-length month slice `$at` falls into, relative to the window
+     * start. Used to weight demand-growth cases more heavily as the window
+     * progresses.
+     */
+    private function monthIndexFor(Carbon $at, Carbon $windowStart): int
+    {
+        $monthLength = max(1, intdiv(self::LOOKBACK_DAYS, self::MONTHS_IN_WINDOW));
+        $daysSinceStart = max(0, intdiv($at->timestamp - $windowStart->timestamp, 86400));
+
+        return min(self::MONTHS_IN_WINDOW - 1, intdiv($daysSinceStart, $monthLength));
+    }
+
+    /**
+     * Pick a random case weighted by its optional `demand_growth` factor:
+     * weight is `1 + demand_growth * monthIndex / (MONTHS_IN_WINDOW - 1)`,
+     * so a case without `demand_growth` always has weight 1 while a growth
+     * case's weight increases across the window, biasing its medications
+     * towards a visible upward consumption trend.
+     *
+     * @param  list<array<string, mixed>>  $cases
+     * @return array<string, mixed>
+     */
+    private function pickWeightedCase(array $cases, int $monthIndex, Generator $faker): array
+    {
+        $weights = array_map(
+            fn (array $case): float => 1 + ($case['demand_growth'] ?? 0) * $monthIndex / (self::MONTHS_IN_WINDOW - 1),
+            $cases
+        );
+
+        $target = $faker->randomFloat(6, 0, array_sum($weights));
+        $cumulative = 0.0;
+
+        foreach ($cases as $index => $case) {
+            $cumulative += $weights[$index];
+
+            if ($target <= $cumulative) {
+                return $case;
+            }
+        }
+
+        return end($cases);
+    }
+
+    /**
+     * Top up every medication to its catalog target stock. Recorded once a
+     * month so the ledger keeps drawing from a realistic, replenished
+     * supply rather than depleting to zero over the year.
+     *
+     * @param  array<string, array{id: int, uuid: string, target_stock: int}>  $medicationIndex
+     */
+    private function processMonthlyRestock(array $medicationIndex, User $actor): void
+    {
+        foreach ($medicationIndex as $medication) {
+            $locked = $this->stockLedger->lock([$medication['id']])->get($medication['id']);
+            $topUp = $medication['target_stock'] - $locked->current_stock;
+
+            if ($topUp > 0) {
+                $this->stockLedger->record($locked, InventoryMovementType::Entry, $topUp, $actor);
+            }
+        }
+    }
+
+    /**
+     * Record a small negative `Adjustment` (shrinkage, damage, or a count
+     * discrepancy) on a handful of randomly sampled medications, skipping
+     * any medication the adjustment would drive negative.
+     *
+     * @param  array<string, array{id: int, uuid: string, target_stock: int}>  $medicationIndex
+     */
+    private function processQuarterlyAdjustment(array $medicationIndex, Generator $faker, User $actor): void
+    {
+        $sample = $faker->randomElements(
+            array_values($medicationIndex),
+            min(self::QUARTERLY_ADJUSTMENT_SAMPLE_SIZE, count($medicationIndex)),
+        );
+
+        foreach ($sample as $medication) {
+            $locked = $this->stockLedger->lock([$medication['id']])->get($medication['id']);
+            $quantity = -$faker->numberBetween(self::QUARTERLY_ADJUSTMENT_MIN, self::QUARTERLY_ADJUSTMENT_MAX);
+
+            if ($locked->current_stock + $quantity < 0) {
                 continue;
             }
 
-            $physician = $faker->boolean(self::DEMO_PHYSICIAN_SHARE_PERCENT) || $otherPhysicians->isEmpty()
-                ? $demoPhysician
-                : $otherPhysicians->random();
-
-            Carbon::withTestNow($at, function () use ($case, $patientId, $physician, $faker, $people, $at, $now, $medicationIndex): void {
-                DB::transaction(function () use ($case, $patientId, $physician, $faker, $people, $at, $now, $medicationIndex): void {
-                    $this->createConsultation($case, $patientId, $physician, $faker, $people, $at, $now, $medicationIndex);
-                });
-            });
+            $this->stockLedger->record(
+                $locked,
+                InventoryMovementType::Adjustment,
+                $quantity,
+                $actor,
+                notes: $faker->randomElement(self::ADJUSTMENT_NOTES),
+            );
         }
     }
 

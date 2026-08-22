@@ -28,14 +28,21 @@ class DemoSeeder extends Seeder
      *
      * @throws RuntimeException
      */
-    public function run(int $users = 8, int $patients = 80, int $consultations = 250): void
+    public function run(int $users = 8, int $patients = 80, int $consultations = 600): void
     {
         $this->guardAgainstUnsafeRun();
 
         $this->call(DemoUserSeeder::class, parameters: ['users' => $users]);
         $this->call(DemoPatientSeeder::class, parameters: ['count' => $patients]);
-        $this->call(DemoMedicationSeeder::class);
-        $this->call(DemoConsultationSeeder::class, parameters: ['consultations' => $consultations]);
+
+        // Medications are created and repeatedly restocked/dispensed while
+        // seeding; deferring their search index sync to a single bulk
+        // `scout:import` (run by `demo:seed` once seeding finishes) avoids
+        // one sync job per stock movement.
+        Medication::withoutSyncingToSearch(function () use ($consultations): void {
+            $this->call(DemoMedicationSeeder::class);
+            $this->call(DemoConsultationSeeder::class, parameters: ['consultations' => $consultations]);
+        });
     }
 
     /**
