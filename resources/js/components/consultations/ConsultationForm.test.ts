@@ -4,7 +4,13 @@ import { defineComponent, h, nextTick } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { index as dashboard } from '@/actions/App/Http/Controllers/DashboardController';
 import { store, update } from '@/actions/App/Http/Controllers/MedicalConsultationController';
-import type { ConsultationAggregate, ConsultationFormPayload, ConsultationPatient } from '@/types/consultations';
+import ComboboxField from '@/components/form/ComboboxField.vue';
+import type {
+    ConsultationAggregate,
+    ConsultationFormPayload,
+    ConsultationPatient,
+    MedicationOption,
+} from '@/types/consultations';
 
 /**
  * `ConsultationForm.vue` uses Inertia's REAL `useForm` here: only `Link` is
@@ -42,10 +48,32 @@ const patient: ConsultationPatient = {
     enrollment_number: 'A-100',
 };
 
+const medicationOptions: MedicationOption[] = [
+    {
+        uuid: 'med-paracetamol',
+        name: 'Paracetamol',
+        presentation: 'Tableta',
+        concentration: '500 mg',
+        dispensing_unit: 'tableta',
+        current_stock: 120,
+        is_active: true,
+    },
+    {
+        uuid: 'med-ibuprofeno',
+        name: 'Ibuprofeno',
+        presentation: 'Tableta',
+        concentration: '400 mg',
+        dispensing_unit: 'tableta',
+        current_stock: 40,
+        is_active: true,
+    },
+];
+
 const formOptions = {
     medicalStateOptions: [1, 2, 3, 4, 5],
     medicalClassificationOptions: [1, 2, 3],
     transferTypeOptions: [1, 2, 3],
+    medicationOptions,
 };
 
 function existingConsultation(overrides: Partial<ConsultationAggregate> = {}): ConsultationAggregate {
@@ -59,7 +87,22 @@ function existingConsultation(overrides: Partial<ConsultationAggregate> = {}): C
         condition: 1,
         prognosis: 2,
         medical_classification: 3,
-        treatment: [{ medication: 'Paracetamol', dose: '500 mg', frequency: 'c/8h', duration: '3 días' }],
+        treatment: [
+            {
+                medication: {
+                    uuid: 'med-paracetamol',
+                    name: 'Paracetamol',
+                    presentation: 'Tableta',
+                    concentration: '500 mg',
+                    dispensing_unit: 'tableta',
+                    is_active: true,
+                },
+                quantity_dispensed: 2,
+                dose: '500 mg',
+                frequency: 'c/8h',
+                duration: '3 días',
+            },
+        ],
         vital_signs: {
             weight: '70',
             height: '1.70',
@@ -192,11 +235,11 @@ describe('ConsultationForm.vue', () => {
         expect(wrapper.findAll('[aria-label^="Medicamento "]')).toHaveLength(2);
         expect(wrapper.text()).toContain('2 de 20 medicamentos.');
 
-        await wrapper.get('#treatment-1-medication').setValue('Ibuprofeno');
+        await wrapper.get('#treatment-1-dose').setValue('Cada 8 horas');
         await wrapper.get('button[aria-label="Quitar medicamento 1"]').trigger('click');
 
         expect(wrapper.findAll('[aria-label^="Medicamento "]')).toHaveLength(1);
-        expect(wrapper.get<HTMLInputElement>('#treatment-0-medication').element.value).toBe('Ibuprofeno');
+        expect(wrapper.get<HTMLInputElement>('#treatment-0-dose').element.value).toBe('Cada 8 horas');
     });
 
     it('disables adding treatment rows at the 20-row limit and shows the limit hint', async () => {
@@ -224,6 +267,97 @@ describe('ConsultationForm.vue', () => {
 
         expect(postSpy).toHaveBeenCalledTimes(1);
         expect(lastPayload(postSpy).treatment).toEqual([]);
+    });
+
+    it('shows the available stock in the medication combobox option labels', async () => {
+        const wrapper = mountCreateForm();
+        await buttonByText(wrapper, 'Agregar medicamento').trigger('click');
+
+        const options = wrapper.findComponent(ComboboxField).props('options') as { label: string }[];
+
+        expect(options.map((option) => option.label)).toEqual([
+            'Paracetamol · Tableta 500 mg · 120 disponibles',
+            'Ibuprofeno · Tableta 400 mg · 40 disponibles',
+        ]);
+    });
+
+    it('treats a medication option missing is_active as active', async () => {
+        const optionWithoutIsActive = { ...medicationOptions[0] } as Partial<MedicationOption>;
+        delete optionWithoutIsActive.is_active;
+        const wrapper = mount(ConsultationForm, {
+            props: {
+                ...formOptions,
+                medicationOptions: [optionWithoutIsActive as MedicationOption],
+                mode: 'create',
+                title: 'Nueva consulta',
+                patient,
+            },
+        });
+        await buttonByText(wrapper, 'Agregar medicamento').trigger('click');
+
+        const options = wrapper.findComponent(ComboboxField).props('options') as { label: string }[];
+
+        expect(options[0].label).toBe('Paracetamol · Tableta 500 mg · 120 disponibles');
+    });
+
+    it('excludes unlinked inactive medications from the create form picker', async () => {
+        const wrapper = mountCreateForm();
+        await buttonByText(wrapper, 'Agregar medicamento').trigger('click');
+
+        const options = wrapper.findComponent(ComboboxField).props('options') as { label: string }[];
+
+        expect(options.some((option) => option.label.includes('inactivo'))).toBe(false);
+    });
+
+    it('includes the linked inactive medication in the edit form picker', () => {
+        const consultation = existingConsultation({
+            treatment: [
+                {
+                    medication: {
+                        uuid: 'med-discontinued',
+                        name: 'Discontinuado',
+                        presentation: 'Cápsula',
+                        concentration: '250 mg',
+                        dispensing_unit: 'cápsula',
+                        is_active: false,
+                    },
+                    quantity_dispensed: 1,
+                    dose: '250 mg',
+                    frequency: 'c/12h',
+                    duration: '5 días',
+                },
+            ],
+        });
+        const wrapper = mountEditForm(consultation);
+
+        const options = wrapper.findComponent(ComboboxField).props('options') as { value: string; label: string }[];
+
+        expect(options).toContainEqual({
+            value: 'med-discontinued',
+            label: 'Discontinuado · Cápsula 250 mg · inactivo',
+        });
+    });
+
+    it('selects a medication via the combobox and submits the flat payload shape', async () => {
+        const wrapper = mountCreateForm();
+        await buttonByText(wrapper, 'Agregar medicamento').trigger('click');
+        await wrapper.get('#treatment-0-quantity_dispensed').setValue('3');
+        await wrapper.get('#treatment-0-dose').setValue('500 mg');
+        await wrapper.get('#treatment-0-frequency').setValue('c/8h');
+        await wrapper.get('#treatment-0-duration').setValue('3 días');
+
+        await wrapper.findComponent(ComboboxField).setValue('med-ibuprofeno');
+        await submit(wrapper);
+
+        expect(lastPayload(postSpy).treatment).toEqual([
+            {
+                medication_uuid: 'med-ibuprofeno',
+                quantity_dispensed: 3,
+                dose: '500 mg',
+                frequency: 'c/8h',
+                duration: '3 días',
+            },
+        ]);
     });
 
     it('shows the regulation fields only while the transfer switch is on', async () => {
@@ -283,7 +417,7 @@ describe('ConsultationForm.vue', () => {
         expect(payload.vital_signs.glucose).toBe(110);
     });
 
-    it('updates via PUT to the update URL without a patient uuid', async () => {
+    it('updates via PUT to the update URL without a patient uuid, with the flat treatment payload', async () => {
         const consultation = existingConsultation();
         const wrapper = mountEditForm(consultation);
 
@@ -298,7 +432,15 @@ describe('ConsultationForm.vue', () => {
         expect(url).toBe(update.url(consultation.uuid));
         expect(payload).not.toHaveProperty('patient_uuid');
         expect(payload.regulation).toEqual(consultation.regulation);
-        expect(payload.treatment).toEqual(consultation.treatment);
+        expect(payload.treatment).toEqual([
+            {
+                medication_uuid: 'med-paracetamol',
+                quantity_dispensed: 2,
+                dose: '500 mg',
+                frequency: 'c/8h',
+                duration: '3 días',
+            },
+        ]);
     });
 
     it('sends null regulation on edit once the transfer switch is turned off', async () => {
@@ -333,6 +475,31 @@ describe('ConsultationForm.vue', () => {
         expect(fieldTextFor(wrapper, '#transfer-type')).toContain('El tipo de traslado es obligatorio.');
         expect(fieldTextFor(wrapper, '#current-condition')).not.toContain('obligatori');
         expect(wrapper.get('#diagnosis').attributes('aria-invalid')).toBe('true');
+    });
+
+    it('maps treatment.N.quantity_dispensed server errors to the matching row only', async () => {
+        postSpy.mockImplementation((_url: string, _data: unknown, options: VisitOptions) => {
+            options.onError?.({
+                'treatment.0.quantity_dispensed': 'No hay suficiente inventario disponible.',
+                'treatment.1.quantity_dispensed': 'La cantidad es obligatoria.',
+            });
+            options.onFinish?.({});
+        });
+        const wrapper = mountCreateForm();
+        await buttonByText(wrapper, 'Agregar medicamento').trigger('click');
+        await buttonByText(wrapper, 'Agregar medicamento').trigger('click');
+
+        await submit(wrapper);
+        await nextTick();
+
+        expect(fieldTextFor(wrapper, '#treatment-0-quantity_dispensed')).toContain(
+            'No hay suficiente inventario disponible.',
+        );
+        expect(fieldTextFor(wrapper, '#treatment-1-quantity_dispensed')).toContain('La cantidad es obligatoria.');
+        expect(fieldTextFor(wrapper, '#treatment-0-quantity_dispensed')).not.toContain('La cantidad es obligatoria.');
+        expect(fieldTextFor(wrapper, '#treatment-1-quantity_dispensed')).not.toContain(
+            'No hay suficiente inventario disponible.',
+        );
     });
 
     it('issues only one submit while the first one is still processing', async () => {

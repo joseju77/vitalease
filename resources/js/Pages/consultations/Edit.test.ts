@@ -3,7 +3,8 @@ import { mount } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import { show } from '@/actions/App/Http/Controllers/MedicalConsultationController';
-import type { ConsultationAggregate, PatientProfile } from '@/types/consultations';
+import ComboboxField from '@/components/form/ComboboxField.vue';
+import type { ConsultationAggregate, MedicationOption, PatientProfile } from '@/types/consultations';
 
 vi.mock('@inertiajs/vue3', async (importOriginal) => {
     const actual = await importOriginal<typeof import('@inertiajs/vue3')>();
@@ -52,7 +53,22 @@ const patientProfile: PatientProfile = {
     gynecological_history: null,
 };
 
-function consultation(can: ConsultationAggregate['can']): ConsultationAggregate {
+const medicationOptions: MedicationOption[] = [
+    {
+        uuid: 'med-paracetamol',
+        name: 'Paracetamol',
+        presentation: 'Tableta',
+        concentration: '500 mg',
+        dispensing_unit: 'tableta',
+        current_stock: 120,
+        is_active: true,
+    },
+];
+
+function consultation(
+    can: ConsultationAggregate['can'],
+    treatment: ConsultationAggregate['treatment'] = [],
+): ConsultationAggregate {
     return {
         uuid: 'consultation-uuid-9',
         code: 'CON-0009',
@@ -63,7 +79,7 @@ function consultation(can: ConsultationAggregate['can']): ConsultationAggregate 
         condition: 1,
         prognosis: 1,
         medical_classification: 8,
-        treatment: [],
+        treatment,
         vital_signs: {
             weight: '70',
             height: '1.70',
@@ -89,14 +105,15 @@ function consultation(can: ConsultationAggregate['can']): ConsultationAggregate 
     };
 }
 
-function mountEdit(can: ConsultationAggregate['can']) {
+function mountEdit(can: ConsultationAggregate['can'], treatment: ConsultationAggregate['treatment'] = []) {
     return mount(Edit, {
         props: {
-            consultation: consultation(can),
+            consultation: consultation(can, treatment),
             patientProfile,
             medicalStateOptions: [1, 2],
             medicalClassificationOptions: [8],
             transferTypeOptions: [1],
+            medicationOptions,
         },
     });
 }
@@ -121,5 +138,35 @@ describe('Pages/consultations/Edit.vue', () => {
 
     it('hides the delete control when the user cannot delete the consultation', () => {
         expect(hasDeleteControl(mountEdit({ update: true, delete: false }))).toBe(false);
+    });
+
+    it('forwards the linked inactive medication into the treatment picker options', () => {
+        const wrapper = mountEdit({ update: true, delete: true }, [
+            {
+                medication: {
+                    uuid: 'med-discontinued',
+                    name: 'Discontinuado',
+                    presentation: 'Cápsula',
+                    concentration: '250 mg',
+                    dispensing_unit: 'cápsula',
+                    is_active: false,
+                },
+                quantity_dispensed: 1,
+                dose: '250 mg',
+                frequency: 'c/12h',
+                duration: '5 días',
+            },
+        ]);
+
+        const options = wrapper.findComponent(ComboboxField).props('options') as { value: string; label: string }[];
+
+        expect(options).toContainEqual({
+            value: 'med-discontinued',
+            label: 'Discontinuado · Cápsula 250 mg · inactivo',
+        });
+        expect(options).toContainEqual({
+            value: 'med-paracetamol',
+            label: 'Paracetamol · Tableta 500 mg · 120 disponibles',
+        });
     });
 });
