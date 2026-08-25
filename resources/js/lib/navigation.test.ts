@@ -17,6 +17,7 @@ describe('NAV_GROUPS', () => {
                 label: 'ATENCIÓN MÉDICA',
                 items: [
                     { title: 'Consultas', href: '/dashboard', permission: 'consultations.view' },
+                    { title: 'Inventario', href: '/inventory', permission: 'inventory.view' },
                     { title: 'Reportes y estadísticas', href: '#', permission: 'reports.generate' },
                 ],
             },
@@ -37,7 +38,11 @@ describe('visibleNavGroups', () => {
 
         expect(result.map((group) => group.label)).toEqual([undefined, 'ATENCIÓN MÉDICA', 'ADMINISTRACIÓN GENERAL']);
         expect(result[0].items.map((item) => item.title)).toEqual(['Pacientes']);
-        expect(result[1].items.map((item) => item.title)).toEqual(['Consultas', 'Reportes y estadísticas']);
+        expect(result[1].items.map((item) => item.title)).toEqual([
+            'Consultas',
+            'Inventario',
+            'Reportes y estadísticas',
+        ]);
         expect(result[2].items.map((item) => item.title)).toEqual(['Usuarios', 'Roles']);
     });
 

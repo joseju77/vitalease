@@ -92,6 +92,86 @@ describe('listing medications', function () {
     });
 });
 
+describe('computing can_be_deleted', function () {
+    it('marks an untouched medication as deletable on the plain index', function () {
+        $viewer = User::factory()->withPermissions(Permission::InventoryView)->create();
+        Medication::factory()->create();
+
+        $this->actingAs($viewer)->get(route('inventory.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('inventory/Index', false)
+                ->where('medications.data.0.can_be_deleted', true));
+    });
+
+    it('marks a medication with a movement as not deletable on the plain index', function () {
+        $viewer = User::factory()->withPermissions(Permission::InventoryView)->create();
+        $medication = Medication::factory()->create();
+        InventoryMovement::factory()->for($medication)->create();
+
+        $this->actingAs($viewer)->get(route('inventory.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('inventory/Index', false)
+                ->where('medications.data.0.can_be_deleted', false));
+    });
+
+    it('marks a medication with a treatment line as not deletable on the plain index', function () {
+        $viewer = User::factory()->withPermissions(Permission::InventoryView)->create();
+        $physician = User::factory()->create();
+        $medication = Medication::factory()->create(['current_stock' => 10]);
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create();
+        dispenseOneLine($consultation, $medication, 2, $physician);
+
+        $this->actingAs($viewer)->get(route('inventory.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('inventory/Index', false)
+                ->where('medications.data.0.can_be_deleted', false));
+    });
+
+    it('exposes can_be_deleted through the Scout collection search path', function () {
+        $viewer = User::factory()->withPermissions(Permission::InventoryView)->create();
+        $target = Medication::factory()->create(['name' => 'Paracetamol']);
+        InventoryMovement::factory()->for($target)->create();
+
+        $this->actingAs($viewer)->get(route('inventory.index', ['q' => 'Paracetamol']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('inventory/Index', false)
+                ->where('medications.data.0.can_be_deleted', false));
+    });
+
+    it('exposes can_be_deleted on the show page', function () {
+        $viewer = User::factory()->withPermissions(Permission::InventoryView)->create();
+        $medication = Medication::factory()->create();
+
+        $this->actingAs($viewer)->get(route('inventory.show', $medication))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('inventory/Show', false)
+                ->where('medication.can_be_deleted', true));
+    });
+
+    it('does not add an extra query per row when computing can_be_deleted', function () {
+        $viewer = User::factory()->withPermissions(Permission::InventoryView)->create();
+        Medication::factory()->create();
+
+        DB::enableQueryLog();
+        $this->actingAs($viewer)->get(route('inventory.index'))->assertOk();
+        $singleRowQueryCount = count(DB::getQueryLog());
+        DB::flushQueryLog();
+
+        Medication::factory()->count(4)->create();
+
+        $this->actingAs($viewer)->get(route('inventory.index'))->assertOk();
+        $multiRowQueryCount = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        expect($multiRowQueryCount)->toBe($singleRowQueryCount);
+    });
+});
+
 describe('viewing a medication', function () {
     it('denies viewing without inventory.view', function () {
         $medication = Medication::factory()->create();

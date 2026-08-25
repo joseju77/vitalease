@@ -1,0 +1,145 @@
+<script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import { useDebounceFn } from '@vueuse/core';
+import { onBeforeUnmount, ref, watch } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useMedicationFlashToast } from '@/composables/useMedicationFlashToast';
+import { index as inventoryIndex, show as inventoryShow } from '@/routes/inventory';
+import type { InventoryFilters, Medication, Paginator } from '@/types/inventory';
+
+defineOptions({
+    layout: (h: any, page: any) => h(AppLayout, { title: 'Inventario' }, () => page),
+});
+
+const props = defineProps<{
+    medications: Paginator<Medication>;
+    filters: InventoryFilters;
+}>();
+
+useMedicationFlashToast();
+
+const search = ref(props.filters.q ?? '');
+const lowStockOnly = ref(props.filters.low_stock);
+
+function applyFilters() {
+    const query: Record<string, string | boolean> = {};
+
+    const term = search.value.trim();
+    if (term !== '') {
+        query.q = term;
+    }
+
+    if (lowStockOnly.value) {
+        query.low_stock = true;
+    }
+
+    router.get(inventoryIndex().url, query, {
+        preserveState: true,
+        replace: true,
+        preserveScroll: true,
+    });
+}
+
+const debouncedApplyFilters = useDebounceFn(applyFilters, 300);
+
+watch([search, lowStockOnly], () => {
+    debouncedApplyFilters();
+});
+
+function toggleLowStock(value: boolean | 'indeterminate') {
+    lowStockOnly.value = value === true;
+}
+
+onBeforeUnmount(() => {
+    debouncedApplyFilters.cancel();
+});
+</script>
+
+<template>
+    <Head title="Inventario" />
+
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-semibold">Inventario</h1>
+            <div class="flex items-center gap-2" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4">
+            <Input
+                v-model="search"
+                type="search"
+                placeholder="Buscar por nombre, presentación o concentración..."
+                class="max-w-sm"
+            />
+            <Field orientation="horizontal" class="w-auto">
+                <Checkbox
+                    id="inventory-low-stock-filter"
+                    :model-value="lowStockOnly"
+                    @update:model-value="toggleLowStock"
+                />
+                <FieldLabel for="inventory-low-stock-filter">Solo stock bajo</FieldLabel>
+            </Field>
+        </div>
+
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Presentación</TableHead>
+                    <TableHead>Concentración</TableHead>
+                    <TableHead>Unidad de dispensación</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead>Estado</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                <TableEmpty v-if="medications.data.length === 0" :colspan="6">
+                    No se encontraron medicamentos.
+                </TableEmpty>
+                <TableRow v-for="medication in medications.data" :key="medication.uuid">
+                    <TableCell>
+                        <Link :href="inventoryShow(medication.uuid).url" class="font-medium hover:underline">
+                            {{ medication.name }}
+                        </Link>
+                    </TableCell>
+                    <TableCell>{{ medication.presentation }}</TableCell>
+                    <TableCell>{{ medication.concentration }}</TableCell>
+                    <TableCell>{{ medication.dispensing_unit }}</TableCell>
+                    <TableCell>
+                        <div class="flex items-center gap-2">
+                            <span>{{ medication.current_stock }} / {{ medication.minimum_stock }}</span>
+                            <Badge v-if="medication.is_low_stock" variant="destructive">Stock bajo</Badge>
+                        </div>
+                    </TableCell>
+                    <TableCell>
+                        <Badge v-if="!medication.is_active" variant="secondary">Inactivo</Badge>
+                    </TableCell>
+                </TableRow>
+            </TableBody>
+        </Table>
+
+        <nav v-if="medications.links.length > 3" class="flex flex-wrap items-center gap-1">
+            <template v-for="link in medications.links" :key="link.label">
+                <span
+                    v-if="!link.url"
+                    class="rounded-md px-3 py-1.5 text-sm text-muted-foreground/50"
+                    v-html="link.label"
+                />
+                <Link
+                    v-else
+                    :href="link.url"
+                    preserve-scroll
+                    class="rounded-md px-3 py-1.5 text-sm hover:bg-muted"
+                    :class="{ 'bg-muted font-medium': link.active }"
+                >
+                    <span v-html="link.label" />
+                </Link>
+            </template>
+        </nav>
+    </div>
+</template>

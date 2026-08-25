@@ -39,11 +39,13 @@ class MedicationController extends Controller
         if ($query !== '') {
             $medications = Medication::search($query)
                 ->when($lowStock, fn (ScoutBuilder $builder) => $builder->where('is_low_stock', true))
+                ->query(fn (Builder $q) => $q->withExists(['inventoryMovements', 'treatments']))
                 ->orderBy('name')
                 ->paginate(15)
                 ->withQueryString();
         } else {
             $medications = Medication::query()
+                ->withExists(['inventoryMovements', 'treatments'])
                 ->when($lowStock, fn (Builder $builder) => $builder->whereColumn('current_stock', '<=', 'minimum_stock'))
                 ->orderBy('name')
                 ->orderBy('id')
@@ -83,6 +85,8 @@ class MedicationController extends Controller
      */
     public function show(Medication $medication): Response
     {
+        $medication->loadExists(['inventoryMovements', 'treatments']);
+
         $movements = $medication->inventoryMovements()
             ->with('user:id,name')
             ->orderByDesc('id')
@@ -172,6 +176,7 @@ class MedicationController extends Controller
             'minimum_stock' => $medication->minimum_stock,
             'is_active' => $medication->is_active,
             'is_low_stock' => $medication->isLowStock(),
+            'can_be_deleted' => ! ($medication->inventory_movements_exists ?? false) && ! ($medication->treatments_exists ?? false),
         ];
     }
 
