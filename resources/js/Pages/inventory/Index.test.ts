@@ -2,15 +2,18 @@
 import { mount, VueWrapper } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { index, show } from '@/routes/inventory';
+import { activate, index, show } from '@/routes/inventory';
 import type { Medication, MedicationFlash, Paginator } from '@/types/inventory';
 
-const { pageState, routerGet } = vi.hoisted(() => ({
+import MedicationActionDialog from '@/components/inventory/MedicationActionDialog.vue';
+
+const { pageState, routerGet, routerPatch } = vi.hoisted(() => ({
     pageState: {
         flash: {} as { medication?: MedicationFlash },
         props: { auth: { is_super_admin: false, permissions: [] as string[] } },
     },
     routerGet: vi.fn(),
+    routerPatch: vi.fn(),
 }));
 
 vi.mock('@inertiajs/vue3', async (importOriginal) => {
@@ -31,7 +34,7 @@ vi.mock('@inertiajs/vue3', async (importOriginal) => {
                     h('a', { href: props.href }, slots.default?.()),
         }),
         usePage: () => pageState,
-        router: { get: routerGet },
+        router: { get: routerGet, patch: routerPatch },
     };
 });
 
@@ -79,6 +82,7 @@ describe('Pages/inventory/Index.vue', () => {
         pageState.flash = {};
         pageState.props.auth = { is_super_admin: false, permissions: [] };
         routerGet.mockClear();
+        routerPatch.mockClear();
         toastSuccess.mockClear();
     });
 
@@ -237,5 +241,93 @@ describe('Pages/inventory/Index.vue', () => {
         const page = mountIndex(paginator([medication()]));
 
         expect(page.findAll('button').some((button) => button.text() === 'Editar')).toBe(true);
+    });
+
+    it('shows "Desactivar" (not "Activar") for an active medication with inventory.update', () => {
+        pageState.props.auth.permissions = ['inventory.update'];
+        const page = mountIndex(paginator([medication({ is_active: true })]));
+
+        const buttonTexts = page.findAll('button').map((button) => button.text());
+        expect(buttonTexts).toContain('Desactivar');
+        expect(buttonTexts).not.toContain('Activar');
+    });
+
+    it('shows "Activar" (not "Desactivar") for an inactive medication with inventory.update', () => {
+        pageState.props.auth.permissions = ['inventory.update'];
+        const page = mountIndex(paginator([medication({ is_active: false })]));
+
+        const buttonTexts = page.findAll('button').map((button) => button.text());
+        expect(buttonTexts).toContain('Activar');
+        expect(buttonTexts).not.toContain('Desactivar');
+    });
+
+    it('hides both "Activar" and "Desactivar" without inventory.update', () => {
+        pageState.props.auth.permissions = [];
+        const page = mountIndex(
+            paginator([medication({ is_active: true }), medication({ uuid: 'med-2', is_active: false })]),
+        );
+
+        const buttonTexts = page.findAll('button').map((button) => button.text());
+        expect(buttonTexts).not.toContain('Activar');
+        expect(buttonTexts).not.toContain('Desactivar');
+    });
+
+    it('PATCHes the activate URL directly (no confirmation) when "Activar" is clicked', async () => {
+        pageState.props.auth.permissions = ['inventory.update'];
+        const page = mountIndex(paginator([medication({ is_active: false })]));
+
+        const activateButton = page.findAll('button').find((button) => button.text() === 'Activar');
+        await activateButton?.trigger('click');
+
+        expect(routerPatch).toHaveBeenCalledTimes(1);
+        expect(routerPatch).toHaveBeenCalledWith(activate('med-1').url, {}, { preserveScroll: true });
+        expect(page.findComponent(MedicationActionDialog).exists()).toBe(false);
+    });
+
+    it('hides "Eliminar" without inventory.delete even when can_be_deleted is true', () => {
+        pageState.props.auth.permissions = [];
+        const page = mountIndex(paginator([medication({ can_be_deleted: true })]));
+
+        expect(page.findAll('button').some((button) => button.text() === 'Eliminar')).toBe(false);
+    });
+
+    it('hides "Eliminar" when can_be_deleted is false, even with inventory.delete', () => {
+        pageState.props.auth.permissions = ['inventory.delete'];
+        const page = mountIndex(paginator([medication({ can_be_deleted: false })]));
+
+        expect(page.findAll('button').some((button) => button.text() === 'Eliminar')).toBe(false);
+    });
+
+    it('shows "Eliminar" with inventory.delete and can_be_deleted true', () => {
+        pageState.props.auth.permissions = ['inventory.delete'];
+        const page = mountIndex(paginator([medication({ can_be_deleted: true })]));
+
+        expect(page.findAll('button').some((button) => button.text() === 'Eliminar')).toBe(true);
+    });
+
+    it('opens the MedicationActionDialog in "deactivate" mode when "Desactivar" is clicked', async () => {
+        pageState.props.auth.permissions = ['inventory.update'];
+        const page = mountIndex(paginator([medication({ is_active: true })]));
+
+        const deactivateButton = page.findAll('button').find((button) => button.text() === 'Desactivar');
+        await deactivateButton?.trigger('click');
+
+        const dialog = page.findComponent(MedicationActionDialog);
+        expect(dialog.exists()).toBe(true);
+        expect(dialog.props('action')).toBe('deactivate');
+        expect(dialog.props('open')).toBe(true);
+    });
+
+    it('opens the MedicationActionDialog in "delete" mode when "Eliminar" is clicked', async () => {
+        pageState.props.auth.permissions = ['inventory.delete'];
+        const page = mountIndex(paginator([medication({ can_be_deleted: true })]));
+
+        const deleteButton = page.findAll('button').find((button) => button.text() === 'Eliminar');
+        await deleteButton?.trigger('click');
+
+        const dialog = page.findComponent(MedicationActionDialog);
+        expect(dialog.exists()).toBe(true);
+        expect(dialog.props('action')).toBe('delete');
+        expect(dialog.props('open')).toBe(true);
     });
 });

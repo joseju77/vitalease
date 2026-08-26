@@ -9,10 +9,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import MedicationActionDialog from '@/components/inventory/MedicationActionDialog.vue';
 import MedicationFormDialog from '@/components/inventory/MedicationFormDialog.vue';
 import { useMedicationFlashToast } from '@/composables/useMedicationFlashToast';
 import { usePermissions } from '@/composables/usePermissions';
-import { index as inventoryIndex, show as inventoryShow } from '@/routes/inventory';
+import { activate as activateMedication, index as inventoryIndex, show as inventoryShow } from '@/routes/inventory';
 import type { InventoryFilters, Medication, Paginator } from '@/types/inventory';
 
 defineOptions({
@@ -45,6 +46,33 @@ const editOpen = computed({
 
 function edit(medication: Medication) {
     editingMedication.value = medication;
+}
+
+const actionMedication = ref<Medication | null>(null);
+const actionType = ref<'deactivate' | 'delete'>('deactivate');
+
+const actionOpen = computed({
+    get: () => actionMedication.value !== null,
+    set: (value: boolean) => {
+        if (!value) {
+            actionMedication.value = null;
+        }
+    },
+});
+
+/** Activation is reversible and needs no confirmation, unlike deactivate/delete. */
+function activate(medication: Medication) {
+    router.patch(activateMedication(medication.uuid).url, {}, { preserveScroll: true });
+}
+
+function confirmDeactivate(medication: Medication) {
+    actionType.value = 'deactivate';
+    actionMedication.value = medication;
+}
+
+function confirmDelete(medication: Medication) {
+    actionType.value = 'delete';
+    actionMedication.value = medication;
 }
 
 function applyFilters() {
@@ -153,6 +181,30 @@ onBeforeUnmount(() => {
                             >
                                 Editar
                             </Button>
+                            <Button
+                                v-if="can('inventory.update') && !medication.is_active"
+                                variant="outline"
+                                size="sm"
+                                @click="activate(medication)"
+                            >
+                                Activar
+                            </Button>
+                            <Button
+                                v-if="can('inventory.update') && medication.is_active"
+                                variant="outline"
+                                size="sm"
+                                @click="confirmDeactivate(medication)"
+                            >
+                                Desactivar
+                            </Button>
+                            <Button
+                                v-if="can('inventory.delete') && medication.can_be_deleted"
+                                variant="destructive"
+                                size="sm"
+                                @click="confirmDelete(medication)"
+                            >
+                                Eliminar
+                            </Button>
                         </div>
                     </TableCell>
                 </TableRow>
@@ -186,5 +238,12 @@ onBeforeUnmount(() => {
         v-model:open="editOpen"
         mode="edit"
         :medication="editingMedication"
+    />
+    <MedicationActionDialog
+        v-if="actionMedication"
+        :key="`${actionType}-${actionMedication.uuid}`"
+        v-model:open="actionOpen"
+        :medication="actionMedication"
+        :action="actionType"
     />
 </template>
