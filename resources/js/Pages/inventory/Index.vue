@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
-import { onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import MedicationFormDialog from '@/components/inventory/MedicationFormDialog.vue';
 import { useMedicationFlashToast } from '@/composables/useMedicationFlashToast';
+import { usePermissions } from '@/composables/usePermissions';
 import { index as inventoryIndex, show as inventoryShow } from '@/routes/inventory';
 import type { InventoryFilters, Medication, Paginator } from '@/types/inventory';
 
@@ -23,8 +26,26 @@ const props = defineProps<{
 
 useMedicationFlashToast();
 
+const { can } = usePermissions();
+
 const search = ref(props.filters.q ?? '');
 const lowStockOnly = ref(props.filters.low_stock);
+
+const createOpen = ref(false);
+const editingMedication = ref<Medication | null>(null);
+
+const editOpen = computed({
+    get: () => editingMedication.value !== null,
+    set: (value: boolean) => {
+        if (!value) {
+            editingMedication.value = null;
+        }
+    },
+});
+
+function edit(medication: Medication) {
+    editingMedication.value = medication;
+}
 
 function applyFilters() {
     const query: Record<string, string | boolean> = {};
@@ -66,7 +87,9 @@ onBeforeUnmount(() => {
     <div class="space-y-6">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-semibold">Inventario</h1>
-            <div class="flex items-center gap-2" />
+            <div class="flex items-center gap-2">
+                <Button v-if="can('inventory.create')" @click="createOpen = true">Nuevo medicamento</Button>
+            </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-4">
@@ -95,10 +118,11 @@ onBeforeUnmount(() => {
                     <TableHead>Unidad de dispensación</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Estado</TableHead>
+                    <TableHead class="text-right">Acciones</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                <TableEmpty v-if="medications.data.length === 0" :colspan="6">
+                <TableEmpty v-if="medications.data.length === 0" :colspan="7">
                     No se encontraron medicamentos.
                 </TableEmpty>
                 <TableRow v-for="medication in medications.data" :key="medication.uuid">
@@ -118,6 +142,18 @@ onBeforeUnmount(() => {
                     </TableCell>
                     <TableCell>
                         <Badge v-if="!medication.is_active" variant="secondary">Inactivo</Badge>
+                    </TableCell>
+                    <TableCell class="text-right">
+                        <div class="flex justify-end gap-2">
+                            <Button
+                                v-if="can('inventory.update')"
+                                variant="outline"
+                                size="sm"
+                                @click="edit(medication)"
+                            >
+                                Editar
+                            </Button>
+                        </div>
                     </TableCell>
                 </TableRow>
             </TableBody>
@@ -142,4 +178,13 @@ onBeforeUnmount(() => {
             </template>
         </nav>
     </div>
+
+    <MedicationFormDialog v-if="can('inventory.create')" v-model:open="createOpen" mode="create" />
+    <MedicationFormDialog
+        v-if="editingMedication"
+        :key="editingMedication.uuid"
+        v-model:open="editOpen"
+        mode="edit"
+        :medication="editingMedication"
+    />
 </template>

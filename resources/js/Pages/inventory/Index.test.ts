@@ -6,7 +6,10 @@ import { index, show } from '@/routes/inventory';
 import type { Medication, MedicationFlash, Paginator } from '@/types/inventory';
 
 const { pageState, routerGet } = vi.hoisted(() => ({
-    pageState: { flash: {} as { medication?: MedicationFlash } },
+    pageState: {
+        flash: {} as { medication?: MedicationFlash },
+        props: { auth: { is_super_admin: false, permissions: [] as string[] } },
+    },
     routerGet: vi.fn(),
 }));
 
@@ -74,6 +77,7 @@ describe('Pages/inventory/Index.vue', () => {
     beforeEach(() => {
         vi.useFakeTimers();
         pageState.flash = {};
+        pageState.props.auth = { is_super_admin: false, permissions: [] };
         routerGet.mockClear();
         toastSuccess.mockClear();
     });
@@ -205,5 +209,33 @@ describe('Pages/inventory/Index.vue', () => {
         mountIndex(paginator([medication()]));
 
         expect(toastSuccess).toHaveBeenCalledWith('Medicamento Paracetamol creado');
+    });
+
+    it('hides the "Nuevo medicamento" button without inventory.create', () => {
+        pageState.props.auth.permissions = [];
+        const page = mountIndex(paginator([medication()]));
+
+        expect(page.findAll('button').some((button) => button.text() === 'Nuevo medicamento')).toBe(false);
+    });
+
+    it('shows the "Nuevo medicamento" button with inventory.create', () => {
+        pageState.props.auth.permissions = ['inventory.create'];
+        const page = mountIndex(paginator([medication()]));
+
+        expect(page.findAll('button').some((button) => button.text() === 'Nuevo medicamento')).toBe(true);
+    });
+
+    it('hides the row "Editar" action without inventory.update', () => {
+        pageState.props.auth.permissions = [];
+        const page = mountIndex(paginator([medication()]));
+
+        expect(page.findAll('button').some((button) => button.text() === 'Editar')).toBe(false);
+    });
+
+    it('shows the row "Editar" action with inventory.update', () => {
+        pageState.props.auth.permissions = ['inventory.update'];
+        const page = mountIndex(paginator([medication()]));
+
+        expect(page.findAll('button').some((button) => button.text() === 'Editar')).toBe(true);
     });
 });
