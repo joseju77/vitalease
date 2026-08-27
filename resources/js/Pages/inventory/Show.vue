@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import MedicationActionDialog from '@/components/inventory/MedicationActionDialog.vue';
 import MedicationFormDialog from '@/components/inventory/MedicationFormDialog.vue';
 import MovementHistoryTable from '@/components/inventory/MovementHistoryTable.vue';
+import StockAdjustmentDialog from '@/components/inventory/StockAdjustmentDialog.vue';
+import StockEntryDialog from '@/components/inventory/StockEntryDialog.vue';
 import { useMedicationFlashToast } from '@/composables/useMedicationFlashToast';
 import { usePermissions } from '@/composables/usePermissions';
 import { activate as activateMedication, index as inventoryIndex } from '@/routes/inventory';
@@ -32,6 +34,8 @@ useMedicationFlashToast();
 const { can } = usePermissions();
 
 const editOpen = ref(false);
+const entryOpen = ref(false);
+const adjustmentOpen = ref(false);
 
 const actionType = ref<'deactivate' | 'delete'>('deactivate');
 const actionOpen = ref(false);
@@ -64,11 +68,12 @@ function confirmDelete() {
                 <h1 class="text-2xl font-semibold">{{ medication.name }}</h1>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <!--
-                    WU6 adds "Registrar entrada" (gated inventory.create) and
-                    "Registrar ajuste" (gated inventory.update) actions here,
-                    alongside the ones below.
-                -->
+                <Button v-if="can('inventory.create')" variant="outline" @click="entryOpen = true">
+                    Registrar entrada
+                </Button>
+                <Button v-if="can('inventory.update')" variant="outline" @click="adjustmentOpen = true">
+                    Registrar ajuste
+                </Button>
                 <Button v-if="can('inventory.update')" variant="outline" @click="editOpen = true">Editar</Button>
                 <Button v-if="can('inventory.update') && !medication.is_active" variant="outline" @click="activate">
                     Activar
@@ -131,6 +136,8 @@ function confirmDelete() {
     </div>
 
     <MedicationFormDialog v-if="can('inventory.update')" v-model:open="editOpen" mode="edit" :medication="medication" />
+    <StockEntryDialog v-if="can('inventory.create')" v-model:open="entryOpen" :medication="medication" />
+    <StockAdjustmentDialog v-if="can('inventory.update')" v-model:open="adjustmentOpen" :medication="medication" />
     <MedicationActionDialog
         v-if="actionOpen"
         :key="actionType"

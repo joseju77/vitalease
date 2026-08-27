@@ -7,6 +7,8 @@ import type { InventoryMovement, Medication, MedicationFlash, Paginator } from '
 
 import MedicationActionDialog from '@/components/inventory/MedicationActionDialog.vue';
 import MedicationFormDialog from '@/components/inventory/MedicationFormDialog.vue';
+import StockAdjustmentDialog from '@/components/inventory/StockAdjustmentDialog.vue';
+import StockEntryDialog from '@/components/inventory/StockEntryDialog.vue';
 
 const { pageState, routerGet, routerPatch } = vi.hoisted(() => ({
     pageState: {
@@ -248,6 +250,44 @@ describe('Pages/inventory/Show.vue', () => {
         const dialog = page.findComponent(MedicationActionDialog);
         expect(dialog.exists()).toBe(true);
         expect(dialog.props('action')).toBe('delete');
+        expect(dialog.props('open')).toBe(true);
+    });
+
+    it('hides "Registrar entrada" without inventory.create', () => {
+        const page = mountShow({ medication: medication(), movements: movements() });
+
+        expect(page.findAll('button').some((button) => button.text() === 'Registrar entrada')).toBe(false);
+    });
+
+    it('shows "Registrar entrada" with inventory.create and opens the entry dialog', async () => {
+        pageState.props.auth.permissions = ['inventory.create'];
+        const page = mountShow({ medication: medication(), movements: movements() });
+
+        const entryButton = page.findAll('button').find((button) => button.text() === 'Registrar entrada');
+        expect(entryButton).toBeTruthy();
+        await entryButton?.trigger('click');
+
+        const dialog = page.findComponent(StockEntryDialog);
+        expect(dialog.exists()).toBe(true);
+        expect(dialog.props('open')).toBe(true);
+    });
+
+    it('hides "Registrar ajuste" without inventory.update', () => {
+        const page = mountShow({ medication: medication(), movements: movements() });
+
+        expect(page.findAll('button').some((button) => button.text() === 'Registrar ajuste')).toBe(false);
+    });
+
+    it('shows "Registrar ajuste" with inventory.update and opens the adjustment dialog', async () => {
+        pageState.props.auth.permissions = ['inventory.update'];
+        const page = mountShow({ medication: medication(), movements: movements() });
+
+        const adjustmentButton = page.findAll('button').find((button) => button.text() === 'Registrar ajuste');
+        expect(adjustmentButton).toBeTruthy();
+        await adjustmentButton?.trigger('click');
+
+        const dialog = page.findComponent(StockAdjustmentDialog);
+        expect(dialog.exists()).toBe(true);
         expect(dialog.props('open')).toBe(true);
     });
 
