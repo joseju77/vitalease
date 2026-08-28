@@ -2,6 +2,7 @@ import type { LucideIcon } from '@lucide/vue';
 import { Boxes, ChartBar, ShieldCheck, Stethoscope, Users, UsersRound } from '@lucide/vue';
 import { index as dashboardIndex } from '@/routes/dashboard';
 import { index as inventoryIndex } from '@/routes/inventory';
+import { medicationDemand } from '@/routes/reports';
 import { index as rolesIndex } from '@/routes/roles';
 import { index as usersIndex } from '@/routes/users';
 
@@ -33,7 +34,12 @@ export const NAV_GROUPS: NavGroup[] = [
         items: [
             { title: 'Consultas', href: dashboardIndex().url, icon: Stethoscope, permission: 'consultations.view' },
             { title: 'Inventario', href: inventoryIndex().url, icon: Boxes, permission: 'inventory.view' },
-            { title: 'Reportes y estadísticas', href: '#', icon: ChartBar, permission: 'reports.generate' },
+            {
+                title: 'Reportes y estadísticas',
+                href: medicationDemand().url,
+                icon: ChartBar,
+                permission: 'reports.generate',
+            },
         ],
     },
     {

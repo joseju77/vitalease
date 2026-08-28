@@ -18,7 +18,11 @@ describe('NAV_GROUPS', () => {
                 items: [
                     { title: 'Consultas', href: '/dashboard', permission: 'consultations.view' },
                     { title: 'Inventario', href: '/inventory', permission: 'inventory.view' },
-                    { title: 'Reportes y estadísticas', href: '#', permission: 'reports.generate' },
+                    {
+                        title: 'Reportes y estadísticas',
+                        href: '/reports/medication-demand',
+                        permission: 'reports.generate',
+                    },
                 ],
             },
             {
