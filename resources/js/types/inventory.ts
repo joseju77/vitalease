@@ -103,3 +103,19 @@ export interface DemandProjection {
     medication: MedicationSummary;
     is_indicative: boolean;
 }
+
+/**
+ * One merged point on the demand projection chart's shared month axis, as
+ * built by `lib/demandProjectionChart.ts`'s `buildDemandChartPoints`. `index`
+ * is the point's position on the numeric X axis; `history`/`fitted`/
+ * `projection` are `undefined` for months that series has no value for, so
+ * each line renders a gap instead of interpolating across them.
+ */
+export interface DemandChartPoint {
+    index: number;
+    month: string;
+    label: string;
+    history?: number;
+    fitted?: number;
+    projection?: number;
+}
