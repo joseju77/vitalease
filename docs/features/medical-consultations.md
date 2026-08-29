@@ -16,6 +16,9 @@ En resumen:
   [ADR-0005](../adr/0005-permission-taxonomy-and-role-catalog.md)).
 - Los pacientes se localizan mediante Laravel Scout + Meilisearch (ver
   [ADR-0006](../adr/0006-busqueda-de-pacientes-con-scout-y-meilisearch.md)).
+- El tratamiento de una consulta dispensa medicamentos de un inventario real con libro de movimientos (ver
+  [Tratamiento](#tratamiento), [inventario de medicamentos](medication-inventory.md) y
+  [ADR-0007](../adr/0007-inventario-de-medicamentos-y-libro-de-movimientos.md)).
 
 Convenciones usadas en todo este documento:
 
@@ -39,7 +42,6 @@ Nombre de la tabla: `medical_consultations`
 | diagnosis              | VARCHAR(1024)            | NOT NULL                                                  | Diagnóstico.                                                                                           |
 | condition              | SMALLINT                 | NOT NULL, CHECK (condition BETWEEN 1 AND 5)               | Estado del paciente (enum PHP `MedicalState`).                                                         |
 | prognosis              | SMALLINT                 | NOT NULL, CHECK (prognosis BETWEEN 1 AND 5)               | Pronóstico (enum PHP `MedicalState`).                                                                  |
-| treatment              | JSONB                    | NOT NULL, CHECK (jsonb_typeof(treatment) = 'array')       | Filas del tratamiento prescrito (ver más abajo).                                                       |
 | medical_classification | SMALLINT                 | NOT NULL, CHECK (medical_classification BETWEEN 1 AND 10) | Área clínica (enum PHP `MedicalClassification`).                                                       |
 | physician_id           | INTEGER                  | NOT NULL, FK users(id)                                    | Usuario que creó la consulta; nunca cambia.                                                            |
 | patient_id             | INTEGER                  | NOT NULL, FK patients(id)                                 | Paciente al que pertenece la consulta; nunca cambia.                                                   |
@@ -50,12 +52,31 @@ Nombre de la tabla: `medical_consultations`
 - El índice compuesto sobre (patient_id, created_at) respalda la lista "últimas consultas" del resumen del paciente.
 - Las claves foráneas `physician_id` y `patient_id` **no** se eliminan en cascada: un usuario o un paciente con
   consultas no puede eliminarse a nivel de base de datos.
-- `treatment` es un arreglo JSON de objetos con exactamente esta forma. El arreglo puede estar vacío y contiene como
-  máximo 20 filas; cada clave es una cadena obligatoria de como máximo 255 caracteres:
+- El tratamiento prescrito ya no vive en esta tabla como texto libre: cada línea es una fila relacional de
+  `medical_consultation_treatments` (ver [Tratamiento](#tratamiento) más abajo).
 
-  ```json
-  [{ "medication": "Paracetamol", "dose": "500 mg", "frequency": "Every 8 hours", "duration": "5 days" }]
-  ```
+## Tratamiento
+
+El tratamiento de una consulta es una lista de líneas relacionales, cada una respaldada por una fila de
+`medical_consultation_treatments` que referencia un medicamento del catálogo de inventario y descuenta su
+existencia. El módulo completo de inventario (tablas, libro de movimientos, búsqueda y proyección de demanda) se
+documenta en [inventario de medicamentos](medication-inventory.md) y
+[ADR-0007](../adr/0007-inventario-de-medicamentos-y-libro-de-movimientos.md).
+
+- El payload sigue enviando `treatment` como un arreglo en el nivel superior del request (ver
+  [Validación](#validación)), pero cada elemento ahora tiene la forma
+  `{ "medication_uuid": "...", "quantity_dispensed": 2, "dose": "500 mg", "frequency": "Every 8 hours", "duration": "5 days" }`
+  en lugar de un nombre de medicamento en texto libre.
+- `App\Services\Inventory\TreatmentDispensation::sync()` reconcilia las líneas enviadas contra las existentes,
+  dentro de la misma transacción del agregado:
+  - **Crear** una consulta dispensa la cantidad de cada línea (movimiento `Dispensation`).
+  - **Editar** una consulta calcula la diferencia por medicamento entre lo enviado y lo existente: una cantidad
+    mayor dispensa la diferencia; una cantidad menor, o quitar la línea por completo, restituye la diferencia como
+    un movimiento `DispensationReversal`.
+  - **Eliminar** una consulta restituye el stock de todas sus líneas (`TreatmentDispensation::restoreAll()`) antes
+    de borrar el agregado.
+- Si una línea dispensaría más de lo disponible, el servicio lanza `InsufficientStockException`, que la petición
+  traduce en un error 422 por línea (ver [Validación](#validación)).
 
 ## PhysicalExamination
 
@@ -160,7 +181,6 @@ El backend solo envía valores enteros crudos; las etiquetas en español de la U
 | medical_consultations | chk_condition_domain              | `condition BETWEEN 1 AND 5`               |
 | medical_consultations | chk_prognosis_domain              | `prognosis BETWEEN 1 AND 5`               |
 | medical_consultations | chk_medical_classification_domain | `medical_classification BETWEEN 1 AND 10` |
-| medical_consultations | chk_treatment_is_array            | `jsonb_typeof(treatment) = 'array'`       |
 | vital_signs           | chk_glasgow_domain                | `glasgow BETWEEN 3 AND 15`                |
 | vital_signs           | chk_oxygen_saturation_domain      | `oxygen_saturation BETWEEN 0 AND 100`     |
 | medical_regulations   | chk_transfer_type_domain          | `transfer_type BETWEEN 1 AND 3`           |
@@ -190,7 +210,7 @@ el hook `creating` del modelo. Los clientes nunca lo envían y nunca cambia.
 | Precisión decimal              | `weight` y `height` usan `decimal:0,2`; `temperature` usa `decimal:0,1`, en concordancia con la escala de la columna.                                                                                     |
 | Rangos fisiológicos            | peso 0.5–500, estatura 0.30–2.50, sistólica 40–300, diastólica 20–200, frecuencia cardiaca 20–300, frecuencia respiratoria 4–80, temperatura 30–45, SpO2 0–100, Glasgow 3–15, glucosa 10–2000 (nullable). |
 | Diastólica < sistólica         | Un callback `after()` rechaza `diastolic >= systolic` en `vital_signs.blood_pressure_diastolic` (solo cuando ambos campos pasaron sus propias reglas).                                                    |
-| Tratamiento                    | `present`, array, `max:20`; cada fila requiere `medication`, `dose`, `frequency`, `duration`.                                                                                                             |
+| Tratamiento                    | `treatment` es `present`, array, `max:20` líneas. Cada `medication_uuid` es obligatorio, `uuid`, `distinct` entre líneas y debe referenciar un medicamento activo; al editar, también acepta un medicamento inactivo si ya está vinculado a esa consulta. `quantity_dispensed` es entero entre 1 y 9999. `dose`, `frequency` y `duration` siguen siendo texto libre obligatorio (máx. 255 caracteres). Un error de existencia insuficiente se devuelve como un 422 por línea, con clave `treatment.N.quantity_dispensed` (`N` es el índice base cero de la línea). Ver [Tratamiento](#tratamiento). |
 | Regulación                     | `regulation` es nullable; cuando está presente, `transfer_type` y `regulated_at` son `required_with:regulation` y el resto son opcionales.                                                                |
 
 El payload anida `current_condition` y `diagnosis` bajo `consultation`, y las entidades hijas bajo `vital_signs`,
@@ -282,11 +302,16 @@ delete); las filas hijas se eliminan mediante la cascada de la base de datos.
    paciente y lista hasta 5 consultas recientes (cada una enlaza a su página de detalle).
 3. **Nueva consulta**: el botón "Nueva consulta" del diálogo (visible solo con `consultations.create`) abre
    `consultations/Create` para ese paciente.
-4. **Guardar**: `ConsultationForm` envía el agregado; si tiene éxito, el usuario regresa al dashboard con un toast de
+4. **Tratamiento** (`TreatmentRows`): cada línea tiene un selector de medicamento (combobox de medicamentos activos,
+   más el ya vinculado si se está editando) que muestra la existencia disponible como texto puramente informativo
+   (por ejemplo, "Paracetamol · Tableta 500 mg · 120 disponibles"), y un campo de cantidad dispensada. El formulario
+   **no** valida la existencia en el navegador: un intento de dispensar más de lo disponible solo se rechaza en la
+   respuesta del servidor (ver [Tratamiento](#tratamiento)).
+5. **Guardar**: `ConsultationForm` envía el agregado; si tiene éxito, el usuario regresa al dashboard con un toast de
    Sonner como "Consulta MC-260923-0007 registrada" (o "actualizada" / "eliminada" tras editar o eliminar).
-5. **Detalle** (`consultations/Show`): detalle de solo lectura; el botón Editar aparece solo cuando `can.update` es
+6. **Detalle** (`consultations/Show`): detalle de solo lectura; el botón Editar aparece solo cuando `can.update` es
    verdadero.
-6. **Edición** (`consultations/Edit`): el mismo formulario, precargado; cuando `can.delete` es verdadero también ofrece
+7. **Edición** (`consultations/Edit`): el mismo formulario, precargado; cuando `can.delete` es verdadero también ofrece
    "Eliminar consulta", que pide confirmación en un `AlertDialog` antes de enviar el DELETE.
 
 En las páginas de creación, detalle y edición, `PatientProfileCard` se ubica encima del formulario o del detalle. Inicia
@@ -313,8 +338,9 @@ php artisan db:seed --class=PatientSeeder
 
 - **Las firmas y un flujo de revisor/revisión** se eliminaron de esta etapa: una consulta no tiene firma, ni revisor, ni
   estado de revisión.
-- **Los reportes y exportaciones** (PDF, Excel) corresponden a una etapa posterior; `reports.generate` existe en el
-  catálogo de permisos, pero nada en este módulo lo usa.
+- **Los reportes y exportaciones** (PDF, Excel) de consultas corresponden a una etapa posterior; nada en este módulo
+  las genera. `reports.generate` ya no está sin usar: gatea el reporte de proyección de demanda de medicamentos
+  (`reports.medication-demand`), documentado en [inventario de medicamentos](medication-inventory.md).
 
 ## Diagrama entidad-relación
 
@@ -344,12 +370,32 @@ erDiagram
         string diagnosis
         int condition
         int prognosis
-        jsonb treatment
         int medical_classification
         int physician_id
         int patient_id
         timestamp created_at
         timestamp updated_at
+    }
+
+    Medication {
+        int id
+        string uuid
+        string name
+        string presentation
+        string concentration
+        int current_stock
+    }
+
+    MedicalConsultationTreatment }o--|| MedicalConsultation: belongs_to
+    MedicalConsultationTreatment }o--|| Medication: belongs_to
+    MedicalConsultationTreatment {
+        int id
+        int medical_consultation_id
+        int medication_id
+        int quantity_dispensed
+        string dose
+        string frequency
+        string duration
     }
 
     PhysicalExamination ||--|| MedicalConsultation: belongs_to
