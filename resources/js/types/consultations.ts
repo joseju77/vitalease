@@ -67,11 +67,47 @@ export interface ConsultationPatient {
     enrollment_number: string | null;
 }
 
-export interface TreatmentRow {
-    medication: string;
+/** The medication nested inside a `TreatmentLine`, as returned by the consultation aggregate. */
+export interface TreatmentLineMedication {
+    uuid: string;
+    name: string;
+    presentation: string;
+    concentration: string;
+    dispensing_unit: string;
+    is_active: boolean;
+}
+
+/** A treatment line as returned by the consultation aggregate (`consultation.treatment`), with the nested medication. */
+export interface TreatmentLine {
+    medication: TreatmentLineMedication;
+    quantity_dispensed: number;
     dose: string;
     frequency: string;
     duration: string;
+}
+
+/** A treatment line as submitted in the create/update payload: flat medication reference by uuid. */
+export interface TreatmentRowPayload {
+    medication_uuid: string;
+    quantity_dispensed: number;
+    dose: string;
+    frequency: string;
+    duration: string;
+}
+
+/**
+ * A selectable medication for the treatment picker, from
+ * `ConsultationFormOptions.medicationOptions`. `current_stock` is
+ * informational text only, never used for client-side validation.
+ */
+export interface MedicationOption {
+    uuid: string;
+    name: string;
+    presentation: string;
+    concentration: string;
+    dispensing_unit: string;
+    current_stock: number | null;
+    is_active: boolean;
 }
 
 /** Vital-sign inputs start as strings and become numbers once edited (`type="number"` + `v-model`). */
@@ -112,18 +148,19 @@ export interface ConsultationFormPayload {
     condition: number | null;
     prognosis: number | null;
     medical_classification: number | null;
-    treatment: TreatmentRow[];
+    treatment: TreatmentRowPayload[];
     vital_signs: VitalSignsForm;
     physical_examination: PhysicalExaminationForm;
     regulation: RegulationForm | null;
 }
 
-export interface ConsultationAggregate extends Omit<ConsultationFormPayload, 'patient_uuid'> {
+export interface ConsultationAggregate extends Omit<ConsultationFormPayload, 'patient_uuid' | 'treatment'> {
     uuid: string;
     code: string;
     created_at: string;
     patient: ConsultationPatient;
     physician: { name: string };
+    treatment: TreatmentLine[];
     vital_signs: VitalSignsForm;
     regulation: RegulationForm | null;
     can: { update: boolean; delete: boolean };
@@ -133,6 +170,7 @@ export interface ConsultationFormOptions {
     medicalStateOptions: number[];
     medicalClassificationOptions: number[];
     transferTypeOptions: number[];
+    medicationOptions: MedicationOption[];
 }
 
 /**

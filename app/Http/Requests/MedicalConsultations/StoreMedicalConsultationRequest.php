@@ -36,7 +36,13 @@ class StoreMedicalConsultationRequest extends FormRequest
             'medical_classification' => ['required', 'integer', Rule::enum(MedicalClassification::class)],
 
             'treatment' => ['present', 'array', 'max:20'],
-            'treatment.*.medication' => ['required', 'string', 'max:255'],
+            'treatment.*.medication_uuid' => [
+                'required',
+                'uuid',
+                'distinct',
+                Rule::exists('medications', 'uuid')->where('is_active', true),
+            ],
+            'treatment.*.quantity_dispensed' => ['required', 'integer', 'min:1', 'max:9999'],
             'treatment.*.dose' => ['required', 'string', 'max:255'],
             'treatment.*.frequency' => ['required', 'string', 'max:255'],
             'treatment.*.duration' => ['required', 'string', 'max:255'],
@@ -112,5 +118,18 @@ class StoreMedicalConsultationRequest extends FormRequest
     public function attributes(): array
     {
         return __('modules/consultations/management.attributes');
+    }
+
+    /**
+     * Get custom error messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'treatment.*.medication_uuid.distinct' => __('modules/consultations/management.custom.duplicate_medication'),
+            'treatment.*.medication_uuid.exists' => __('modules/consultations/management.custom.inactive_medication'),
+        ];
     }
 }

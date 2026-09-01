@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use RuntimeException;
 
-#[Signature('demo:seed {--users=8 : Total demo users, including the 3 fixed accounts} {--patients=80 : Number of demo patients} {--consultations=250 : Number of demo consultations}')]
+#[Signature('demo:seed {--users=8 : Total demo users, including the 3 fixed accounts} {--patients=80 : Number of demo patients} {--consultations=600 : Number of demo consultations}')]
 #[Description('Seed realistic demo users, patients and consultations for local/staging demonstrations (fresh database only)')]
 class DemoSeedCommand extends Command
 {
@@ -61,6 +61,7 @@ class DemoSeedCommand extends Command
 
         $this->call('scout:sync-index-settings');
         $this->call('scout:import', ['model' => 'App\Models\Patient']);
+        $this->call('scout:import', ['model' => 'App\Models\Medication']);
 
         $this->components->info("Seeded {$users} demo users, {$patients} demo patients and {$consultations} demo consultations.");
         $this->components->twoColumnDetail('Demo physician login', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL);

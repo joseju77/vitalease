@@ -14,6 +14,7 @@ import type {
     ConsultationFormOptions,
     ConsultationFormPayload,
     ConsultationPatient,
+    MedicationOption,
     RegulationForm,
 } from '@/types/consultations';
 import TreatmentRows from './TreatmentRows.vue';
@@ -48,7 +49,14 @@ const form = useForm<ConsultationFormPayload>({
     condition: props.consultation?.condition ?? null,
     prognosis: props.consultation?.prognosis ?? null,
     medical_classification: props.consultation?.medical_classification ?? null,
-    treatment: props.consultation?.treatment.map((row) => ({ ...row })) ?? [],
+    treatment:
+        props.consultation?.treatment.map((row) => ({
+            medication_uuid: row.medication.uuid,
+            quantity_dispensed: row.quantity_dispensed,
+            dose: row.dose,
+            frequency: row.frequency,
+            duration: row.duration,
+        })) ?? [],
     vital_signs: {
         weight: String(props.consultation?.vital_signs.weight ?? ''),
         height: String(props.consultation?.vital_signs.height ?? ''),
@@ -70,6 +78,37 @@ const form = useForm<ConsultationFormPayload>({
         cabinet_laboratory: props.consultation?.physical_examination.cabinet_laboratory ?? '',
     },
     regulation: { ...defaultRegulation, ...props.consultation?.regulation },
+});
+
+/**
+ * The picker must offer every active medication plus any medication already
+ * linked to the consultation being edited, even if it was deactivated since
+ * (D3): those linked-but-inactive medications keep no stock information and
+ * are excluded from the create form, which has no `consultation` yet.
+ * `medicationOptions` (`MedicalConsultationController::formOptions`) does not
+ * send `is_active` today, so an option missing it is treated as active.
+ */
+const medicationOptionsForPicker = computed<MedicationOption[]>(() => {
+    const activeOptions = props.medicationOptions.map((option) => ({ ...option, is_active: option.is_active ?? true }));
+    const seenUuids = new Set(activeOptions.map((option) => option.uuid));
+    const linkedInactiveOptions: MedicationOption[] = [];
+
+    for (const row of props.consultation?.treatment ?? []) {
+        const { medication } = row;
+        if (medication.is_active || seenUuids.has(medication.uuid)) continue;
+        seenUuids.add(medication.uuid);
+        linkedInactiveOptions.push({
+            uuid: medication.uuid,
+            name: medication.name,
+            presentation: medication.presentation,
+            concentration: medication.concentration,
+            dispensing_unit: medication.dispensing_unit,
+            current_stock: null,
+            is_active: false,
+        });
+    }
+
+    return [...activeOptions, ...linkedInactiveOptions];
 });
 
 function submit() {
@@ -163,7 +202,7 @@ const selectFields = [
 
             <VitalSignsSection v-model="form.vital_signs" :errors="errors" />
             <PhysicalExaminationSection v-model="form.physical_examination" :errors="errors" />
-            <TreatmentRows v-model="form.treatment" :errors="errors" />
+            <TreatmentRows v-model="form.treatment" :errors="errors" :medication-options="medicationOptionsForPicker" />
             <RegulationSection
                 v-model:enabled="hasRegulation"
                 v-model:regulation="form.regulation!"

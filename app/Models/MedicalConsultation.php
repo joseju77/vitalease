@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
@@ -18,7 +19,6 @@ use Illuminate\Support\Str;
     'diagnosis',
     'condition',
     'prognosis',
-    'treatment',
     'medical_classification',
     'physician_id',
     'patient_id',
@@ -47,7 +47,6 @@ class MedicalConsultation extends Model
             'condition' => MedicalState::class,
             'prognosis' => MedicalState::class,
             'medical_classification' => MedicalClassification::class,
-            'treatment' => 'array',
             'created_at' => 'immutable_datetime',
             'updated_at' => 'immutable_datetime',
         ];
@@ -102,5 +101,13 @@ class MedicalConsultation extends Model
     public function regulation(): HasOne
     {
         return $this->hasOne(MedicalRegulation::class);
+    }
+
+    /**
+     * @return HasMany<MedicalConsultationTreatment, $this>
+     */
+    public function treatments(): HasMany
+    {
+        return $this->hasMany(MedicalConsultationTreatment::class);
     }
 }

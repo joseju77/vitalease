@@ -18,6 +18,7 @@ defineProps<ConsultationFormOptions & { patient: ConsultationPatient; patientPro
         :medical-state-options="medicalStateOptions"
         :medical-classification-options="medicalClassificationOptions"
         :transfer-type-options="transferTypeOptions"
+        :medication-options="medicationOptions"
     >
         <template #before-sections>
             <PatientProfileCard :profile="patientProfile" />

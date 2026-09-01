@@ -1,5 +1,6 @@
 import '@inertiajs/core';
 import type { ConsultationFlash } from '@/types/consultations';
+import type { MedicationFlash } from '@/types/inventory';
 
 declare module '@inertiajs/core' {
     export interface InertiaConfig {
@@ -17,6 +18,13 @@ declare module '@inertiajs/core' {
              * from it.
              */
             consultation?: ConsultationFlash;
+            /**
+             * One-time confirmation flashed by
+             * `MedicationController::flashMedication()` and (later)
+             * `InventoryMovementController` on redirect to `inventory.index`
+             * or `inventory.show`; the inventory pages render a toast from it.
+             */
+            medication?: MedicationFlash;
         };
     }
 }

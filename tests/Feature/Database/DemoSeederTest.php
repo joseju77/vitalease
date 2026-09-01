@@ -1,8 +1,12 @@
 <?php
 
+use App\Enums\InventoryMovementType;
 use App\Enums\SexAtBirth;
+use App\Models\InventoryMovement;
 use App\Models\MedicalConsultation;
+use App\Models\MedicalConsultationTreatment;
 use App\Models\MedicalRegulation;
+use App\Models\Medication;
 use App\Models\Patient;
 use App\Models\PatientGynecologicalHistory;
 use App\Models\User;
@@ -121,6 +125,30 @@ describe('DemoSeeder', function () {
 
         expect(User::query()->count())->toBe($usersAfterFirstRun)
             ->and(Patient::query()->count())->toBe($patientsAfterFirstRun);
+    });
+});
+
+describe('DemoSeeder inventory ledger', function () {
+    it('keeps every medication\'s ledger consistent and produces dispensed treatment lines and adjustments', function () {
+        seedSmallDemoData(users: 4, patients: 20, consultations: 60);
+
+        $medications = Medication::query()->get(['id', 'current_stock']);
+
+        expect($medications)->not->toBeEmpty();
+
+        foreach ($medications as $medication) {
+            $movements = InventoryMovement::query()
+                ->where('medication_id', $medication->id)
+                ->orderBy('id')
+                ->get(['quantity', 'stock_after']);
+
+            expect($movements)->not->toBeEmpty()
+                ->and($movements->last()->stock_after)->toBe($medication->current_stock)
+                ->and($movements->sum('quantity'))->toBe($medication->current_stock);
+        }
+
+        expect(MedicalConsultationTreatment::query()->exists())->toBeTrue()
+            ->and(InventoryMovement::query()->where('type', InventoryMovementType::Adjustment)->exists())->toBeTrue();
     });
 });
 

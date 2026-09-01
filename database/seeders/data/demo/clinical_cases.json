@@ -13,7 +13,7 @@
             "blood_pressure_diastolic": [70, 84],
             "heart_rate": [76, 96],
             "respiratory_rate": [14, 19],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [96, 99],
             "glasgow": [15, 15]
         },
@@ -26,9 +26,16 @@
             "cabinet_laboratory": "Radiografía de tobillo AP y lateral sin datos de fractura; reglas de Ottawa negativas para estudio adicional."
         },
         "treatment": [
-            { "medication": "Diclofenaco", "dose": "50 mg", "frequency": "Cada 8 horas", "duration": "5 días" },
             {
-                "medication": "Paracetamol",
+                "medication_key": "diclofenaco",
+                "quantity_dispensed": 15,
+                "dose": "50 mg",
+                "frequency": "Cada 8 horas",
+                "duration": "5 días"
+            },
+            {
+                "medication_key": "paracetamol",
+                "quantity_dispensed": 9,
                 "dose": "500 mg",
                 "frequency": "Cada 8 horas si dolor",
                 "duration": "3 días"
@@ -62,8 +69,20 @@
             "cabinet_laboratory": "Radiografía de muñeca AP y lateral con trazo de fractura no desplazada del radio distal."
         },
         "treatment": [
-            { "medication": "Paracetamol", "dose": "500 mg", "frequency": "Cada 8 horas", "duration": "5 días" },
-            { "medication": "Naproxeno", "dose": "250 mg", "frequency": "Cada 12 horas", "duration": "5 días" }
+            {
+                "medication_key": "paracetamol",
+                "quantity_dispensed": 15,
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas",
+                "duration": "5 días"
+            },
+            {
+                "medication_key": "naproxeno",
+                "quantity_dispensed": 10,
+                "dose": "250 mg",
+                "frequency": "Cada 12 horas",
+                "duration": "5 días"
+            }
         ]
     },
     {
@@ -94,12 +113,19 @@
         },
         "treatment": [
             {
-                "medication": "Solución Hartmann",
+                "medication_key": "solucion_hartmann",
+                "quantity_dispensed": 2,
                 "dose": "1000 mL",
                 "frequency": "Infusión rápida",
                 "duration": "Según respuesta hemodinámica"
             },
-            { "medication": "Ketorolaco", "dose": "30 mg", "frequency": "Cada 8 horas", "duration": "Según evolución" }
+            {
+                "medication_key": "ketorolaco",
+                "quantity_dispensed": 3,
+                "dose": "30 mg",
+                "frequency": "Cada 8 horas",
+                "duration": "Según evolución"
+            }
         ],
         "regulation": {
             "transfer_type": "MunicipalHealthServices",
@@ -120,7 +146,7 @@
             "blood_pressure_diastolic": [72, 88],
             "heart_rate": [74, 96],
             "respiratory_rate": [14, 19],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [96, 99],
             "glasgow": [15, 15]
         },
@@ -133,13 +159,26 @@
             "cabinet_laboratory": "No se solicitan estudios de imagen por ausencia de banderas rojas."
         },
         "treatment": [
-            { "medication": "Naproxeno", "dose": "250 mg", "frequency": "Cada 12 horas", "duration": "7 días" },
-            { "medication": "Metocarbamol", "dose": "750 mg", "frequency": "Cada 8 horas", "duration": "5 días" }
+            {
+                "medication_key": "naproxeno",
+                "quantity_dispensed": 14,
+                "dose": "250 mg",
+                "frequency": "Cada 12 horas",
+                "duration": "7 días"
+            },
+            {
+                "medication_key": "metocarbamol",
+                "quantity_dispensed": 15,
+                "dose": "750 mg",
+                "frequency": "Cada 8 horas",
+                "duration": "5 días"
+            }
         ]
     },
     {
         "key": "faringoamigdalitis_aguda",
         "medical_classification": "Otolaryngology",
+        "demand_growth": 1.8,
         "current_condition": "Presenta dolor faríngeo intenso de tres días de evolución, fiebre y dificultad para deglutir alimentos sólidos.",
         "diagnosis": "Faringoamigdalitis aguda de probable origen bacteriano.",
         "condition": "Fair",
@@ -164,9 +203,16 @@
             "cabinet_laboratory": "Prueba rápida de estreptococo positiva."
         },
         "treatment": [
-            { "medication": "Amoxicilina", "dose": "500 mg", "frequency": "Cada 8 horas", "duration": "7 días" },
             {
-                "medication": "Paracetamol",
+                "medication_key": "amoxicilina",
+                "quantity_dispensed": 21,
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas",
+                "duration": "7 días"
+            },
+            {
+                "medication_key": "paracetamol",
+                "quantity_dispensed": 15,
                 "dose": "500 mg",
                 "frequency": "Cada 8 horas si fiebre",
                 "duration": "5 días"
@@ -201,13 +247,15 @@
         },
         "treatment": [
             {
-                "medication": "Amoxicilina/Ácido clavulánico",
+                "medication_key": "amoxicilina_acido_clavulanico",
+                "quantity_dispensed": 14,
                 "dose": "875/125 mg",
                 "frequency": "Cada 12 horas",
                 "duration": "7 días"
             },
             {
-                "medication": "Paracetamol",
+                "medication_key": "paracetamol",
+                "quantity_dispensed": 9,
                 "dose": "500 mg",
                 "frequency": "Cada 8 horas si dolor",
                 "duration": "3 días"
@@ -217,6 +265,7 @@
     {
         "key": "sinusitis_aguda",
         "medical_classification": "Otolaryngology",
+        "demand_growth": 2,
         "current_condition": "Presenta congestión nasal, dolor facial de predominio en mejillas y cefalea frontal de cinco días de evolución.",
         "diagnosis": "Rinosinusitis aguda bacteriana.",
         "condition": "Fair",
@@ -242,12 +291,19 @@
         },
         "treatment": [
             {
-                "medication": "Amoxicilina/Ácido clavulánico",
+                "medication_key": "amoxicilina_acido_clavulanico",
+                "quantity_dispensed": 14,
                 "dose": "875/125 mg",
                 "frequency": "Cada 12 horas",
                 "duration": "7 días"
             },
-            { "medication": "Loratadina", "dose": "10 mg", "frequency": "Cada 24 horas", "duration": "7 días" }
+            {
+                "medication_key": "loratadina",
+                "quantity_dispensed": 7,
+                "dose": "10 mg",
+                "frequency": "Cada 24 horas",
+                "duration": "7 días"
+            }
         ]
     },
     {
@@ -278,17 +334,25 @@
         },
         "treatment": [
             {
-                "medication": "Paracetamol",
+                "medication_key": "paracetamol",
+                "quantity_dispensed": 9,
                 "dose": "500 mg",
                 "frequency": "Cada 8 horas si molestia",
                 "duration": "3 días"
             },
-            { "medication": "Ambroxol", "dose": "30 mg", "frequency": "Cada 8 horas", "duration": "5 días" }
+            {
+                "medication_key": "ambroxol",
+                "quantity_dispensed": 15,
+                "dose": "30 mg",
+                "frequency": "Cada 8 horas",
+                "duration": "5 días"
+            }
         ]
     },
     {
         "key": "resfriado_comun",
         "medical_classification": "Respiratory",
+        "demand_growth": 2.5,
         "current_condition": "Presenta congestión nasal, estornudos y tos leve de dos días de evolución, sin fiebre.",
         "diagnosis": "Infección de vías respiratorias altas de origen viral (resfriado común).",
         "condition": "Good",
@@ -314,17 +378,25 @@
         },
         "treatment": [
             {
-                "medication": "Paracetamol",
+                "medication_key": "paracetamol",
+                "quantity_dispensed": 9,
                 "dose": "500 mg",
                 "frequency": "Cada 8 horas si molestia",
                 "duration": "3 días"
             },
-            { "medication": "Loratadina", "dose": "10 mg", "frequency": "Cada 24 horas", "duration": "5 días" }
+            {
+                "medication_key": "loratadina",
+                "quantity_dispensed": 5,
+                "dose": "10 mg",
+                "frequency": "Cada 24 horas",
+                "duration": "5 días"
+            }
         ]
     },
     {
         "key": "crisis_asmatica_moderada",
         "medical_classification": "Respiratory",
+        "demand_growth": 1.5,
         "current_condition": "Acude por dificultad respiratoria y sibilancias de inicio súbito tras exposición a polvo, con antecedente de asma diagnosticada.",
         "diagnosis": "Crisis asmática moderada.",
         "condition": "Serious",
@@ -350,12 +422,19 @@
         },
         "treatment": [
             {
-                "medication": "Salbutamol",
+                "medication_key": "salbutamol",
+                "quantity_dispensed": 1,
                 "dose": "2 disparos (200 mcg)",
                 "frequency": "Cada 4-6 horas",
                 "duration": "3 días"
             },
-            { "medication": "Prednisona", "dose": "50 mg", "frequency": "Cada 24 horas", "duration": "5 días" }
+            {
+                "medication_key": "prednisona",
+                "quantity_dispensed": 5,
+                "dose": "50 mg",
+                "frequency": "Cada 24 horas",
+                "duration": "5 días"
+            }
         ]
     },
     {
@@ -372,7 +451,7 @@
             "blood_pressure_diastolic": [55, 68],
             "heart_rate": [112, 138],
             "respiratory_rate": [27, 35],
-            "temperature": [38.6, 40.0],
+            "temperature": [38.6, 40],
             "oxygen_saturation": [82, 89],
             "glasgow": [13, 15]
         },
@@ -386,13 +465,15 @@
         },
         "treatment": [
             {
-                "medication": "Ceftriaxona",
+                "medication_key": "ceftriaxona",
+                "quantity_dispensed": 3,
                 "dose": "1 g",
                 "frequency": "Cada 24 horas",
                 "duration": "Según evolución hospitalaria"
             },
             {
-                "medication": "Solución Hartmann",
+                "medication_key": "solucion_hartmann",
+                "quantity_dispensed": 2,
                 "dose": "1000 mL",
                 "frequency": "Infusión inicial",
                 "duration": "Según respuesta hemodinámica"
@@ -431,13 +512,15 @@
         },
         "treatment": [
             {
-                "medication": "Vida Suero Oral",
+                "medication_key": "vida_suero_oral",
+                "quantity_dispensed": 3,
                 "dose": "1 sobre disuelto en 1 L",
                 "frequency": "Fraccionado durante el día",
                 "duration": "3 días"
             },
             {
-                "medication": "Butilhioscina",
+                "medication_key": "butilhioscina",
+                "quantity_dispensed": 9,
                 "dose": "10 mg",
                 "frequency": "Cada 8 horas si dolor",
                 "duration": "3 días"
@@ -472,12 +555,19 @@
         },
         "treatment": [
             {
-                "medication": "Omeprazol",
+                "medication_key": "omeprazol",
+                "quantity_dispensed": 14,
                 "dose": "20 mg",
                 "frequency": "Cada 24 horas en ayuno",
                 "duration": "14 días"
             },
-            { "medication": "Sucralfato", "dose": "1 g", "frequency": "Cada 8 horas", "duration": "7 días" }
+            {
+                "medication_key": "sucralfato",
+                "quantity_dispensed": 21,
+                "dose": "1 g",
+                "frequency": "Cada 8 horas",
+                "duration": "7 días"
+            }
         ]
     },
     {
@@ -507,8 +597,20 @@
             "cabinet_laboratory": "Examen general de orina con microhematuria; ultrasonido renal con dilatación pielocalicial leve derecha."
         },
         "treatment": [
-            { "medication": "Ketorolaco", "dose": "30 mg", "frequency": "Cada 8 horas", "duration": "3 días" },
-            { "medication": "Butilhioscina", "dose": "20 mg", "frequency": "Cada 8 horas", "duration": "3 días" }
+            {
+                "medication_key": "ketorolaco",
+                "quantity_dispensed": 3,
+                "dose": "30 mg",
+                "frequency": "Cada 8 horas",
+                "duration": "3 días"
+            },
+            {
+                "medication_key": "butilhioscina",
+                "quantity_dispensed": 9,
+                "dose": "20 mg",
+                "frequency": "Cada 8 horas",
+                "duration": "3 días"
+            }
         ]
     },
     {
@@ -539,9 +641,16 @@
             "cabinet_laboratory": "Examen general de orina con leucocituria y nitritos positivos."
         },
         "treatment": [
-            { "medication": "Nitrofurantoína", "dose": "100 mg", "frequency": "Cada 12 horas", "duration": "5 días" },
             {
-                "medication": "Paracetamol",
+                "medication_key": "nitrofurantoina",
+                "quantity_dispensed": 10,
+                "dose": "100 mg",
+                "frequency": "Cada 12 horas",
+                "duration": "5 días"
+            },
+            {
+                "medication_key": "paracetamol",
+                "quantity_dispensed": 9,
                 "dose": "500 mg",
                 "frequency": "Cada 8 horas si dolor",
                 "duration": "3 días"
@@ -563,7 +672,7 @@
             "blood_pressure_diastolic": [64, 80],
             "heart_rate": [70, 92],
             "respiratory_rate": [14, 18],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [97, 99],
             "glasgow": [15, 15]
         },
@@ -576,9 +685,16 @@
             "cabinet_laboratory": "Exudado vaginal con presencia de seudohifas compatibles con Candida spp."
         },
         "treatment": [
-            { "medication": "Fluconazol", "dose": "150 mg", "frequency": "Dosis única", "duration": "1 día" },
             {
-                "medication": "Clotrimazol óvulos",
+                "medication_key": "fluconazol",
+                "quantity_dispensed": 1,
+                "dose": "150 mg",
+                "frequency": "Dosis única",
+                "duration": "1 día"
+            },
+            {
+                "medication_key": "clotrimazol_ovulos",
+                "quantity_dispensed": 1,
                 "dose": "500 mg",
                 "frequency": "Dosis única vaginal",
                 "duration": "1 día"
@@ -600,7 +716,7 @@
             "blood_pressure_diastolic": [62, 78],
             "heart_rate": [76, 98],
             "respiratory_rate": [14, 19],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [97, 99],
             "glasgow": [15, 15]
         },
@@ -613,9 +729,16 @@
             "cabinet_laboratory": "No se solicitan estudios; presentación típica sin banderas rojas."
         },
         "treatment": [
-            { "medication": "Ácido mefenámico", "dose": "500 mg", "frequency": "Cada 8 horas", "duration": "3 días" },
             {
-                "medication": "Butilhioscina",
+                "medication_key": "acido_mefenamico",
+                "quantity_dispensed": 9,
+                "dose": "500 mg",
+                "frequency": "Cada 8 horas",
+                "duration": "3 días"
+            },
+            {
+                "medication_key": "butilhioscina",
+                "quantity_dispensed": 9,
                 "dose": "10 mg",
                 "frequency": "Cada 8 horas si dolor",
                 "duration": "3 días"
@@ -636,7 +759,7 @@
             "blood_pressure_diastolic": [65, 80],
             "heart_rate": [72, 92],
             "respiratory_rate": [14, 18],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [97, 99],
             "glasgow": [15, 15]
         },
@@ -650,7 +773,8 @@
         },
         "treatment": [
             {
-                "medication": "Ciprofloxacino oftálmico",
+                "medication_key": "ciprofloxacino_oftalmico",
+                "quantity_dispensed": 1,
                 "dose": "1 gota",
                 "frequency": "Cada 4 horas",
                 "duration": "7 días"
@@ -671,7 +795,7 @@
             "blood_pressure_diastolic": [65, 80],
             "heart_rate": [70, 90],
             "respiratory_rate": [14, 18],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [97, 99],
             "glasgow": [15, 15]
         },
@@ -685,13 +809,15 @@
         },
         "treatment": [
             {
-                "medication": "Compresas tibias",
+                "medication_key": "compresas_tibias",
+                "quantity_dispensed": 1,
                 "dose": "No aplica",
                 "frequency": "Cada 8 horas",
                 "duration": "5 días"
             },
             {
-                "medication": "Cloranfenicol oftálmico",
+                "medication_key": "cloranfenicol_oftalmico",
+                "quantity_dispensed": 1,
                 "dose": "1 gota",
                 "frequency": "Cada 8 horas",
                 "duration": "5 días"
@@ -712,7 +838,7 @@
             "blood_pressure_diastolic": [95, 112],
             "heart_rate": [82, 104],
             "respiratory_rate": [16, 21],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [95, 98],
             "glasgow": [15, 15]
         },
@@ -726,13 +852,15 @@
         },
         "treatment": [
             {
-                "medication": "Losartán",
+                "medication_key": "losartan",
+                "quantity_dispensed": 30,
                 "dose": "50 mg",
                 "frequency": "Cada 24 horas",
                 "duration": "Tratamiento continuo"
             },
             {
-                "medication": "Amlodipino",
+                "medication_key": "amlodipino",
+                "quantity_dispensed": 30,
                 "dose": "5 mg",
                 "frequency": "Cada 24 horas",
                 "duration": "Tratamiento continuo"
@@ -767,13 +895,15 @@
         },
         "treatment": [
             {
-                "medication": "Captopril",
+                "medication_key": "captopril",
+                "quantity_dispensed": 2,
                 "dose": "25 mg",
                 "frequency": "Dosis inicial sublingual",
                 "duration": "Según respuesta"
             },
             {
-                "medication": "Losartán",
+                "medication_key": "losartan",
+                "quantity_dispensed": 30,
                 "dose": "50 mg",
                 "frequency": "Cada 24 horas",
                 "duration": "Tratamiento continuo"
@@ -798,7 +928,7 @@
             "blood_pressure_diastolic": [65, 80],
             "heart_rate": [70, 90],
             "respiratory_rate": [14, 18],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [97, 99],
             "glasgow": [15, 15]
         },
@@ -811,8 +941,20 @@
             "cabinet_laboratory": "No se solicitan estudios; diagnóstico clínico."
         },
         "treatment": [
-            { "medication": "Hidrocortisona crema", "dose": "1%", "frequency": "Cada 12 horas", "duration": "7 días" },
-            { "medication": "Loratadina", "dose": "10 mg", "frequency": "Cada 24 horas", "duration": "5 días" }
+            {
+                "medication_key": "hidrocortisona_crema",
+                "quantity_dispensed": 1,
+                "dose": "1%",
+                "frequency": "Cada 12 horas",
+                "duration": "7 días"
+            },
+            {
+                "medication_key": "loratadina",
+                "quantity_dispensed": 5,
+                "dose": "10 mg",
+                "frequency": "Cada 24 horas",
+                "duration": "5 días"
+            }
         ]
     },
     {
@@ -842,9 +984,16 @@
             "cabinet_laboratory": "Biometría hemática con leucocitosis leve; ultrasonido de tejidos blandos sin colección."
         },
         "treatment": [
-            { "medication": "Cefalexina", "dose": "500 mg", "frequency": "Cada 6 horas", "duration": "7 días" },
             {
-                "medication": "Paracetamol",
+                "medication_key": "cefalexina",
+                "quantity_dispensed": 28,
+                "dose": "500 mg",
+                "frequency": "Cada 6 horas",
+                "duration": "7 días"
+            },
+            {
+                "medication_key": "paracetamol",
+                "quantity_dispensed": 15,
                 "dose": "500 mg",
                 "frequency": "Cada 8 horas si fiebre",
                 "duration": "5 días"
@@ -879,13 +1028,15 @@
         },
         "treatment": [
             {
-                "medication": "Sumatriptán",
+                "medication_key": "sumatriptan",
+                "quantity_dispensed": 2,
                 "dose": "50 mg",
                 "frequency": "Dosis única, repetir si persiste tras 2 horas",
                 "duration": "Según necesidad"
             },
             {
-                "medication": "Metoclopramida",
+                "medication_key": "metoclopramida",
+                "quantity_dispensed": 6,
                 "dose": "10 mg",
                 "frequency": "Cada 8 horas si náusea",
                 "duration": "2 días"
@@ -906,7 +1057,7 @@
             "blood_pressure_diastolic": [68, 84],
             "heart_rate": [72, 94],
             "respiratory_rate": [14, 19],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [97, 99],
             "glasgow": [15, 15]
         },
@@ -920,7 +1071,8 @@
         },
         "treatment": [
             {
-                "medication": "Paracetamol",
+                "medication_key": "paracetamol",
+                "quantity_dispensed": 9,
                 "dose": "500 mg",
                 "frequency": "Cada 8 horas si dolor",
                 "duration": "3 días"
@@ -941,7 +1093,7 @@
             "blood_pressure_diastolic": [72, 90],
             "heart_rate": [78, 100],
             "respiratory_rate": [15, 20],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [96, 99],
             "glasgow": [15, 15]
         },
@@ -954,9 +1106,16 @@
             "cabinet_laboratory": "No se solicitan estudios de imagen; presentación compatible con causa periférica."
         },
         "treatment": [
-            { "medication": "Betahistina", "dose": "24 mg", "frequency": "Cada 12 horas", "duration": "10 días" },
             {
-                "medication": "Dimenhidrinato",
+                "medication_key": "betahistina",
+                "quantity_dispensed": 20,
+                "dose": "24 mg",
+                "frequency": "Cada 12 horas",
+                "duration": "10 días"
+            },
+            {
+                "medication_key": "dimenhidrinato",
+                "quantity_dispensed": 9,
                 "dose": "50 mg",
                 "frequency": "Cada 8 horas si náusea",
                 "duration": "3 días"
@@ -992,13 +1151,15 @@
         },
         "treatment": [
             {
-                "medication": "Metformina",
+                "medication_key": "metformina",
+                "quantity_dispensed": 30,
                 "dose": "850 mg",
                 "frequency": "Cada 12 horas",
                 "duration": "Tratamiento continuo"
             },
             {
-                "medication": "Insulina glargina",
+                "medication_key": "insulina_glargina",
+                "quantity_dispensed": 1,
                 "dose": "10 UI",
                 "frequency": "Cada 24 horas",
                 "duration": "Tratamiento continuo"
@@ -1033,7 +1194,8 @@
         },
         "treatment": [
             {
-                "medication": "Levotiroxina",
+                "medication_key": "levotiroxina",
+                "quantity_dispensed": 30,
                 "dose": "75 mcg",
                 "frequency": "Cada 24 horas en ayuno",
                 "duration": "Tratamiento continuo"
@@ -1054,7 +1216,7 @@
             "blood_pressure_diastolic": [75, 90],
             "heart_rate": [88, 110],
             "respiratory_rate": [18, 24],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [96, 99],
             "glasgow": [15, 15]
         },
@@ -1068,13 +1230,15 @@
         },
         "treatment": [
             {
-                "medication": "Sertralina",
+                "medication_key": "sertralina",
+                "quantity_dispensed": 30,
                 "dose": "50 mg",
                 "frequency": "Cada 24 horas",
                 "duration": "Tratamiento continuo"
             },
             {
-                "medication": "Clonazepam",
+                "medication_key": "clonazepam",
+                "quantity_dispensed": 14,
                 "dose": "0.5 mg",
                 "frequency": "Cada 24 horas por la noche",
                 "duration": "14 días"
@@ -1095,7 +1259,7 @@
             "blood_pressure_diastolic": [68, 82],
             "heart_rate": [68, 90],
             "respiratory_rate": [14, 19],
-            "temperature": [36.3, 37.0],
+            "temperature": [36.3, 37],
             "oxygen_saturation": [96, 99],
             "glasgow": [15, 15]
         },
@@ -1109,7 +1273,8 @@
         },
         "treatment": [
             {
-                "medication": "Fluoxetina",
+                "medication_key": "fluoxetina",
+                "quantity_dispensed": 30,
                 "dose": "20 mg",
                 "frequency": "Cada 24 horas",
                 "duration": "Tratamiento continuo"

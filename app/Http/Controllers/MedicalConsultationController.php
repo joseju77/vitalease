@@ -8,9 +8,13 @@ use App\Enums\TransferType;
 use App\Http\Requests\MedicalConsultations\StoreMedicalConsultationRequest;
 use App\Http\Requests\MedicalConsultations\UpdateMedicalConsultationRequest;
 use App\Models\MedicalConsultation;
+use App\Models\MedicalConsultationTreatment;
+use App\Models\Medication;
 use App\Models\Patient;
 use App\Models\PatientAilment;
 use App\Models\PatientEmergencyContact;
+use App\Services\Inventory\InsufficientStockException;
+use App\Services\Inventory\TreatmentDispensation;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +25,8 @@ use Inertia\Response;
 
 class MedicalConsultationController extends Controller
 {
+    public function __construct(private readonly TreatmentDispensation $treatmentDispensation) {}
+
     public function create(Request $request): Response
     {
         $patientUuid = $request->query('patient');
@@ -37,7 +43,10 @@ class MedicalConsultationController extends Controller
 
     public function show(Request $request, MedicalConsultation $consultation): Response
     {
-        $consultation->load(['patient', 'physician', 'vitalSigns', 'physicalExamination', 'regulation']);
+        $consultation->load([
+            'patient', 'physician', 'vitalSigns', 'physicalExamination', 'regulation',
+            'treatments' => fn (HasMany $query) => $query->orderBy('id')->with('medication'),
+        ]);
 
         return Inertia::render('consultations/Show', [
             'consultation' => $this->mapConsultationAggregate($consultation, $request),
@@ -47,7 +56,10 @@ class MedicalConsultationController extends Controller
 
     public function edit(Request $request, MedicalConsultation $consultation): Response
     {
-        $consultation->load(['patient', 'physician', 'vitalSigns', 'physicalExamination', 'regulation']);
+        $consultation->load([
+            'patient', 'physician', 'vitalSigns', 'physicalExamination', 'regulation',
+            'treatments' => fn (HasMany $query) => $query->orderBy('id')->with('medication'),
+        ]);
 
         return Inertia::render('consultations/Edit', [
             'consultation' => $this->mapConsultationAggregate($consultation, $request),
@@ -65,30 +77,35 @@ class MedicalConsultationController extends Controller
      */
     public function store(StoreMedicalConsultationRequest $request): RedirectResponse
     {
-        $consultation = DB::transaction(function () use ($request): MedicalConsultation {
-            $patient = Patient::query()->where('uuid', $request->validated('patient_uuid'))->firstOrFail();
+        try {
+            $consultation = DB::transaction(function () use ($request): MedicalConsultation {
+                $patient = Patient::query()->where('uuid', $request->validated('patient_uuid'))->firstOrFail();
 
-            $consultation = MedicalConsultation::query()->create([
-                'current_condition' => $request->validated('consultation.current_condition'),
-                'diagnosis' => $request->validated('consultation.diagnosis'),
-                'condition' => $request->validated('condition'),
-                'prognosis' => $request->validated('prognosis'),
-                'treatment' => $request->validated('treatment'),
-                'medical_classification' => $request->validated('medical_classification'),
-                'physician_id' => $request->user()->id,
-                'patient_id' => $patient->id,
-            ]);
+                $consultation = MedicalConsultation::query()->create([
+                    'current_condition' => $request->validated('consultation.current_condition'),
+                    'diagnosis' => $request->validated('consultation.diagnosis'),
+                    'condition' => $request->validated('condition'),
+                    'prognosis' => $request->validated('prognosis'),
+                    'medical_classification' => $request->validated('medical_classification'),
+                    'physician_id' => $request->user()->id,
+                    'patient_id' => $patient->id,
+                ]);
 
-            $consultation->vitalSigns()->create($request->validated('vital_signs'));
-            $consultation->physicalExamination()->create($request->validated('physical_examination'));
+                $consultation->vitalSigns()->create($request->validated('vital_signs'));
+                $consultation->physicalExamination()->create($request->validated('physical_examination'));
 
-            $regulation = $request->validated('regulation');
-            if ($regulation !== null) {
-                $consultation->regulation()->create($regulation);
-            }
+                $regulation = $request->validated('regulation');
+                if ($regulation !== null) {
+                    $consultation->regulation()->create($regulation);
+                }
 
-            return $consultation;
-        });
+                $this->treatmentDispensation->sync($consultation, $request->validated('treatment'), $request->user());
+
+                return $consultation;
+            });
+        } catch (InsufficientStockException $e) {
+            throw $e->toValidationException('treatment.%d.quantity_dispensed');
+        }
 
         $this->flashConsultation($consultation, 'created');
 
@@ -103,26 +120,31 @@ class MedicalConsultationController extends Controller
      */
     public function update(UpdateMedicalConsultationRequest $request, MedicalConsultation $consultation): RedirectResponse
     {
-        DB::transaction(function () use ($request, $consultation): void {
-            $consultation->update([
-                'current_condition' => $request->validated('consultation.current_condition'),
-                'diagnosis' => $request->validated('consultation.diagnosis'),
-                'condition' => $request->validated('condition'),
-                'prognosis' => $request->validated('prognosis'),
-                'treatment' => $request->validated('treatment'),
-                'medical_classification' => $request->validated('medical_classification'),
-            ]);
+        try {
+            DB::transaction(function () use ($request, $consultation): void {
+                $consultation->update([
+                    'current_condition' => $request->validated('consultation.current_condition'),
+                    'diagnosis' => $request->validated('consultation.diagnosis'),
+                    'condition' => $request->validated('condition'),
+                    'prognosis' => $request->validated('prognosis'),
+                    'medical_classification' => $request->validated('medical_classification'),
+                ]);
 
-            $consultation->vitalSigns->update($request->validated('vital_signs'));
-            $consultation->physicalExamination->update($request->validated('physical_examination'));
+                $consultation->vitalSigns->update($request->validated('vital_signs'));
+                $consultation->physicalExamination->update($request->validated('physical_examination'));
 
-            $regulation = $request->validated('regulation');
-            if ($regulation === null) {
-                $consultation->regulation()->delete();
-            } else {
-                $consultation->regulation()->updateOrCreate([], $regulation);
-            }
-        });
+                $regulation = $request->validated('regulation');
+                if ($regulation === null) {
+                    $consultation->regulation()->delete();
+                } else {
+                    $consultation->regulation()->updateOrCreate([], $regulation);
+                }
+
+                $this->treatmentDispensation->sync($consultation, $request->validated('treatment'), $request->user());
+            });
+        } catch (InsufficientStockException $e) {
+            throw $e->toValidationException('treatment.%d.quantity_dispensed');
+        }
 
         $this->flashConsultation($consultation, 'updated');
 
@@ -130,27 +152,38 @@ class MedicalConsultationController extends Controller
     }
 
     /**
-     * Hard-delete the consultation; child rows cascade at the database
-     * level.
+     * Restore all stock dispensed by the consultation's treatment lines,
+     * then hard-delete the consultation; remaining child rows cascade at the
+     * database level.
      */
-    public function destroy(MedicalConsultation $consultation): RedirectResponse
+    public function destroy(Request $request, MedicalConsultation $consultation): RedirectResponse
     {
         $this->flashConsultation($consultation, 'deleted');
 
-        DB::transaction(function () use ($consultation): void {
+        DB::transaction(function () use ($request, $consultation): void {
+            $this->treatmentDispensation->restoreAll($consultation, $request->user());
+
             $consultation->delete();
         });
 
         return redirect()->route('dashboard.index');
     }
 
-    /** @return array<string, list<int>> */
+    /** @return array<string, mixed> */
     private function formOptions(): array
     {
         return [
             'medicalStateOptions' => array_column(MedicalState::cases(), 'value'),
             'medicalClassificationOptions' => array_column(MedicalClassification::cases(), 'value'),
             'transferTypeOptions' => array_column(TransferType::cases(), 'value'),
+            'medicationOptions' => Medication::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Medication $medication): array => $medication->only([
+                    'uuid', 'name', 'presentation', 'concentration', 'dispensing_unit', 'current_stock',
+                ]))
+                ->all(),
         ];
     }
 
@@ -259,7 +292,22 @@ class MedicalConsultationController extends Controller
             'condition' => $consultation->condition->value,
             'prognosis' => $consultation->prognosis->value,
             'medical_classification' => $consultation->medical_classification->value,
-            'treatment' => $consultation->treatment ?? [],
+            'treatment' => $consultation->treatments
+                ->map(fn (MedicalConsultationTreatment $treatment): array => [
+                    'medication' => [
+                        'uuid' => $treatment->medication->uuid,
+                        'name' => $treatment->medication->name,
+                        'presentation' => $treatment->medication->presentation,
+                        'concentration' => $treatment->medication->concentration,
+                        'dispensing_unit' => $treatment->medication->dispensing_unit,
+                        'is_active' => $treatment->medication->is_active,
+                    ],
+                    'quantity_dispensed' => $treatment->quantity_dispensed,
+                    'dose' => $treatment->dose,
+                    'frequency' => $treatment->frequency,
+                    'duration' => $treatment->duration,
+                ])
+                ->all(),
             'vital_signs' => $consultation->vitalSigns->only([
                 'weight', 'height', 'blood_pressure_systolic', 'blood_pressure_diastolic',
                 'heart_rate', 'respiratory_rate', 'temperature', 'oxygen_saturation', 'glasgow', 'glucose',

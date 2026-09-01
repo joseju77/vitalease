@@ -21,10 +21,17 @@ class UpdateMedicalConsultationRequest extends FormRequest
      * update, so it is not an accepted key here at all — `#[FailOnUnknownFields]`
      * rejects it if sent.
      *
+     * `treatment.*.medication_uuid` accepts an active medication OR a
+     * medication already linked to this consultation's existing treatment
+     * lines, so a line prescribed before its medication was deactivated
+     * stays editable (e.g. to adjust its quantity) without being forced out.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
     {
+        $existingMedicationIds = $this->route('consultation')->treatments()->pluck('medication_id')->all();
+
         return [
             'consultation' => ['required', 'array'],
             'consultation.current_condition' => ['required', 'string', 'max:1024'],
@@ -35,7 +42,15 @@ class UpdateMedicalConsultationRequest extends FormRequest
             'medical_classification' => ['required', 'integer', Rule::enum(MedicalClassification::class)],
 
             'treatment' => ['present', 'array', 'max:20'],
-            'treatment.*.medication' => ['required', 'string', 'max:255'],
+            'treatment.*.medication_uuid' => [
+                'required',
+                'uuid',
+                'distinct',
+                Rule::exists('medications', 'uuid')->where(
+                    fn ($query) => $query->where('is_active', true)->orWhereIn('id', $existingMedicationIds)
+                ),
+            ],
+            'treatment.*.quantity_dispensed' => ['required', 'integer', 'min:1', 'max:9999'],
             'treatment.*.dose' => ['required', 'string', 'max:255'],
             'treatment.*.frequency' => ['required', 'string', 'max:255'],
             'treatment.*.duration' => ['required', 'string', 'max:255'],
@@ -111,5 +126,18 @@ class UpdateMedicalConsultationRequest extends FormRequest
     public function attributes(): array
     {
         return __('modules/consultations/management.attributes');
+    }
+
+    /**
+     * Get custom error messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'treatment.*.medication_uuid.distinct' => __('modules/consultations/management.custom.duplicate_medication'),
+            'treatment.*.medication_uuid.exists' => __('modules/consultations/management.custom.inactive_medication'),
+        ];
     }
 }

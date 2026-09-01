@@ -77,17 +77,18 @@ base de datos recién creada:
 make seed-demo
 ```
 
-Por defecto crea 8 usuarios, 80 pacientes y 250 consultas repartidas en los últimos 90 días. Las cantidades se pueden
-ajustar ejecutando el comando de Artisan directamente (desde `make laravel-shell`):
+Por defecto crea 8 usuarios, 80 pacientes, un catálogo de medicamentos con su existencia inicial y 600 consultas (con
+sus líneas de tratamiento) repartidas en los últimos 365 días. Las cantidades se pueden ajustar ejecutando el comando
+de Artisan directamente (desde `make laravel-shell`):
 
 ```bash
-php artisan demo:seed --users=8 --patients=80 --consultations=250
+php artisan demo:seed --users=8 --patients=80 --consultations=600
 ```
 
 - `--users` incluye las 3 cuentas fijas (superadministrador, médico demo y administrador), por lo que el mínimo es 3;
   el resto se crean como médicos.
-- El comando carga primero los catálogos, luego los datos de demostración y al final importa los pacientes al índice
-  de búsqueda.
+- El comando carga primero los catálogos, luego los datos de demostración (incluyendo el catálogo de medicamentos y
+  su historial de movimientos de inventario) y al final importa pacientes y medicamentos al índice de búsqueda.
 - No es idempotente: se niega a ejecutarse si los datos de demostración ya existen. Para volver a cargarlos, recrea la
   base de datos (`php artisan migrate:fresh --seed`) antes de ejecutarlo de nuevo.
 - Se niega a ejecutarse en producción.

@@ -45,6 +45,7 @@ export default defineConfigWithVueTs(
             'public/build/**',
             'storage/**',
             'bootstrap/cache/**',
+            'docs/**',
             'resources/js/routes/**',
             'resources/js/actions/**',
             'resources/js/wayfinder/**',

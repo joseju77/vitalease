@@ -64,7 +64,22 @@ function consultation(overrides: Partial<ConsultationAggregate> = {}): Consultat
         condition: 2,
         prognosis: 5,
         medical_classification: 8,
-        treatment: [{ medication: 'Sumatriptán', dose: '50 mg', frequency: 'c/12h', duration: '2 días' }],
+        treatment: [
+            {
+                medication: {
+                    uuid: 'med-sumatriptan',
+                    name: 'Sumatriptán',
+                    presentation: 'Tableta',
+                    concentration: '50 mg',
+                    dispensing_unit: 'tableta',
+                    is_active: true,
+                },
+                quantity_dispensed: 2,
+                dose: '50 mg',
+                frequency: 'c/12h',
+                duration: '2 días',
+            },
+        ],
         vital_signs: {
             weight: '70',
             height: '1.70',
@@ -134,7 +149,8 @@ describe('Pages/consultations/Show.vue', () => {
         expect(definitionFor(wrapper, 'Glucosa')).toContain('95');
         expect(definitionFor(wrapper, 'Neurológico')).toBe('Fotofobia');
         expect(wrapper.text()).toContain('Sumatriptán');
-        expect(wrapper.text()).toContain('50 mg');
+        expect(wrapper.text()).toContain('Tableta 50 mg');
+        expect(wrapper.text()).toContain('Cantidad: 2 tableta');
         expect(definitionFor(wrapper, 'Tipo de traslado')).toBe('Servicios de Salud Municipales');
         expect(definitionFor(wrapper, 'Registro de ambulancia')).toBe('AMB-7');
         expect(definitionFor(wrapper, 'Médico receptor')).toBe('Dr. Soto');

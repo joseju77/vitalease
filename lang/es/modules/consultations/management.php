@@ -9,7 +9,8 @@ return [
         'prognosis' => 'pronóstico',
         'medical_classification' => 'clasificación médica',
         'treatment' => 'tratamiento',
-        'treatment.*.medication' => 'medicamento',
+        'treatment.*.medication_uuid' => 'medicamento',
+        'treatment.*.quantity_dispensed' => 'cantidad dispensada',
         'treatment.*.dose' => 'dosis',
         'treatment.*.frequency' => 'frecuencia',
         'treatment.*.duration' => 'duración',
@@ -39,5 +40,7 @@ return [
 
     'custom' => [
         'diastolic_not_less_than_systolic' => 'La presión arterial diastólica debe ser menor que la sistólica.',
+        'duplicate_medication' => 'No se puede repetir el mismo medicamento en el tratamiento.',
+        'inactive_medication' => 'El medicamento seleccionado no existe o está inactivo.',
     ],
 ];

@@ -1,18 +1,22 @@
 <?php
 
+use App\Enums\InventoryMovementType;
 use App\Enums\MedicalClassification;
 use App\Enums\MedicalState;
 use App\Enums\Permission;
 use App\Enums\SexAtBirth;
 use App\Enums\TransferType;
+use App\Models\InventoryMovement;
 use App\Models\MedicalConsultation;
 use App\Models\MedicalRegulation;
+use App\Models\Medication;
 use App\Models\Neighborhood;
 use App\Models\Patient;
 use App\Models\PatientAilment;
 use App\Models\PhysicalExamination;
 use App\Models\User;
 use App\Models\VitalSigns;
+use App\Services\Inventory\TreatmentDispensation;
 use App\Support\MedicalConsultationCode;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +84,37 @@ function validConsultationPayload(Patient $patient, array $overrides = []): arra
 function validConsultationUpdatePayload(array $overrides = []): array
 {
     return array_replace_recursive(consultationAggregatePayload(), $overrides);
+}
+
+/**
+ * Build one treatment line payload for the given medication.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function treatmentLine(Medication $medication, int $quantity = 1, array $overrides = []): array
+{
+    return array_replace([
+        'medication_uuid' => $medication->uuid,
+        'quantity_dispensed' => $quantity,
+        'dose' => '500 mg',
+        'frequency' => 'Cada 8 horas',
+        'duration' => '5 días',
+    ], $overrides);
+}
+
+/**
+ * Dispense a treatment line directly through {@see TreatmentDispensation},
+ * bypassing HTTP, to seed a consultation's existing treatment state before
+ * exercising the update/destroy endpoints.
+ */
+function dispenseTreatment(MedicalConsultation $consultation, Medication $medication, int $quantity, User $actor): void
+{
+    DB::transaction(fn () => app(TreatmentDispensation::class)->sync(
+        $consultation,
+        [treatmentLine($medication, $quantity)],
+        $actor,
+    ));
 }
 
 /**
@@ -329,37 +364,6 @@ describe('creating a consultation', function () {
         $response->assertInertiaFlash('consultation', ['uuid' => $consultation->uuid, 'code' => $consultation->code, 'action' => 'created']);
     });
 
-    it('accepts an empty treatment array', function () {
-        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
-        $patient = Patient::factory()->create();
-
-        $response = $this->actingAs($physician)->post(
-            route('consultations.store'),
-            validConsultationPayload($patient, ['treatment' => []])
-        );
-
-        $response->assertSessionHasNoErrors();
-        expect(MedicalConsultation::query()->count())->toBe(1);
-    });
-
-    it('rejects a malformed treatment entry missing a required field', function () {
-        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
-        $patient = Patient::factory()->create();
-
-        $payload = validConsultationPayload($patient, [
-            'treatment' => [[
-                'medication' => 'Ibuprofeno',
-                'frequency' => 'Cada 8 horas',
-                'duration' => '5 días',
-            ]],
-        ]);
-
-        $response = $this->actingAs($physician)->post(route('consultations.store'), $payload);
-
-        $response->assertSessionHasErrors(['treatment.0.dose']);
-        expect(MedicalConsultation::query()->count())->toBe(0);
-    });
-
     it('accepts whole-number and single/double decimal vital sign inputs', function () {
         $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
         $patient = Patient::factory()->create();
@@ -408,6 +412,249 @@ describe('creating a consultation', function () {
         'diastolic equal to systolic' => [120, 120],
         'diastolic greater than systolic' => [110, 120],
     ]);
+});
+
+describe('treatment lines dispense inventory', function () {
+    it('accepts an empty treatment array and dispenses no stock', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $patient = Patient::factory()->create();
+
+        $response = $this->actingAs($physician)->post(
+            route('consultations.store'),
+            validConsultationPayload($patient, ['treatment' => []])
+        );
+
+        $response->assertSessionHasNoErrors();
+        expect(MedicalConsultation::query()->count())->toBe(1)
+            ->and(InventoryMovement::query()->count())->toBe(0);
+    });
+
+    it('rejects a malformed treatment entry missing a required field', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $patient = Patient::factory()->create();
+        $medication = Medication::factory()->create();
+
+        $line = treatmentLine($medication);
+        unset($line['dose']);
+
+        $response = $this->actingAs($physician)->post(
+            route('consultations.store'),
+            validConsultationPayload($patient, ['treatment' => [$line]])
+        );
+
+        $response->assertSessionHasErrors(['treatment.0.dose']);
+        expect(MedicalConsultation::query()->count())->toBe(0);
+    });
+
+    it('dispenses stock and records one Dispensation movement per treatment line on create', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $patient = Patient::factory()->create();
+        $medication = Medication::factory()->create(['current_stock' => 10]);
+
+        $response = $this->actingAs($physician)->post(
+            route('consultations.store'),
+            validConsultationPayload($patient, ['treatment' => [treatmentLine($medication, 3)]])
+        );
+
+        $response->assertSessionHasNoErrors();
+        $consultation = MedicalConsultation::query()->sole();
+
+        expect($medication->fresh()->current_stock)->toBe(7)
+            ->and($consultation->treatments()->sole()->quantity_dispensed)->toBe(3);
+
+        $movement = InventoryMovement::query()->sole();
+        expect($movement->type)->toBe(InventoryMovementType::Dispensation)
+            ->and($movement->quantity)->toBe(-3)
+            ->and($movement->stock_after)->toBe(7)
+            ->and($movement->medical_consultation_id)->toBe($consultation->id)
+            ->and($movement->medical_consultation_code)->toBe($consultation->code);
+    });
+
+    it('rejects a treatment line requesting more than the available stock with a per-line 422 and no stock change', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $patient = Patient::factory()->create();
+        $medication = Medication::factory()->create(['current_stock' => 2]);
+
+        $response = $this->actingAs($physician)->post(
+            route('consultations.store'),
+            validConsultationPayload($patient, ['treatment' => [treatmentLine($medication, 5)]])
+        );
+
+        $response->assertSessionHasErrors(['treatment.0.quantity_dispensed']);
+        expect(MedicalConsultation::query()->count())->toBe(0)
+            ->and($medication->fresh()->current_stock)->toBe(2)
+            ->and(InventoryMovement::query()->count())->toBe(0);
+    });
+
+    it('rejects a duplicate medication referenced by two treatment lines', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $patient = Patient::factory()->create();
+        $medication = Medication::factory()->create(['current_stock' => 10]);
+
+        $response = $this->actingAs($physician)->post(
+            route('consultations.store'),
+            validConsultationPayload($patient, [
+                'treatment' => [treatmentLine($medication, 1), treatmentLine($medication, 2)],
+            ])
+        );
+
+        $response->assertSessionHasErrors(['treatment.0.medication_uuid', 'treatment.1.medication_uuid']);
+        expect(MedicalConsultation::query()->count())->toBe(0);
+    });
+
+    it('rejects an inactive medication referenced by a new treatment line on create', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $patient = Patient::factory()->create();
+        $medication = Medication::factory()->inactive()->create();
+
+        $response = $this->actingAs($physician)->post(
+            route('consultations.store'),
+            validConsultationPayload($patient, ['treatment' => [treatmentLine($medication)]])
+        );
+
+        $response->assertSessionHasErrors(['treatment.0.medication_uuid']);
+        expect(MedicalConsultation::query()->count())->toBe(0);
+    });
+
+    it('dispenses the delta as an additional Dispensation when a treatment line quantity increases on update', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsUpdate)->create();
+        $medication = Medication::factory()->create(['current_stock' => 20]);
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
+        dispenseTreatment($consultation, $medication, 2, $physician);
+        expect($medication->fresh()->current_stock)->toBe(18);
+
+        $response = $this->actingAs($physician)->put(
+            route('consultations.update', $consultation),
+            validConsultationUpdatePayload(['treatment' => [treatmentLine($medication, 5)]])
+        );
+
+        $response->assertSessionHasNoErrors();
+        expect($medication->fresh()->current_stock)->toBe(15)
+            ->and($consultation->treatments()->sole()->quantity_dispensed)->toBe(5);
+
+        $lastMovement = InventoryMovement::query()->where('medication_id', $medication->id)->orderBy('id')->get()->last();
+        expect($lastMovement->type)->toBe(InventoryMovementType::Dispensation)
+            ->and($lastMovement->quantity)->toBe(-3);
+    });
+
+    it('restores the difference via a DispensationReversal when a treatment line quantity decreases on update', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsUpdate)->create();
+        $medication = Medication::factory()->create(['current_stock' => 20]);
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
+        dispenseTreatment($consultation, $medication, 6, $physician);
+        expect($medication->fresh()->current_stock)->toBe(14);
+
+        $response = $this->actingAs($physician)->put(
+            route('consultations.update', $consultation),
+            validConsultationUpdatePayload(['treatment' => [treatmentLine($medication, 2)]])
+        );
+
+        $response->assertSessionHasNoErrors();
+        expect($medication->fresh()->current_stock)->toBe(18)
+            ->and($consultation->treatments()->sole()->quantity_dispensed)->toBe(2);
+
+        $reversal = InventoryMovement::query()
+            ->where('medication_id', $medication->id)
+            ->where('type', InventoryMovementType::DispensationReversal)
+            ->sole();
+        expect($reversal->quantity)->toBe(4);
+    });
+
+    it('restores the full quantity via a DispensationReversal when a treatment line is removed on update', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsUpdate)->create();
+        $medication = Medication::factory()->create(['current_stock' => 20]);
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
+        dispenseTreatment($consultation, $medication, 4, $physician);
+        expect($medication->fresh()->current_stock)->toBe(16);
+
+        $response = $this->actingAs($physician)->put(
+            route('consultations.update', $consultation),
+            validConsultationUpdatePayload(['treatment' => []])
+        );
+
+        $response->assertSessionHasNoErrors();
+        expect($medication->fresh()->current_stock)->toBe(20)
+            ->and($consultation->treatments()->count())->toBe(0);
+
+        $reversal = InventoryMovement::query()
+            ->where('medication_id', $medication->id)
+            ->where('type', InventoryMovementType::DispensationReversal)
+            ->sole();
+        expect($reversal->quantity)->toBe(4);
+    });
+
+    it('keeps an existing treatment line editable after its medication is deactivated', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsUpdate)->create();
+        $medication = Medication::factory()->create(['current_stock' => 20]);
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
+        dispenseTreatment($consultation, $medication, 2, $physician);
+        $medication->update(['is_active' => false]);
+
+        $response = $this->actingAs($physician)->put(
+            route('consultations.update', $consultation),
+            validConsultationUpdatePayload(['treatment' => [treatmentLine($medication, 3)]])
+        );
+
+        $response->assertSessionHasNoErrors();
+        expect($consultation->treatments()->sole()->quantity_dispensed)->toBe(3)
+            ->and($medication->fresh()->current_stock)->toBe(17);
+    });
+
+    it('rejects a deactivated medication as a newly added treatment line on update', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsUpdate)->create();
+        $linkedMedication = Medication::factory()->create(['current_stock' => 20]);
+        $medication = Medication::factory()->inactive()->create();
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
+        dispenseTreatment($consultation, $linkedMedication, 2, $physician);
+
+        $response = $this->actingAs($physician)->put(
+            route('consultations.update', $consultation),
+            validConsultationUpdatePayload(['treatment' => [
+                treatmentLine($linkedMedication, 2),
+                treatmentLine($medication),
+            ]])
+        );
+
+        $response->assertSessionHasErrors(['treatment.1.medication_uuid'])
+            ->assertSessionDoesntHaveErrors(['treatment.0.medication_uuid']);
+    });
+
+    it('restores all dispensed stock and preserves movements with a null consultation id and the code snapshot on delete', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsDelete, Permission::ConsultationsUpdate)->create();
+        $medication = Medication::factory()->create(['current_stock' => 20]);
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
+        dispenseTreatment($consultation, $medication, 6, $physician);
+        $code = $consultation->code;
+
+        $response = $this->actingAs($physician)->delete(route('consultations.destroy', $consultation));
+
+        $response->assertRedirect(route('dashboard.index'));
+        expect($medication->fresh()->current_stock)->toBe(20)
+            ->and(MedicalConsultation::query()->count())->toBe(0);
+
+        $movements = InventoryMovement::query()->where('medication_id', $medication->id)->orderBy('id')->get();
+        expect($movements)->toHaveCount(2);
+
+        foreach ($movements as $movement) {
+            expect($movement->medical_consultation_id)->toBeNull()
+                ->and($movement->medical_consultation_code)->toBe($code);
+        }
+    });
+
+    it('sends the medication catalog and each treatment line linked medication on the edit page', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsUpdate)->create();
+        $medication = Medication::factory()->create(['current_stock' => 10]);
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
+        dispenseTreatment($consultation, $medication, 1, $physician);
+
+        $this->actingAs($physician)->get(route('consultations.edit', $consultation))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('consultations/Edit', false)
+                ->has('medicationOptions')
+                ->where('consultation.treatment.0.medication.uuid', $medication->uuid)
+                ->where('consultation.treatment.0.quantity_dispensed', 1));
+    });
 });
 
 describe('consultation code generation', function () {

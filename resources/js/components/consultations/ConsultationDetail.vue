@@ -123,9 +123,18 @@ const ddClass = 'mt-1 font-medium whitespace-pre-line';
                     <li
                         v-for="(row, index) in consultation.treatment"
                         :key="index"
-                        class="grid gap-2 p-3 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]"
+                        class="grid gap-2 p-3 md:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]"
                     >
-                        <span class="font-medium">{{ row.medication }}</span>
+                        <div>
+                            <span class="font-medium">{{ row.medication.name }}</span>
+                            <p class="text-sm text-muted-foreground">
+                                {{ row.medication.presentation }} {{ row.medication.concentration }}
+                            </p>
+                        </div>
+                        <span
+                            ><span class="text-muted-foreground">Cantidad:</span> {{ row.quantity_dispensed }}
+                            {{ row.medication.dispensing_unit }}</span
+                        >
                         <span><span class="text-muted-foreground">Dosis:</span> {{ row.dose }}</span>
                         <span><span class="text-muted-foreground">Frecuencia:</span> {{ row.frequency }}</span>
                         <span><span class="text-muted-foreground">Duración:</span> {{ row.duration }}</span>
