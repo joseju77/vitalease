@@ -296,8 +296,9 @@ Todas las rutas requieren `auth`; la autorización la aplica el middleware `can:
    notas; paginado.
 7. **Reporte de proyección** (`reports/MedicationDemand.vue`): un selector de medicamento (`ComboboxField`) actualiza
    la URL con `?medication=`; sin selección, muestra una invitación a elegir un medicamento; con datos insuficientes,
-   un estado vacío explícito; en el caso normal, cuatro tarjetas (demanda proyectada del próximo mes, existencia
-   actual, reorden sugerido, R²), una nota de tendencia y la gráfica de tres series.
+   un estado vacío explícito; en el caso normal, tres tarjetas (demanda proyectada del próximo mes, existencia
+   actual, reorden sugerido), una nota de tendencia y la gráfica de tres series. El R² se calcula en el backend pero
+   no se muestra, porque la página está dirigida a personal médico, no técnico.
 
 ## Datos de desarrollo
 

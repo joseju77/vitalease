@@ -53,7 +53,10 @@ function selectMedication(value: AcceptableValue | AcceptableValue[]) {
 
 const chartPoints = computed(() => (props.projection?.status === 'ok' ? buildDemandChartPoints(props.projection) : []));
 
-/** e.g. "Tendencia: +13.1 unidades/mes", or `null` when there is no fitted slope yet. */
+/**
+ * Plain-language trend sentence for clinical staff, e.g. "En promedio, el
+ * consumo sube 13 unidades cada mes", or `null` when there is no fitted slope.
+ */
 const slopeLabel = computed(() => {
     const slope = props.projection?.slope;
 
@@ -61,8 +64,14 @@ const slopeLabel = computed(() => {
         return null;
     }
 
-    const sign = slope >= 0 ? '+' : '';
-    return `Tendencia: ${sign}${slope.toFixed(1)} unidades/mes`;
+    const units = Math.round(Math.abs(slope));
+
+    if (units === 0) {
+        return 'En promedio, el consumo se ha mantenido estable mes con mes';
+    }
+
+    const direction = slope > 0 ? 'sube' : 'baja';
+    return `En promedio, el consumo ${direction} ${units} ${units === 1 ? 'unidad' : 'unidades'} cada mes`;
 });
 </script>
 
@@ -91,8 +100,9 @@ const slopeLabel = computed(() => {
 
         <Alert v-if="projection !== null">
             <AlertDescription>
-                Demostración: proyección indicativa por regresión lineal simple sobre el consumo mensual; no sustituye
-                el criterio de compra.
+                Esta estimación se calcula con lo que se ha entregado de este medicamento en los últimos meses. Es solo
+                una referencia para planear compras: no toma en cuenta temporadas ni situaciones imprevistas, así que
+                revísala con tu criterio antes de hacer un pedido.
             </AlertDescription>
         </Alert>
 
@@ -109,7 +119,7 @@ const slopeLabel = computed(() => {
         </Card>
 
         <template v-else>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Card>
                     <CardHeader>
                         <CardTitle class="text-sm font-medium text-muted-foreground">
@@ -131,14 +141,6 @@ const slopeLabel = computed(() => {
                     </CardHeader>
                     <CardContent class="text-2xl font-semibold">
                         {{ projection.suggested_reorder_quantity }}
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle class="text-sm font-medium text-muted-foreground">Ajuste R²</CardTitle>
-                    </CardHeader>
-                    <CardContent class="text-2xl font-semibold">
-                        {{ projection.r_squared !== null ? projection.r_squared.toFixed(2) : '—' }}
                     </CardContent>
                 </Card>
             </div>

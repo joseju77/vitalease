@@ -148,7 +148,7 @@ describe('Pages/reports/MedicationDemand.vue', () => {
         expect(page.text()).not.toContain('Reorden sugerido');
     });
 
-    it('renders the four summary cards, the demo note, and the chart for an ok projection', () => {
+    it('renders the three summary cards, the notice, and the chart for an ok projection', () => {
         const page = mountPage([medicationSummary()], okProjection());
         const text = page.text();
 
@@ -158,13 +158,22 @@ describe('Pages/reports/MedicationDemand.vue', () => {
         expect(text).toContain('40');
         expect(text).toContain('Reorden sugerido');
         expect(text).toContain('68');
-        expect(text).toContain('Ajuste R²');
-        expect(text).toContain('0.87');
+        expect(text).not.toContain('R²');
+        expect(text).not.toContain('0.87');
         expect(text).toContain(
-            'Demostración: proyección indicativa por regresión lineal simple sobre el consumo mensual; no sustituye el criterio de compra.',
+            'Esta estimación se calcula con lo que se ha entregado de este medicamento en los últimos meses. Es solo una referencia para planear compras: no toma en cuenta temporadas ni situaciones imprevistas, así que revísala con tu criterio antes de hacer un pedido.',
         );
-        expect(text).toContain('Tendencia: +13.1 unidades/mes');
+        expect(text).toContain('En promedio, el consumo sube 13 unidades cada mes');
         expect(page.findComponent({ name: 'DemandProjectionChartStub' }).exists()).toBe(true);
         expect(chartPointsProp.length).toBeGreaterThan(0);
+    });
+
+    it.each([
+        [-1.2, 'En promedio, el consumo baja 1 unidad cada mes'],
+        [0.3, 'En promedio, el consumo se ha mantenido estable mes con mes'],
+    ])('describes a slope of %s in plain language', (slope, expected) => {
+        const page = mountPage([medicationSummary()], okProjection({ slope }));
+
+        expect(page.text()).toContain(expected);
     });
 });

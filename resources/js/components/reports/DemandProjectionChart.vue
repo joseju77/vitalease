@@ -16,9 +16,9 @@ const props = defineProps<{
 }>();
 
 const chartConfig: ChartConfig = {
-    history: { label: 'Consumo histórico', color: 'var(--chart-1)' },
-    fitted: { label: 'Tendencia (ajuste lineal)', color: 'var(--chart-2)' },
-    projection: { label: 'Proyección', color: 'var(--chart-3)' },
+    history: { label: 'Consumo real', color: 'var(--chart-1)' },
+    fitted: { label: 'Tendencia', color: 'var(--chart-2)' },
+    projection: { label: 'Estimación', color: 'var(--chart-3)' },
 };
 
 /** SVG `stroke-dasharray`, applied only to the projection line. */
