@@ -245,7 +245,7 @@ El módulo usa cuatro permisos de inventario más uno de reportes, de `App\Enums
 | `inventory.create`    | Dar de alta medicamentos y registrar entradas de stock.                                                        |
 | `inventory.update`    | Editar un medicamento, activarlo/desactivarlo y registrar ajustes de stock.                                    |
 | `inventory.delete`    | Eliminar un medicamento — solo mientras `can_be_deleted` sea verdadero (sin movimientos ni líneas de tratamiento). |
-| `reports.generate`    | Ver el reporte de proyección de demanda; gatea la entrada "Reportes y estadísticas" de la barra lateral y la ruta `reports.medication-demand`. |
+| `reports.generate`    | Ver el reporte de proyección de demanda; gatea la entrada "Proyección de demanda" de la barra lateral y la ruta `reports.medication-demand`. |
 
 - Un ajuste (`Adjustment`) siempre exige una nota que explique el motivo (`chk_adjustment_notes` y
   `RecordAdjustmentRequest::validateNotesNotBlank()`).

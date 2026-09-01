@@ -35,7 +35,7 @@ export const NAV_GROUPS: NavGroup[] = [
             { title: 'Consultas', href: dashboardIndex().url, icon: Stethoscope, permission: 'consultations.view' },
             { title: 'Inventario', href: inventoryIndex().url, icon: Boxes, permission: 'inventory.view' },
             {
-                title: 'Reportes y estadísticas',
+                title: 'Proyección de demanda',
                 href: medicationDemand().url,
                 icon: ChartBar,
                 permission: 'reports.generate',
