@@ -103,7 +103,12 @@ final class TreatmentDispensation
         $removedIds = $old->keys()->diff(array_keys($new));
 
         if ($removedIds->isNotEmpty()) {
-            $consultation->treatments()->whereIn('medication_id', $removedIds)->delete();
+            // Model-by-model deletes so each removed line writes its audit.
+            $old->each(function (MedicalConsultationTreatment $line) use ($removedIds): void {
+                if ($removedIds->contains($line->medication_id)) {
+                    $line->delete();
+                }
+            });
         }
 
         foreach ($new as $medicationId => $line) {

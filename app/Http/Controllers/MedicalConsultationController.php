@@ -15,6 +15,7 @@ use App\Models\PatientAilment;
 use App\Models\PatientEmergencyContact;
 use App\Services\Inventory\InsufficientStockException;
 use App\Services\Inventory\TreatmentDispensation;
+use App\Services\MedicalConsultations\ConsultationWriter;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,10 @@ use Inertia\Response;
 
 class MedicalConsultationController extends Controller
 {
-    public function __construct(private readonly TreatmentDispensation $treatmentDispensation) {}
+    public function __construct(
+        private readonly TreatmentDispensation $treatmentDispensation,
+        private readonly ConsultationWriter $consultationWriter,
+    ) {}
 
     public function create(Request $request): Response
     {
@@ -77,32 +81,10 @@ class MedicalConsultationController extends Controller
      */
     public function store(StoreMedicalConsultationRequest $request): RedirectResponse
     {
+        $patient = Patient::query()->where('uuid', $request->validated('patient_uuid'))->firstOrFail();
+
         try {
-            $consultation = DB::transaction(function () use ($request): MedicalConsultation {
-                $patient = Patient::query()->where('uuid', $request->validated('patient_uuid'))->firstOrFail();
-
-                $consultation = MedicalConsultation::query()->create([
-                    'current_condition' => $request->validated('consultation.current_condition'),
-                    'diagnosis' => $request->validated('consultation.diagnosis'),
-                    'condition' => $request->validated('condition'),
-                    'prognosis' => $request->validated('prognosis'),
-                    'medical_classification' => $request->validated('medical_classification'),
-                    'physician_id' => $request->user()->id,
-                    'patient_id' => $patient->id,
-                ]);
-
-                $consultation->vitalSigns()->create($request->validated('vital_signs'));
-                $consultation->physicalExamination()->create($request->validated('physical_examination'));
-
-                $regulation = $request->validated('regulation');
-                if ($regulation !== null) {
-                    $consultation->regulation()->create($regulation);
-                }
-
-                $this->treatmentDispensation->sync($consultation, $request->validated('treatment'), $request->user());
-
-                return $consultation;
-            });
+            $consultation = $this->consultationWriter->create($patient, $request->validated(), $request->user());
         } catch (InsufficientStockException $e) {
             throw $e->toValidationException('treatment.%d.quantity_dispensed');
         }
@@ -121,27 +103,7 @@ class MedicalConsultationController extends Controller
     public function update(UpdateMedicalConsultationRequest $request, MedicalConsultation $consultation): RedirectResponse
     {
         try {
-            DB::transaction(function () use ($request, $consultation): void {
-                $consultation->update([
-                    'current_condition' => $request->validated('consultation.current_condition'),
-                    'diagnosis' => $request->validated('consultation.diagnosis'),
-                    'condition' => $request->validated('condition'),
-                    'prognosis' => $request->validated('prognosis'),
-                    'medical_classification' => $request->validated('medical_classification'),
-                ]);
-
-                $consultation->vitalSigns->update($request->validated('vital_signs'));
-                $consultation->physicalExamination->update($request->validated('physical_examination'));
-
-                $regulation = $request->validated('regulation');
-                if ($regulation === null) {
-                    $consultation->regulation()->delete();
-                } else {
-                    $consultation->regulation()->updateOrCreate([], $regulation);
-                }
-
-                $this->treatmentDispensation->sync($consultation, $request->validated('treatment'), $request->user());
-            });
+            $this->consultationWriter->update($consultation, $request->validated(), $request->user());
         } catch (InsufficientStockException $e) {
             throw $e->toValidationException('treatment.%d.quantity_dispensed');
         }

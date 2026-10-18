@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
+use OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
 #[Fillable([
     'current_condition',
@@ -23,10 +25,27 @@ use Illuminate\Support\Str;
     'physician_id',
     'patient_id',
 ])]
-class MedicalConsultation extends Model
+class MedicalConsultation extends Model implements AuditableContract
 {
+    use Auditable;
+
     /** @use HasFactory<MedicalConsultationFactory> */
     use HasFactory;
+
+    /**
+     * Only plain create/update events are audited automatically; any further
+     * events are recorded explicitly as custom audit events.
+     *
+     * @var list<string>
+     */
+    protected array $auditEvents = ['created', 'updated'];
+
+    /**
+     * Attributes that never appear in audit values.
+     *
+     * @var list<string>
+     */
+    protected array $auditExclude = ['id', 'uuid', 'patient_id', 'physician_id', 'voided_at', 'voided_by_id', 'void_reason'];
 
     /**
      * Get the route key for the model.
@@ -61,6 +80,16 @@ class MedicalConsultation extends Model
             $consultation->uuid ??= (string) Str::uuid7();
             $consultation->code ??= MedicalConsultationCode::next();
         });
+    }
+
+    /**
+     * Tag every audit with its consultation so the full history is one query.
+     *
+     * @return list<string>
+     */
+    public function generateTags(): array
+    {
+        return ['consultation:'.$this->getKey()];
     }
 
     /**
