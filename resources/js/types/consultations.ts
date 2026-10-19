@@ -236,3 +236,29 @@ export interface PatientProfile {
         abortions: number;
     } | null;
 }
+
+/** One field change inside a history group; labels and enum values are already Spanish. */
+export interface ConsultationHistoryChange {
+    section: string;
+    item: string | null;
+    field: string;
+    old: string | number | boolean | null;
+    new: string | number | boolean | null;
+}
+
+/** One save, void or restore of a consultation, as returned by the history endpoint. */
+export interface ConsultationHistoryGroup {
+    id: string;
+    event: 'created' | 'updated' | 'voided' | 'restored';
+    event_label: string;
+    occurred_at: string;
+    actor: { name: string } | null;
+    reason: string | null;
+    changes: ConsultationHistoryChange[];
+}
+
+/** A page of history groups, newest first; `next_cursor` is null on the last page. */
+export interface ConsultationHistoryPage {
+    data: ConsultationHistoryGroup[];
+    next_cursor: number | null;
+}

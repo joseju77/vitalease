@@ -3,6 +3,8 @@ import { Link } from '@inertiajs/vue3';
 import { ClipboardList } from '@lucide/vue';
 import { show } from '@/actions/App/Http/Controllers/MedicalConsultationController';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { medicalClassificationLabel } from '@/lib/consultationLabels';
@@ -11,7 +13,10 @@ import type { ConsultationListItem } from '@/types/consultations';
 
 defineProps<{
     consultations: ConsultationListItem[];
+    includeVoided?: boolean;
 }>();
+
+defineEmits<{ (e: 'update:includeVoided', value: boolean): void }>();
 
 function consultationHref(uuid: string): string {
     return show.url(uuid);
@@ -28,6 +33,15 @@ function consultationHref(uuid: string): string {
                 </Badge>
             </CardTitle>
             <CardDescription>Consultas que registraste recientemente.</CardDescription>
+            <div class="flex items-center gap-2 pt-1">
+                <Switch
+                    id="include-voided"
+                    size="sm"
+                    :model-value="includeVoided ?? false"
+                    @update:model-value="$emit('update:includeVoided', $event === true)"
+                />
+                <Label for="include-voided" class="text-sm font-normal">Incluir anuladas</Label>
+            </div>
         </CardHeader>
         <CardContent>
             <div
@@ -50,9 +64,12 @@ function consultationHref(uuid: string): string {
                 <TableBody>
                     <TableRow v-for="consultation in consultations" :key="consultation.uuid">
                         <TableCell>
-                            <Link :href="consultationHref(consultation.uuid)" class="font-medium hover:underline">
-                                {{ consultation.code }}
-                            </Link>
+                            <div class="flex items-center gap-2">
+                                <Link :href="consultationHref(consultation.uuid)" class="font-medium hover:underline">
+                                    {{ consultation.code }}
+                                </Link>
+                                <Badge v-if="consultation.voided_at" variant="destructive">Anulada</Badge>
+                            </div>
                         </TableCell>
                         <TableCell>{{ consultation.patient.full_name }}</TableCell>
                         <TableCell>{{ medicalClassificationLabel(consultation.medical_classification) }}</TableCell>

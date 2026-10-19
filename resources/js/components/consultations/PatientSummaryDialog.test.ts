@@ -208,4 +208,20 @@ describe('PatientSummaryDialog.vue', () => {
 
         expect(dialogElement().textContent).toContain('No se pudo cargar la información del paciente.');
     });
+
+    it('marks voided consultations with an "Anulada" badge', async () => {
+        respondWith(
+            summary([
+                consultationItem({ code: 'CON-0001' }),
+                consultationItem({ uuid: 'consultation-uuid-2', code: 'CON-0002', voided_at: '2026-09-02T10:00:00Z' }),
+            ]),
+        );
+
+        await mountDialog({ open: true });
+
+        const [active, voided] = dialogLinks().filter((link) => link.textContent?.includes('CON-'));
+        expect(active.textContent).not.toContain('Anulada');
+        expect(voided.textContent).toContain('Anulada');
+        expect(dialogElement().textContent).not.toContain('Incluir anuladas');
+    });
 });

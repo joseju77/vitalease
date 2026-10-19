@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
+import { index as dashboardIndex } from '@/actions/App/Http/Controllers/DashboardController';
 import ConsultationList from '@/components/consultations/ConsultationList.vue';
 import PatientSearch from '@/components/consultations/PatientSearch.vue';
 import PatientSummaryDialog from '@/components/consultations/PatientSummaryDialog.vue';
@@ -15,6 +16,7 @@ defineOptions({
 
 defineProps<{
     latestConsultations: ConsultationListItem[];
+    filters: { include_voided: boolean };
     can: {
         searchPatients: boolean;
         createConsultation: boolean;
@@ -29,6 +31,14 @@ const summaryOpen = ref(false);
 function openSummary(patient: PatientSearchResult) {
     selectedPatient.value = patient;
     summaryOpen.value = true;
+}
+
+function toggleVoided(includeVoided: boolean) {
+    router.get(
+        dashboardIndex.url(includeVoided ? { query: { include_voided: 1 } } : undefined),
+        {},
+        { preserveScroll: true, preserveState: true, only: ['latestConsultations', 'filters'] },
+    );
 }
 
 const CONSULTATION_ACTION_LABELS: Record<string, string> = {
@@ -69,7 +79,11 @@ watch(
             </CardContent>
         </Card>
 
-        <ConsultationList :consultations="latestConsultations" />
+        <ConsultationList
+            :consultations="latestConsultations"
+            :include-voided="filters.include_voided"
+            @update:include-voided="toggleVoided"
+        />
     </div>
 
     <PatientSummaryDialog

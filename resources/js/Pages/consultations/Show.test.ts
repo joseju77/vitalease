@@ -206,4 +206,63 @@ describe('Pages/consultations/Show.vue', () => {
 
         expect(wrapper.text()).not.toContain('Eliminar');
     });
+
+    describe('void, restore and history controls', () => {
+        const voidedAt = '2026-09-02T09:00:00Z';
+
+        function buttonLabels(wrapper: VueWrapper): string[] {
+            return wrapper.findAll('button').map((button) => button.text());
+        }
+
+        it('offers voiding only when the user can void an active consultation', () => {
+            const allowed = mountShow({ can: { update: true, void: true, restore: false, audit: false } });
+            expect(buttonLabels(allowed)).toContain('Anular consulta');
+
+            const denied = mountShow({ can: { update: true, void: false, restore: false, audit: false } });
+            expect(buttonLabels(denied)).not.toContain('Anular consulta');
+        });
+
+        it('shows no banner for an active consultation', () => {
+            const wrapper = mountShow();
+
+            expect(wrapper.find('[data-testid="voided-banner"]').exists()).toBe(false);
+            expect(buttonLabels(wrapper)).not.toContain('Restaurar consulta');
+        });
+
+        it('shows the banner and restore, but no edit or void, for a voided consultation', () => {
+            const wrapper = mountShow({
+                voided_at: voidedAt,
+                voided_by: { name: 'Dr. Soto' },
+                void_reason: 'Registro duplicado',
+                can: { update: true, void: true, restore: true, audit: false },
+            });
+
+            const banner = wrapper.get('[data-testid="voided-banner"]');
+            expect(banner.text()).toContain('Anulada');
+            expect(banner.text()).toContain('Dr. Soto');
+            expect(banner.text()).toContain('Registro duplicado');
+            expect(buttonLabels(wrapper)).toContain('Restaurar consulta');
+            expect(buttonLabels(wrapper)).not.toContain('Anular consulta');
+            expect(wrapper.findAll('a').some((link) => link.text() === 'Editar')).toBe(false);
+        });
+
+        it('hides restore from users who cannot restore', () => {
+            const wrapper = mountShow({
+                voided_at: voidedAt,
+                voided_by: { name: 'Dr. Soto' },
+                void_reason: 'Registro duplicado',
+                can: { update: false, void: false, restore: false, audit: false },
+            });
+
+            expect(buttonLabels(wrapper)).not.toContain('Restaurar consulta');
+        });
+
+        it('shows the history button only with the audit ability', () => {
+            const audited = mountShow({ can: { update: true, void: true, restore: false, audit: true } });
+            expect(buttonLabels(audited)).toContain('Historial de cambios');
+
+            const plain = mountShow({ can: { update: true, void: true, restore: false, audit: false } });
+            expect(buttonLabels(plain)).not.toContain('Historial de cambios');
+        });
+    });
 });
