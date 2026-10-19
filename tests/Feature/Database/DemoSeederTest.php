@@ -44,11 +44,11 @@ describe('DemoSeeder', function () {
 
         expect(User::query()->count())->toBe(5)
             ->and(Patient::query()->count())->toBe(10)
-            ->and(MedicalConsultation::query()->count())->toBe(30);
+            ->and(MedicalConsultation::withTrashed()->count())->toBe(30);
 
         $loremPattern = '/lorem|ipsum/i';
 
-        foreach (MedicalConsultation::query()->get(['current_condition', 'diagnosis']) as $consultation) {
+        foreach (MedicalConsultation::withTrashed()->get(['current_condition', 'diagnosis']) as $consultation) {
             expect($consultation->current_condition)->not->toMatch($loremPattern)
                 ->and($consultation->diagnosis)->not->toMatch($loremPattern);
         }
@@ -62,7 +62,7 @@ describe('DemoSeeder', function () {
             expect($name)->not->toMatch($loremPattern);
         }
 
-        $consultations = MedicalConsultation::query()->orderBy('created_at')->get(['code', 'created_at']);
+        $consultations = MedicalConsultation::withTrashed()->orderBy('created_at')->get(['code', 'created_at']);
 
         expect($consultations->pluck('code')->unique())->toHaveCount(30);
 
@@ -111,7 +111,7 @@ describe('DemoSeeder', function () {
 
         expect(User::query()->count())->toBe(0)
             ->and(Patient::query()->count())->toBe(0)
-            ->and(MedicalConsultation::query()->count())->toBe(0);
+            ->and(MedicalConsultation::withTrashed()->count())->toBe(0);
     });
 
     it('refuses a second run once the demo physician account already exists', function () {
@@ -159,7 +159,7 @@ describe('demo:seed command', function () {
 
         expect(User::query()->where('email', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL)->exists())->toBeTrue()
             ->and(Patient::query()->count())->toBe(1)
-            ->and(MedicalConsultation::query()->count())->toBe(0);
+            ->and(MedicalConsultation::withTrashed()->count())->toBe(0);
     });
 
     it('refuses to run in production without writing any data', function () {
@@ -196,6 +196,6 @@ describe('default DatabaseSeeder', function () {
 
         expect(User::query()->count())->toBe(0)
             ->and(Patient::query()->count())->toBe(0)
-            ->and(MedicalConsultation::query()->count())->toBe(0);
+            ->and(MedicalConsultation::withTrashed()->count())->toBe(0);
     });
 });

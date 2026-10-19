@@ -73,6 +73,9 @@ function consultation(
         uuid: 'consultation-uuid-9',
         code: 'CON-0009',
         created_at: '2026-09-01T10:00:00Z',
+        voided_at: null,
+        voided_by: null,
+        void_reason: null,
         patient: { uuid: 'patient-uuid-1', full_name: 'Ana López', enrollment_number: 'A-100' },
         physician: { name: 'Dra. Ruiz' },
         consultation: { current_condition: 'Cefalea', diagnosis: 'Migraña' },
@@ -118,13 +121,15 @@ function mountEdit(can: ConsultationAggregate['can'], treatment: ConsultationAgg
     });
 }
 
+const CAN: ConsultationAggregate['can'] = { update: true, void: true, restore: false, audit: false };
+
 function hasDeleteControl(wrapper: ReturnType<typeof mountEdit>): boolean {
     return wrapper.findAll('button').some((button) => button.text().includes('Eliminar consulta'));
 }
 
 describe('Pages/consultations/Edit.vue', () => {
     it('titles the page with the consultation code and links back to its detail', () => {
-        const wrapper = mountEdit({ update: true, delete: true });
+        const wrapper = mountEdit(CAN);
 
         expect(wrapper.get('h1').text()).toBe('Editar CON-0009');
         expect(wrapper.findComponent({ name: 'InertiaHead' }).props('title')).toBe('Editar CON-0009');
@@ -132,16 +137,12 @@ describe('Pages/consultations/Edit.vue', () => {
         expect(detailLink?.attributes('href')).toBe(show.url('consultation-uuid-9'));
     });
 
-    it('shows the delete control when the user can delete the consultation', () => {
-        expect(hasDeleteControl(mountEdit({ update: true, delete: true }))).toBe(true);
-    });
-
-    it('hides the delete control when the user cannot delete the consultation', () => {
-        expect(hasDeleteControl(mountEdit({ update: true, delete: false }))).toBe(false);
+    it('never offers a delete control, since consultations are voided from the detail page', () => {
+        expect(hasDeleteControl(mountEdit(CAN))).toBe(false);
     });
 
     it('forwards the linked inactive medication into the treatment picker options', () => {
-        const wrapper = mountEdit({ update: true, delete: true }, [
+        const wrapper = mountEdit(CAN, [
             {
                 medication: {
                     uuid: 'med-discontinued',

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\MedicalConsultation;
 use App\Models\Patient;
 use App\Models\User;
+use App\Support\MedicalConsultationAbilities;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,9 +22,11 @@ class DashboardController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+        $includeVoided = $request->boolean('include_voided');
 
         return Inertia::render('dashboard/Index', [
-            'latestConsultations' => $this->latestConsultationItems($user),
+            'latestConsultations' => $this->latestConsultationItems($user, $includeVoided),
+            'filters' => ['include_voided' => $includeVoided],
             'can' => [
                 'searchPatients' => $user->can('viewAny', Patient::class),
                 'createConsultation' => $user->can('create', MedicalConsultation::class),
@@ -53,6 +57,7 @@ class DashboardController extends Controller
     public function patientSummary(Request $request, Patient $patient): JsonResponse
     {
         $consultations = $patient->medicalConsultations()
+            ->visibleTo($request->user())
             ->with(['patient', 'physician'])
             ->latest()
             ->take(5)
@@ -86,13 +91,15 @@ class DashboardController extends Controller
     /**
      * Shared query behind the dashboard page's `latestConsultations` prop and
      * the JSON endpoint of the same name: the authenticated user's own
-     * consultations, newest first, capped at 10.
+     * consultations, newest first, capped at 10. Voided ones are left out
+     * unless requested.
      *
      * @return list<array<string, mixed>>
      */
-    private function latestConsultationItems(User $user): array
+    private function latestConsultationItems(User $user, bool $includeVoided = false): array
     {
         return MedicalConsultation::query()
+            ->when($includeVoided, fn (Builder $query) => $query->withTrashed())
             ->where('physician_id', $user->id)
             ->with(['patient', 'physician'])
             ->latest()
@@ -128,6 +135,7 @@ class DashboardController extends Controller
             'uuid' => $consultation->uuid,
             'code' => $consultation->code,
             'created_at' => $consultation->created_at->toISOString(),
+            'voided_at' => $consultation->voided_at?->toISOString(),
             'diagnosis' => $consultation->diagnosis,
             'medical_classification' => $consultation->medical_classification->value,
             'patient' => [
@@ -137,10 +145,7 @@ class DashboardController extends Controller
             'physician' => [
                 'name' => $consultation->physician->name,
             ],
-            'can' => [
-                'update' => $currentUser->can('update', $consultation),
-                'delete' => $currentUser->can('delete', $consultation),
-            ],
+            'can' => MedicalConsultationAbilities::for($currentUser, $consultation),
         ];
     }
 

@@ -106,7 +106,7 @@ function treatmentLine(Medication $medication, int $quantity = 1, array $overrid
 /**
  * Dispense a treatment line directly through {@see TreatmentDispensation},
  * bypassing HTTP, to seed a consultation's existing treatment state before
- * exercising the update/destroy endpoints.
+ * exercising the update/void endpoints.
  */
 function dispenseTreatment(MedicalConsultation $consultation, Medication $medication, int $quantity, User $actor): void
 {
@@ -170,7 +170,9 @@ dataset('consultationRoutes', [
     'viewing a consultation' => ['get', 'consultations.show', true],
     'editing a consultation' => ['get', 'consultations.edit', true],
     'updating a consultation' => ['put', 'consultations.update', true],
-    'deleting a consultation' => ['delete', 'consultations.destroy', true],
+    'voiding a consultation' => ['post', 'consultations.void', true],
+    'restoring a consultation' => ['post', 'consultations.restore', true],
+    'reading the history of a consultation' => ['get', 'consultations.history', true],
 ]);
 
 describe('consultation pages and mutation navigation', function () {
@@ -210,7 +212,9 @@ describe('consultation pages and mutation navigation', function () {
                 ->component('consultations/Show', false)
                 ->where('consultation.uuid', $consultation->uuid)
                 ->where('consultation.can.update', false)
-                ->where('consultation.can.delete', false)
+                ->where('consultation.can.void', false)
+                ->where('consultation.can.restore', false)
+                ->where('consultation.can.audit', false)
                 ->has('consultation.vital_signs')
                 ->has('consultation.physical_examination')
                 ->has('consultation.regulation'));
@@ -289,16 +293,19 @@ describe('consultation pages and mutation navigation', function () {
                 ->where('patientProfile.gynecological_history', null));
     });
 
-    it('redirects update and delete to the dashboard with action-specific flash', function () {
-        $physician = User::factory()->withPermissions(Permission::ConsultationsUpdate, Permission::ConsultationsDelete)->create();
+    it('redirects update to the dashboard, and void and restore to the detail, with action-specific flash', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsUpdate, Permission::ConsultationsView, Permission::ConsultationsVoid)->create();
         $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
 
         $this->actingAs($physician)->put(route('consultations.update', $consultation), validConsultationUpdatePayload())
             ->assertRedirect(route('dashboard.index'))
             ->assertInertiaFlash('consultation', ['uuid' => $consultation->uuid, 'code' => $consultation->code, 'action' => 'updated']);
-        $this->actingAs($physician)->delete(route('consultations.destroy', $consultation))
-            ->assertRedirect(route('dashboard.index'))
-            ->assertInertiaFlash('consultation', ['uuid' => $consultation->uuid, 'code' => $consultation->code, 'action' => 'deleted']);
+        $this->actingAs($physician)->post(route('consultations.void', $consultation), ['reason' => 'Registro duplicado'])
+            ->assertRedirect(route('consultations.show', $consultation))
+            ->assertInertiaFlash('consultation', ['uuid' => $consultation->uuid, 'code' => $consultation->code, 'action' => 'voided']);
+        $this->actingAs($physician)->post(route('consultations.restore', $consultation), ['reason' => 'Se anuló por error'])
+            ->assertRedirect(route('consultations.show', $consultation))
+            ->assertInertiaFlash('consultation', ['uuid' => $consultation->uuid, 'code' => $consultation->code, 'action' => 'restored']);
     });
 });
 
@@ -619,25 +626,25 @@ describe('treatment lines dispense inventory', function () {
             ->assertSessionDoesntHaveErrors(['treatment.0.medication_uuid']);
     });
 
-    it('restores all dispensed stock and preserves movements with a null consultation id and the code snapshot on delete', function () {
-        $physician = User::factory()->withPermissions(Permission::ConsultationsDelete, Permission::ConsultationsUpdate)->create();
+    it('returns all dispensed stock on void and keeps the movements linked to the consultation', function () {
+        $physician = User::factory()->withPermissions(Permission::ConsultationsVoid)->create();
         $medication = Medication::factory()->create(['current_stock' => 20]);
         $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $physician->id]);
         dispenseTreatment($consultation, $medication, 6, $physician);
-        $code = $consultation->code;
 
-        $response = $this->actingAs($physician)->delete(route('consultations.destroy', $consultation));
+        $response = $this->actingAs($physician)->post(route('consultations.void', $consultation), ['reason' => 'Registro duplicado']);
 
-        $response->assertRedirect(route('dashboard.index'));
+        $response->assertRedirect(route('consultations.show', $consultation));
         expect($medication->fresh()->current_stock)->toBe(20)
-            ->and(MedicalConsultation::query()->count())->toBe(0);
+            ->and(MedicalConsultation::query()->count())->toBe(0)
+            ->and(MedicalConsultation::withTrashed()->count())->toBe(1);
 
         $movements = InventoryMovement::query()->where('medication_id', $medication->id)->orderBy('id')->get();
         expect($movements)->toHaveCount(2);
 
         foreach ($movements as $movement) {
-            expect($movement->medical_consultation_id)->toBeNull()
-                ->and($movement->medical_consultation_code)->toBe($code);
+            expect($movement->medical_consultation_id)->toBe($consultation->id)
+                ->and($movement->medical_consultation_code)->toBe($consultation->code);
         }
     });
 
@@ -838,18 +845,20 @@ describe('updating a consultation', function () {
 });
 
 describe('deleting a consultation', function () {
-    it('hard deletes the consultation and cascades all child rows', function () {
-        $physician = User::factory()->withPermissions(Permission::ConsultationsDelete)->create();
-        $consultation = MedicalConsultation::factory()->withRegulation()->create(['physician_id' => $physician->id]);
+    it('has no delete route: the consultation and every child row survive the attempt', function (string $actor) {
+        $user = $actor === 'super-admin'
+            ? User::factory()->superAdmin()->create()
+            : User::factory()->withPermissions(Permission::ConsultationsView, Permission::ConsultationsUpdate, Permission::ConsultationsVoid, Permission::ConsultationsVoidAny)->create();
+        $consultation = MedicalConsultation::factory()->withRegulation()->create(['physician_id' => $user->id]);
 
-        $response = $this->actingAs($physician)->delete(route('consultations.destroy', $consultation));
+        $response = $this->actingAs($user)->delete('/consultations/'.$consultation->uuid);
 
-        $response->assertRedirect(route('dashboard.index'));
-        expect(MedicalConsultation::query()->count())->toBe(0)
-            ->and(VitalSigns::query()->count())->toBe(0)
-            ->and(PhysicalExamination::query()->count())->toBe(0)
-            ->and(MedicalRegulation::query()->count())->toBe(0);
-    });
+        expect($response->getStatusCode())->toBeIn([404, 405])
+            ->and(MedicalConsultation::withTrashed()->count())->toBe(1)
+            ->and(VitalSigns::query()->count())->toBe(1)
+            ->and(PhysicalExamination::query()->count())->toBe(1)
+            ->and(MedicalRegulation::query()->count())->toBe(1);
+    })->with(['super-admin', 'permissioned owner']);
 });
 
 describe('guest access', function () {
@@ -884,12 +893,12 @@ describe('permission and ownership boundary', function () {
         $response->assertForbidden();
     });
 
-    it('denies a permissioned non-owner from deleting', function () {
+    it('denies a permissioned non-owner from voiding', function () {
         $owner = User::factory()->create();
         $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $owner->id]);
-        $caller = User::factory()->withPermissions(Permission::ConsultationsDelete)->create();
+        $caller = User::factory()->withPermissions(Permission::ConsultationsVoid)->create();
 
-        $response = $this->actingAs($caller)->delete(route('consultations.destroy', $consultation));
+        $response = $this->actingAs($caller)->post(route('consultations.void', $consultation), ['reason' => 'Registro duplicado']);
 
         $response->assertForbidden();
         expect(MedicalConsultation::query()->count())->toBe(1);
@@ -904,11 +913,11 @@ describe('permission and ownership boundary', function () {
         $response->assertForbidden();
     });
 
-    it('denies the owner from deleting without consultations.delete', function () {
+    it('denies the owner from voiding without consultations.void', function () {
         $owner = User::factory()->create();
         $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $owner->id]);
 
-        $response = $this->actingAs($owner)->delete(route('consultations.destroy', $consultation));
+        $response = $this->actingAs($owner)->post(route('consultations.void', $consultation), ['reason' => 'Registro duplicado']);
 
         $response->assertForbidden();
         expect(MedicalConsultation::query()->count())->toBe(1);
@@ -925,14 +934,14 @@ describe('permission and ownership boundary', function () {
         $response->assertSessionHasNoErrors();
     });
 
-    it("allows a super-admin with zero direct permissions to delete someone else's consultation", function () {
+    it("allows a super-admin with zero direct permissions to void someone else's consultation", function () {
         $admin = User::factory()->superAdmin()->create();
         $owner = User::factory()->create();
         $consultation = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $owner->id]);
 
-        $response = $this->actingAs($admin)->delete(route('consultations.destroy', $consultation));
+        $response = $this->actingAs($admin)->post(route('consultations.void', $consultation), ['reason' => 'Registro duplicado']);
 
-        $response->assertRedirect(route('dashboard.index'));
+        $response->assertRedirect(route('consultations.show', $consultation));
         expect(MedicalConsultation::query()->count())->toBe(0);
     });
 });

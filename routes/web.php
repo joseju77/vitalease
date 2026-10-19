@@ -52,10 +52,12 @@ Route::middleware('auth')
     ->group(function () {
         Route::get('/consultations/create', 'create')->name('create')->middleware('can:create,App\Models\MedicalConsultation');
         Route::post('/consultations', 'store')->name('store')->middleware('can:create,App\Models\MedicalConsultation');
-        Route::get('/consultations/{consultation}', 'show')->name('show')->middleware('can:view,consultation');
+        Route::get('/consultations/{consultation}', 'show')->name('show')->withTrashed()->middleware('can:view,consultation');
         Route::get('/consultations/{consultation}/edit', 'edit')->name('edit')->middleware('can:update,consultation');
         Route::put('/consultations/{consultation}', 'update')->name('update')->middleware('can:update,consultation');
-        Route::delete('/consultations/{consultation}', 'destroy')->name('destroy')->middleware('can:delete,consultation');
+        Route::post('/consultations/{consultation}/void', 'voidConsultation')->name('void')->middleware('can:void,consultation');
+        Route::post('/consultations/{consultation}/restore', 'restore')->name('restore')->withTrashed()->middleware('can:restore,consultation');
+        Route::get('/consultations/{consultation}/history', 'history')->name('history')->withTrashed()->middleware('can:audit,consultation');
     });
 
 Route::middleware('auth')

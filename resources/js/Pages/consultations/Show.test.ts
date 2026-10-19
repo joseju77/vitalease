@@ -58,6 +58,9 @@ function consultation(overrides: Partial<ConsultationAggregate> = {}): Consultat
         uuid: 'consultation-uuid-9',
         code: 'CON-0009',
         created_at: '2026-09-01T10:00:00Z',
+        voided_at: null,
+        voided_by: null,
+        void_reason: null,
         patient: { uuid: 'patient-uuid-1', full_name: 'Ana López', enrollment_number: 'A-100' },
         physician: { name: 'Dra. Ruiz' },
         consultation: { current_condition: 'Cefalea intensa', diagnosis: 'Migraña sin aura' },
@@ -108,7 +111,7 @@ function consultation(overrides: Partial<ConsultationAggregate> = {}): Consultat
             clinic_id: '',
             receiver_physician: 'Dr. Soto',
         },
-        can: { update: true, delete: true },
+        can: { update: true, void: true, restore: false, audit: false },
         ...overrides,
     };
 }
@@ -181,16 +184,25 @@ describe('Pages/consultations/Show.vue', () => {
     });
 
     it('shows the edit link only when the user can update the consultation', () => {
-        const editable = mountShow({ can: { update: true, delete: true } });
+        const editable = mountShow({ can: { update: true, void: true, restore: false, audit: false } });
         const editLink = editable.findAll('a').find((link) => link.text() === 'Editar');
         expect(editLink?.attributes('href')).toBe(edit.url('consultation-uuid-9'));
 
-        const readOnly = mountShow({ can: { update: false, delete: true } });
+        const readOnly = mountShow({ can: { update: false, void: true, restore: false, audit: false } });
         expect(readOnly.findAll('a').some((link) => link.text() === 'Editar')).toBe(false);
     });
 
+    it('hides the edit link for a voided consultation even when the user can update', () => {
+        const wrapper = mountShow({
+            voided_at: '2026-09-02T09:00:00Z',
+            can: { update: true, void: false, restore: true, audit: false },
+        });
+
+        expect(wrapper.findAll('a').some((link) => link.text() === 'Editar')).toBe(false);
+    });
+
     it('never offers a delete control on the detail page', () => {
-        const wrapper = mountShow({ can: { update: true, delete: true } });
+        const wrapper = mountShow({ can: { update: true, void: true, restore: false, audit: false } });
 
         expect(wrapper.text()).not.toContain('Eliminar');
     });

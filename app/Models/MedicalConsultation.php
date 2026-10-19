@@ -4,14 +4,18 @@ namespace App\Models;
 
 use App\Enums\MedicalClassification;
 use App\Enums\MedicalState;
+use App\Enums\Permission;
 use App\Support\MedicalConsultationCode;
 use Database\Factories\MedicalConsultationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
@@ -31,6 +35,15 @@ class MedicalConsultation extends Model implements AuditableContract
 
     /** @use HasFactory<MedicalConsultationFactory> */
     use HasFactory;
+
+    use SoftDeletes;
+
+    /**
+     * A consultation is never deleted: "voided" means `voided_at` is set. The
+     * void columns are written together by `ConsultationVoiding`, never through
+     * `delete()`/`restore()`.
+     */
+    public const string DELETED_AT = 'voided_at';
 
     /**
      * Only plain create/update events are audited automatically; any further
@@ -66,6 +79,7 @@ class MedicalConsultation extends Model implements AuditableContract
             'condition' => MedicalState::class,
             'prognosis' => MedicalState::class,
             'medical_classification' => MedicalClassification::class,
+            'voided_at' => 'immutable_datetime',
             'created_at' => 'immutable_datetime',
             'updated_at' => 'immutable_datetime',
         ];
@@ -90,6 +104,34 @@ class MedicalConsultation extends Model implements AuditableContract
     public function generateTags(): array
     {
         return ['consultation:'.$this->getKey()];
+    }
+
+    /**
+     * Include voided consultations, limited to the ones the user may view:
+     * active ones, their own, or all of them with `view-voided`/`void-any`.
+     *
+     * @param  Builder<MedicalConsultation>  $query
+     */
+    #[Scope]
+    protected function visibleTo(Builder $query, User $user): void
+    {
+        $query->withTrashed();
+
+        if ($user->can(Permission::ConsultationsViewVoided->value) || $user->can(Permission::ConsultationsVoidAny->value)) {
+            return;
+        }
+
+        $query->where(function (Builder $query) use ($user): void {
+            $query->whereNull('voided_at')->orWhere('physician_id', $user->id);
+        });
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function voidedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'voided_by_id');
     }
 
     /**

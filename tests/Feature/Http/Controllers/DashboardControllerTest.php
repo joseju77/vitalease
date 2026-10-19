@@ -43,6 +43,28 @@ describe('dashboard index', function () {
         );
     });
 
+    it('hides voided consultations by default and lists them with the include_voided filter', function () {
+        $caller = User::factory()->withPermissions(Permission::ConsultationsView)->create();
+        $active = MedicalConsultation::factory()->withoutRegulation()->create(['physician_id' => $caller->id]);
+        $voided = MedicalConsultation::factory()->withoutRegulation()->voided()->create(['physician_id' => $caller->id]);
+        $othersVoided = MedicalConsultation::factory()->withoutRegulation()->voided()->create();
+
+        $this->actingAs($caller)->get(route('dashboard.index'))
+            ->assertInertia(fn ($page) => $page
+                ->has('latestConsultations', 1)
+                ->where('latestConsultations.0.uuid', $active->uuid)
+                ->where('latestConsultations.0.voided_at', null)
+                ->where('filters.include_voided', false));
+
+        $this->actingAs($caller)->get(route('dashboard.index', ['include_voided' => 1]))
+            ->assertInertia(fn ($page) => $page
+                ->has('latestConsultations', 2)
+                ->where('filters.include_voided', true)
+                ->where('latestConsultations', fn ($items) => collect($items)->pluck('uuid')->sort()->values()->all() === collect([$active->uuid, $voided->uuid])->sort()->values()->all()
+                    && ! collect($items)->pluck('uuid')->contains($othersVoided->uuid)
+                    && collect($items)->firstWhere('uuid', $voided->uuid)['voided_at'] !== null));
+    });
+
     it('reflects false ability flags without patients.view or consultations.create', function () {
         $caller = User::factory()->withPermissions(Permission::ConsultationsView)->create();
 
@@ -292,12 +314,12 @@ describe('patient summary', function () {
         expect(collect($items)->pluck('uuid')->all())->toBe($expectedUuids);
     });
 
-    it('reflects can.update and can.delete only for the caller\'s own consultations', function () {
+    it('reflects can.update and can.void only for the caller\'s own consultations', function () {
         $caller = User::factory()->withPermissions(
             Permission::PatientsView,
             Permission::ConsultationsView,
             Permission::ConsultationsUpdate,
-            Permission::ConsultationsDelete,
+            Permission::ConsultationsVoid,
         )->create();
         $otherPhysician = User::factory()->create();
         $patient = Patient::factory()->create();
@@ -315,8 +337,46 @@ describe('patient summary', function () {
 
         $items = collect($response->json('latest_consultations'))->keyBy('uuid');
 
-        expect($items[$owned->uuid]['can'])->toBe(['update' => true, 'delete' => true])
-            ->and($items[$notOwned->uuid]['can'])->toBe(['update' => false, 'delete' => false]);
+        expect($items[$owned->uuid]['can'])->toBe(['update' => true, 'void' => true, 'restore' => false, 'audit' => false])
+            ->and($items[$notOwned->uuid]['can'])->toBe(['update' => false, 'void' => false, 'restore' => false, 'audit' => false]);
+    });
+});
+
+describe('patient summary with voided consultations', function () {
+    it('shows voided consultations only to viewers allowed to see them', function (array $permissions, bool $ownsVoided, bool $seesVoided) {
+        $caller = User::factory()->withPermissions(Permission::PatientsView, Permission::ConsultationsView, ...$permissions)->create();
+        $patient = Patient::factory()->create();
+        $active = MedicalConsultation::factory()->withoutRegulation()->create(['patient_id' => $patient->id]);
+        $voided = MedicalConsultation::factory()->withoutRegulation()->voided()->create([
+            'patient_id' => $patient->id,
+            'physician_id' => $ownsVoided ? $caller->id : User::factory(),
+        ]);
+
+        $items = collect($this->actingAs($caller)->getJson(route('dashboard.patients.summary', $patient))->json('latest_consultations'))->keyBy('uuid');
+
+        expect($items->has($active->uuid))->toBeTrue()
+            ->and($items->has($voided->uuid))->toBe($seesVoided);
+
+        if ($seesVoided) {
+            expect($items[$voided->uuid]['voided_at'])->not->toBeNull();
+        }
+    })->with([
+        'plain viewer' => [[], false, false],
+        'owner of the voided consultation' => [[], true, true],
+        'view-voided' => [[Permission::ConsultationsViewVoided], false, true],
+        'void-any' => [[Permission::ConsultationsVoidAny], false, true],
+    ]);
+
+    it('exposes the per-item abilities, with restore only on voided items', function () {
+        $caller = User::factory()->withPermissions(Permission::PatientsView, Permission::ConsultationsView, Permission::ConsultationsVoidAny, Permission::ConsultationsAudit)->create();
+        $patient = Patient::factory()->create();
+        $active = MedicalConsultation::factory()->withoutRegulation()->create(['patient_id' => $patient->id]);
+        $voided = MedicalConsultation::factory()->withoutRegulation()->voided()->create(['patient_id' => $patient->id]);
+
+        $items = collect($this->actingAs($caller)->getJson(route('dashboard.patients.summary', $patient))->json('latest_consultations'))->keyBy('uuid');
+
+        expect($items[$active->uuid]['can'])->toBe(['update' => false, 'void' => true, 'restore' => false, 'audit' => true])
+            ->and($items[$voided->uuid]['can'])->toBe(['update' => false, 'void' => false, 'restore' => true, 'audit' => true]);
     });
 });
 

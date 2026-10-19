@@ -65,4 +65,17 @@ class MedicalConsultationFactory extends Factory
             MedicalRegulation::factory()->create(['medical_consultation_id' => $consultation->id]);
         });
     }
+
+    /**
+     * Mark the consultation as voided (all three void columns together).
+     * Only the state is set: no stock movement is written.
+     */
+    public function voided(?User $voidedBy = null, string $reason = 'Registro duplicado'): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'voided_at' => now(),
+            'voided_by_id' => $voidedBy?->id ?? User::factory(),
+            'void_reason' => $reason,
+        ]);
+    }
 }

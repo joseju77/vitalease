@@ -48,7 +48,7 @@ class DemoUserSeeder extends Seeder
             Permission::ConsultationsView->value,
             Permission::ConsultationsCreate->value,
             Permission::ConsultationsUpdate->value,
-            Permission::ConsultationsDelete->value,
+            Permission::ConsultationsVoid->value,
         ]);
 
         $administrador = Role::findOrCreate('Administrador', 'web');

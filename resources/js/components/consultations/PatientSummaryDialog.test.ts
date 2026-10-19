@@ -35,11 +35,12 @@ function consultationItem(overrides: Partial<ConsultationListItem> = {}): Consul
         uuid: 'consultation-uuid-1',
         code: 'CON-0001',
         created_at: '2026-09-01T10:00:00Z',
+        voided_at: null,
         diagnosis: 'Migraña',
         medical_classification: 8,
         patient: { uuid: patient.uuid, full_name: 'Ana López Pérez' },
         physician: { name: 'Dra. Ruiz' },
-        can: { update: true, delete: true },
+        can: { update: true, void: true, restore: false, audit: false },
         ...overrides,
     };
 }

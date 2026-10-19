@@ -81,6 +81,9 @@ function existingConsultation(overrides: Partial<ConsultationAggregate> = {}): C
         uuid: 'consultation-uuid-9',
         code: 'CON-0009',
         created_at: '2026-09-01T10:00:00Z',
+        voided_at: null,
+        voided_by: null,
+        void_reason: null,
         patient,
         physician: { name: 'Dra. Ruiz' },
         consultation: { current_condition: 'Cefalea', diagnosis: 'Migraña' },
@@ -131,7 +134,7 @@ function existingConsultation(overrides: Partial<ConsultationAggregate> = {}): C
             clinic_id: 'CL-1',
             receiver_physician: 'Dr. Soto',
         },
-        can: { update: true, delete: true },
+        can: { update: true, void: true, restore: false, audit: false },
         ...overrides,
     };
 }

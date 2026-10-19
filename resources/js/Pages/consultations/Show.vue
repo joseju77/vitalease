@@ -26,7 +26,7 @@ defineProps<{ consultation: ConsultationAggregate; patientProfile: PatientProfil
             </template>
             <template #actions>
                 <Button variant="outline" as-child><Link :href="dashboard.url()">Volver al panel</Link></Button>
-                <Button v-if="consultation.can.update" as-child>
+                <Button v-if="consultation.can.update && !consultation.voided_at" as-child>
                     <Link :href="edit.url(consultation.uuid)"><Pencil aria-hidden="true" />Editar</Link>
                 </Button>
             </template>

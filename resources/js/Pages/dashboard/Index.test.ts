@@ -233,7 +233,8 @@ describe('Pages/dashboard/Index.vue', () => {
     it.each([
         ['created', 'Consulta CON-0001 registrada'],
         ['updated', 'Consulta CON-0001 actualizada'],
-        ['deleted', 'Consulta CON-0001 eliminada'],
+        ['voided', 'Consulta CON-0001 anulada'],
+        ['restored', 'Consulta CON-0001 restaurada'],
     ] as const)('toasts the %s consultation flash', (action, message) => {
         pageState.flash = { consultation: { uuid: 'consultation-uuid-1', code: 'CON-0001', action } };
 

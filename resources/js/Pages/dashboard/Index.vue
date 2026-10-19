@@ -34,7 +34,8 @@ function openSummary(patient: PatientSearchResult) {
 const CONSULTATION_ACTION_LABELS: Record<string, string> = {
     created: 'registrada',
     updated: 'actualizada',
-    deleted: 'eliminada',
+    voided: 'anulada',
+    restored: 'restaurada',
 };
 
 watch(

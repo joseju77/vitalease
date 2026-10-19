@@ -13,7 +13,10 @@ enum Permission: string
     case ConsultationsView = 'consultations.view';
     case ConsultationsCreate = 'consultations.create';
     case ConsultationsUpdate = 'consultations.update';
-    case ConsultationsDelete = 'consultations.delete';
+    case ConsultationsVoid = 'consultations.void';
+    case ConsultationsVoidAny = 'consultations.void-any';
+    case ConsultationsViewVoided = 'consultations.view-voided';
+    case ConsultationsAudit = 'consultations.audit';
     case RolesManage = 'roles.manage';
     case InventoryView = 'inventory.view';
     case InventoryCreate = 'inventory.create';

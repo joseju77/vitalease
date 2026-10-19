@@ -15,6 +15,7 @@ export interface ConsultationListItem {
     uuid: string;
     code: string;
     created_at: string;
+    voided_at: string | null;
     diagnosis: string;
     medical_classification: number;
     patient: {
@@ -24,10 +25,15 @@ export interface ConsultationListItem {
     physician: {
         name: string;
     };
-    can: {
-        update: boolean;
-        delete: boolean;
-    };
+    can: ConsultationAbilities;
+}
+
+/** Per-consultation abilities; `void`/`restore` already account for the voided state. */
+export interface ConsultationAbilities {
+    update: boolean;
+    void: boolean;
+    restore: boolean;
+    audit: boolean;
 }
 
 /** A single patient search result row, restricted to the Scout-indexed fields. */
@@ -58,7 +64,7 @@ export interface PatientSummary {
 export interface ConsultationFlash {
     uuid: string;
     code: string;
-    action: 'created' | 'updated' | 'deleted';
+    action: 'created' | 'updated' | 'voided' | 'restored';
 }
 
 export interface ConsultationPatient {
@@ -158,12 +164,15 @@ export interface ConsultationAggregate extends Omit<ConsultationFormPayload, 'pa
     uuid: string;
     code: string;
     created_at: string;
+    voided_at: string | null;
+    voided_by: { name: string } | null;
+    void_reason: string | null;
     patient: ConsultationPatient;
     physician: { name: string };
     treatment: TreatmentLine[];
     vital_signs: VitalSignsForm;
     regulation: RegulationForm | null;
-    can: { update: boolean; delete: boolean };
+    can: ConsultationAbilities;
 }
 
 export interface ConsultationFormOptions {
