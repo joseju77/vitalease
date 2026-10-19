@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use RuntimeException;
 
-#[Signature('demo:seed {--users=8 : Total demo users, including the 3 fixed accounts} {--patients=80 : Number of demo patients} {--consultations=600 : Number of demo consultations}')]
+#[Signature('demo:seed {--users=8 : Total demo users, including the 4 fixed accounts} {--patients=80 : Number of demo patients} {--consultations=600 : Number of demo consultations}')]
 #[Description('Seed realistic demo users, patients and consultations for local/staging demonstrations (fresh database only)')]
 class DemoSeedCommand extends Command
 {
@@ -28,8 +28,8 @@ class DemoSeedCommand extends Command
         $patients = filter_var($this->option('patients'), FILTER_VALIDATE_INT);
         $consultations = filter_var($this->option('consultations'), FILTER_VALIDATE_INT);
 
-        if ($users === false || $users < 3) {
-            $this->components->error('The --users option must be an integer of at least 3 (super-admin, demo physician, and administrador).');
+        if ($users === false || $users < 4) {
+            $this->components->error('The --users option must be an integer of at least 4 (super-admin, demo physician, administrador, and medical coordination).');
 
             return self::FAILURE;
         }

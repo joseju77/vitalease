@@ -15,7 +15,7 @@ class DemoSeeder extends Seeder
 {
     /**
      * Orchestrate realistic demo data for local/staging demonstrations:
-     * `$users` users covering every role (including the 3 fixed accounts),
+     * `$users` users covering every role (including the 4 fixed accounts),
      * `$patients` realistic patients, a demo medication catalog with its
      * starting stock, and `$consultations` realistic medical consultations
      * (with treatment lines dispensing that stock) spread over the last
@@ -42,6 +42,7 @@ class DemoSeeder extends Seeder
         Medication::withoutSyncingToSearch(function () use ($consultations): void {
             $this->call(DemoMedicationSeeder::class);
             $this->call(DemoConsultationSeeder::class, parameters: ['consultations' => $consultations]);
+            $this->call(DemoConsultationHistorySeeder::class);
         });
     }
 

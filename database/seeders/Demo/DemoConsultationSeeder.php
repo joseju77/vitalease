@@ -14,6 +14,7 @@ use App\Services\Inventory\StockLedger;
 use App\Services\Inventory\TreatmentDispensation;
 use BackedEnum;
 use Database\Seeders\Concerns\LoadsCatalog;
+use Database\Seeders\Concerns\RunsWithAuditing;
 use Faker\Generator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -24,6 +25,7 @@ use JsonException;
 class DemoConsultationSeeder extends Seeder
 {
     use LoadsCatalog;
+    use RunsWithAuditing;
 
     public function __construct(
         private readonly TreatmentDispensation $treatmentDispensation,
@@ -52,6 +54,14 @@ class DemoConsultationSeeder extends Seeder
      * initial stock entries before the earliest possible consultation.
      */
     public const int LOOKBACK_DAYS = 365;
+
+    /**
+     * How many of the most recent consultations are curated for the audit
+     * trail demo: created by the demo physician with auditing on, then
+     * edited, voided and restored by {@see DemoConsultationHistorySeeder}.
+     * Every other consultation is seeded without audit history.
+     */
+    public const int CURATED_COUNT = 6;
 
     /**
      * Earliest and latest attention hour, in `America/Mexico_City`.
@@ -155,6 +165,8 @@ class DemoConsultationSeeder extends Seeder
 
         usort($events, fn (array $a, array $b): int => $a['at']->timestamp <=> $b['at']->timestamp);
 
+        $events = $this->markCuratedEvents($events);
+
         $context = [
             'cases' => $cases,
             'people' => $people,
@@ -169,13 +181,45 @@ class DemoConsultationSeeder extends Seeder
             'windowStart' => $windowStart,
         ];
 
-        foreach ($events as $event) {
-            Carbon::withTestNow($event['at'], function () use ($event, $context): void {
-                DB::transaction(function () use ($event, $context): void {
-                    $this->processEvent($event, $context);
+        // The audit trail is explicitly off for the baseline timeline, even
+        // when the environment enables console auditing; only curated
+        // events opt in.
+        $this->withoutAuditing(function () use ($events, $context): void {
+            foreach ($events as $event) {
+                Carbon::withTestNow($event['at'], function () use ($event, $context): void {
+                    $process = fn () => DB::transaction(function () use ($event, $context): void {
+                        $this->processEvent($event, $context);
+                    });
+
+                    if ($event['curated'] ?? false) {
+                        $this->withAuditing($context['demoPhysician'], $process);
+                    } else {
+                        $process();
+                    }
                 });
-            });
+            }
+        });
+    }
+
+    /**
+     * Flag the last {@see self::CURATED_COUNT} consultation events of the
+     * chronological timeline as curated.
+     *
+     * @param  list<array{type: string, at: Carbon}>  $events
+     * @return list<array{type: string, at: Carbon, curated?: true}>
+     */
+    private function markCuratedEvents(array $events): array
+    {
+        $remaining = self::CURATED_COUNT;
+
+        for ($index = count($events) - 1; $index >= 0 && $remaining > 0; $index--) {
+            if ($events[$index]['type'] === 'consultation') {
+                $events[$index]['curated'] = true;
+                $remaining--;
+            }
         }
+
+        return $events;
     }
 
     /**
@@ -197,7 +241,7 @@ class DemoConsultationSeeder extends Seeder
      * Pick a demand-weighted case and eligible patient/physician for a
      * `consultation` event, then create the full consultation aggregate.
      *
-     * @param  array{type: string, at: Carbon}  $event
+     * @param  array{type: string, at: Carbon, curated?: true}  $event
      * @param  array<string, mixed>  $context
      */
     private function processConsultationEvent(array $event, array $context): void
@@ -210,7 +254,7 @@ class DemoConsultationSeeder extends Seeder
             return;
         }
 
-        $physician = $context['faker']->boolean(self::DEMO_PHYSICIAN_SHARE_PERCENT) || $context['otherPhysicians']->isEmpty()
+        $physician = ($event['curated'] ?? false) || $context['faker']->boolean(self::DEMO_PHYSICIAN_SHARE_PERCENT) || $context['otherPhysicians']->isEmpty()
             ? $context['demoPhysician']
             : $context['otherPhysicians']->random();
 

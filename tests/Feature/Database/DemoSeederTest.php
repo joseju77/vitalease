@@ -2,6 +2,7 @@
 
 use App\Enums\InventoryMovementType;
 use App\Enums\SexAtBirth;
+use App\Models\Audit;
 use App\Models\InventoryMovement;
 use App\Models\MedicalConsultation;
 use App\Models\MedicalConsultationTreatment;
@@ -9,8 +10,10 @@ use App\Models\MedicalRegulation;
 use App\Models\Medication;
 use App\Models\Patient;
 use App\Models\PatientGynecologicalHistory;
+use App\Models\PhysicalExamination;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\Demo\DemoConsultationSeeder;
 use Database\Seeders\Demo\DemoSeeder;
 use Database\Seeders\Demo\DemoUserSeeder;
 use Database\Seeders\EnrollmentSeeder;
@@ -18,6 +21,7 @@ use Database\Seeders\FamilyMedicalUnitSeeder;
 use Database\Seeders\LocationSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 function seedDemoCatalogs(): void
 {
@@ -154,7 +158,7 @@ describe('DemoSeeder inventory ledger', function () {
 
 describe('demo:seed command', function () {
     it('seeds users, patients, and consultations end-to-end and reports the demo physician login', function () {
-        $this->artisan('demo:seed', ['--users' => 3, '--patients' => 1, '--consultations' => 0])
+        $this->artisan('demo:seed', ['--users' => 4, '--patients' => 1, '--consultations' => 0])
             ->assertSuccessful();
 
         expect(User::query()->where('email', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL)->exists())->toBeTrue()
@@ -171,8 +175,8 @@ describe('demo:seed command', function () {
         expect(User::query()->count())->toBe(0);
     });
 
-    it('rejects a --users option below the 3 fixed accounts', function () {
-        $this->artisan('demo:seed', ['--users' => 2])->assertFailed();
+    it('rejects a --users option below the 4 fixed accounts', function () {
+        $this->artisan('demo:seed', ['--users' => 3])->assertFailed();
 
         expect(User::query()->count())->toBe(0);
     });
@@ -197,5 +201,140 @@ describe('default DatabaseSeeder', function () {
         expect(User::query()->count())->toBe(0)
             ->and(Patient::query()->count())->toBe(0)
             ->and(MedicalConsultation::withTrashed()->count())->toBe(0);
+    });
+});
+
+describe('DemoSeeder curated consultation history', function () {
+    it('seeds the fixed accounts including a medical coordination user with audit permissions', function () {
+        seedSmallDemoData(users: 4, patients: 6, consultations: 15);
+
+        $coordinator = User::query()->where('email', DemoUserSeeder::DEMO_COORDINATOR_EMAIL)->firstOrFail();
+        $physician = User::query()->where('email', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL)->firstOrFail();
+
+        expect(User::query()->count())->toBe(4)
+            ->and($coordinator->hasRole('Coordinación médica'))->toBeTrue()
+            ->and($coordinator->can('consultations.audit'))->toBeTrue()
+            ->and($coordinator->can('consultations.void-any'))->toBeTrue()
+            ->and($coordinator->can('consultations.view-voided'))->toBeTrue()
+            ->and($coordinator->can('consultations.create'))->toBeFalse()
+            ->and($physician->can('consultations.void'))->toBeTrue()
+            ->and($physician->can('consultations.audit'))->toBeFalse();
+    });
+
+    it('audits only the curated consultations and records edits, voids and one restore through the real services', function () {
+        seedSmallDemoData(users: 6, patients: 20, consultations: 40);
+
+        $audited = MedicalConsultation::withTrashed()->whereHas('audits')->orderBy('created_at')->orderBy('id')->get();
+        $coordinator = User::query()->where('email', DemoUserSeeder::DEMO_COORDINATOR_EMAIL)->firstOrFail();
+        $physician = User::query()->where('email', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL)->firstOrFail();
+
+        expect($audited)->toHaveCount(DemoConsultationSeeder::CURATED_COUNT)
+            ->and($audited->every(fn (MedicalConsultation $c): bool => $c->physician_id === $physician->id))->toBeTrue();
+
+        $auditedIds = $audited->pluck('id');
+
+        foreach (Audit::query()->get() as $audit) {
+            expect($audit->tags)->toMatch('/^consultation:(\d+)$/')
+                ->and($auditedIds->contains((int) substr((string) $audit->tags, strlen('consultation:'))))->toBeTrue();
+        }
+
+        $eventsOf = fn (MedicalConsultation $c) => Audit::query()
+            ->where('tags', "consultation:{$c->id}")
+            ->get();
+
+        // 1. vital signs + diagnosis edited, by the owner, in one batch
+        $edited = $eventsOf($audited[0])->filter(fn (Audit $a): bool => $a->event === 'updated');
+        expect($edited->pluck('user_id')->unique()->all())->toBe([$physician->id])
+            ->and($edited->pluck('auditable_type')->unique()->count())->toBeGreaterThanOrEqual(2)
+            ->and($edited->pluck('batch_id')->unique())->toHaveCount(1)
+            ->and($edited->contains(fn (Audit $a): bool => $a->event === 'updated' && array_key_exists('heart_rate', $a->new_values)))->toBeTrue()
+            ->and($edited->contains(fn (Audit $a): bool => array_key_exists('diagnosis', $a->new_values)))->toBeTrue();
+
+        // edits never log unchanged regulations or physical examinations as changes
+        expect(Audit::query()
+            ->where('event', 'updated')
+            ->whereIn('auditable_type', [(new MedicalRegulation)->getMorphClass(), (new PhysicalExamination)->getMorphClass()])
+            ->count())->toBe(0);
+
+        // 2. a treatment line added
+        expect($eventsOf($audited[1])->contains(fn (Audit $a): bool => $a->event === 'created' && array_key_exists('medication', $a->new_values) && $a->created_at->greaterThan($audited[1]->created_at)))->toBeTrue();
+
+        // 3. a treatment line removed
+        expect($eventsOf($audited[2])->contains(fn (Audit $a): bool => $a->event === 'deleted'))->toBeTrue();
+
+        // 4 + 5. voided with a reason (by the owner, then by coordination)
+        $voidedByOwner = $audited[3];
+        $voidedByCoordinator = $audited[4];
+
+        expect($voidedByOwner->trashed())->toBeTrue()
+            ->and($voidedByOwner->voided_by_id)->toBe($physician->id)
+            ->and($voidedByOwner->void_reason)->not->toBeEmpty()
+            ->and($voidedByCoordinator->trashed())->toBeTrue()
+            ->and($voidedByCoordinator->voided_by_id)->toBe($coordinator->id);
+
+        $voidAudit = $eventsOf($voidedByCoordinator)->firstWhere('event', 'voided');
+        expect($voidAudit->new_values['reason'])->toBe($voidedByCoordinator->void_reason)
+            ->and($voidAudit->user_id)->toBe($coordinator->id);
+
+        // 6. voided then restored: current state clean, both events audited
+        $restored = $audited[5];
+        $restoredEvents = $eventsOf($restored)->pluck('event');
+
+        expect($restored->trashed())->toBeFalse()
+            ->and($restored->voided_by_id)->toBeNull()
+            ->and($restoredEvents->contains('voided'))->toBeTrue()
+            ->and($restoredEvents->contains('restored'))->toBeTrue()
+            ->and($eventsOf($restored)->firstWhere('event', 'restored')->new_values['reason'])->not->toBeEmpty();
+
+        expect(MedicalConsultation::onlyTrashed()->count())->toBe(2)
+            ->and(Auth::guard('web')->user())->toBeNull()
+            ->and((bool) config('audit.console'))->toBeTrue();
+    });
+
+    it('keeps audits chronological after the creation, and the ledger consistent with no negative stock', function () {
+        seedSmallDemoData(users: 4, patients: 20, consultations: 40);
+
+        foreach (MedicalConsultation::withTrashed()->whereHas('audits')->get() as $consultation) {
+            $audits = Audit::query()->where('tags', "consultation:{$consultation->id}")->orderBy('id')->get();
+            $created = $audits->firstWhere('event', 'created');
+
+            expect($created)->not->toBeNull()
+                ->and($created->created_at->equalTo($consultation->created_at))->toBeTrue();
+
+            $previous = $created->created_at;
+
+            foreach ($audits as $audit) {
+                expect($audit->created_at->greaterThanOrEqualTo($previous))->toBeTrue();
+                $previous = $audit->created_at;
+            }
+        }
+
+        foreach (Medication::query()->get(['id', 'current_stock']) as $medication) {
+            $movements = InventoryMovement::query()->where('medication_id', $medication->id)->orderBy('id')->get(['quantity', 'stock_after']);
+
+            expect($medication->current_stock)->toBeGreaterThanOrEqual(0)
+                ->and($movements->min('stock_after'))->toBeGreaterThanOrEqual(0)
+                ->and($movements->sum('quantity'))->toBe($medication->current_stock);
+        }
+
+        $voidedLines = MedicalConsultationTreatment::query()
+            ->whereIn('medical_consultation_id', MedicalConsultation::onlyTrashed()->pluck('id'))
+            ->count();
+
+        expect($voidedLines)->toBeGreaterThan(0)
+            ->and(InventoryMovement::query()->where('type', InventoryMovementType::DispensationReversal)->exists())->toBeTrue();
+    });
+
+    it('leaves the non-curated consultations without audit history', function () {
+        seedSmallDemoData(users: 4, patients: 20, consultations: 40);
+
+        expect(MedicalConsultation::withTrashed()->doesntHave('audits')->count())->toBe(40 - DemoConsultationSeeder::CURATED_COUNT);
+    });
+
+    it('seeds fewer consultations than the curated count without failing', function () {
+        seedSmallDemoData(users: 4, patients: 6, consultations: 2);
+
+        expect(MedicalConsultation::withTrashed()->count())->toBe(2)
+            ->and(MedicalConsultation::withTrashed()->whereHas('audits')->count())->toBe(2);
     });
 });
