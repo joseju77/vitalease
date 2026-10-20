@@ -28,11 +28,17 @@ return new class extends Migration
             $table->integer('family_medical_unit_id')->nullable();
             $table->string('other_family_medical_unit')->nullable();
             $table->string('social_security_number', 11)->unique();
+            $table->timestampTz('disabled_at')->nullable();
+            $table->integer('disabled_by_id')->nullable();
+            $table->string('disable_reason', 500)->nullable();
+            $table->boolean('is_disabled')->storedAs('disabled_at IS NOT NULL');
             $table->timestampsTz();
 
             $table->foreign('enrollment_id')->references('id')->on('enrollments');
             $table->foreign('family_medical_unit_id')->references('id')->on('family_medical_units');
+            $table->foreign('disabled_by_id')->references('id')->on('users')->restrictOnDelete();
 
+            $table->index('disabled_at');
             $table->unique(['enrollment_id', 'enrollment_number']);
         });
 
@@ -40,6 +46,8 @@ return new class extends Migration
         DB::statement('ALTER TABLE patients ADD CONSTRAINT chk_marital_status_domain CHECK (marital_status IN (1, 2, 3, 4))');
         DB::statement('ALTER TABLE patients ADD CONSTRAINT chk_blood_type_domain CHECK (blood_type IN (1, 2, 3, 4, 5, 6, 7, 8))');
         DB::statement("ALTER TABLE patients ADD CONSTRAINT chk_social_security_number_format CHECK (social_security_number ~ '^[0-9]{11}$')");
+
+        DB::statement('ALTER TABLE patients ADD CONSTRAINT chk_disable_state_all_or_none CHECK ((disabled_at IS NULL AND disabled_by_id IS NULL AND disable_reason IS NULL) OR (disabled_at IS NOT NULL AND disabled_by_id IS NOT NULL AND disable_reason IS NOT NULL))');
 
         DB::statement('
             ALTER TABLE patients ADD CONSTRAINT chk_enrollment_consistency CHECK (

@@ -15,6 +15,7 @@ use App\Models\PatientContactInformation;
 use App\Models\PatientEmergencyContact;
 use App\Models\PatientGynecologicalHistory;
 use App\Models\PatientOtherAilment;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -92,6 +93,18 @@ class PatientFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'family_medical_unit_id' => null,
             'other_family_medical_unit' => fake()->company(),
+        ]);
+    }
+
+    /**
+     * Mark the patient as disabled (all three disable columns together).
+     */
+    public function disabled(?User $disabledBy = null, string $reason = 'Registro duplicado'): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'disabled_at' => now(),
+            'disabled_by_id' => $disabledBy?->id ?? User::factory(),
+            'disable_reason' => $reason,
         ]);
     }
 

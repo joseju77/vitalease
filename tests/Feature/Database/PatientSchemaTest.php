@@ -2,7 +2,9 @@
 
 use App\Models\Enrollment;
 use App\Models\FamilyMedicalUnit;
+use App\Models\MedicalConsultation;
 use App\Models\Patient;
+use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -153,5 +155,70 @@ describe('patient valid writes', function () {
         ]));
 
         expect(Patient::query()->count())->toBe(1);
+    });
+});
+
+describe('patient disable state', function () {
+    it('allows a patient with all three disable columns set', function () {
+        $patient = Patient::factory()->disabled(reason: 'Registro duplicado')->create();
+
+        expect($patient->fresh()->disabled_at)->not->toBeNull()
+            ->and($patient->disabled_by_id)->not->toBeNull()
+            ->and($patient->disable_reason)->toBe('Registro duplicado')
+            ->and($patient->disabledBy)->toBeInstanceOf(User::class);
+    });
+
+    it('allows a patient with all three disable columns null', function () {
+        $patient = Patient::factory()->create();
+
+        expect($patient->fresh()->disabled_at)->toBeNull();
+    });
+
+    it('rejects disabled_at set without a reason', function () {
+        DB::table('patients')->insert(validPatientAttributes([
+            'disabled_at' => now(),
+            'disabled_by_id' => User::factory()->create()->id,
+            'disable_reason' => null,
+        ]));
+    })->throws(QueryException::class);
+
+    it('rejects disabled_at set without the disabling user', function () {
+        DB::table('patients')->insert(validPatientAttributes([
+            'disabled_at' => now(),
+            'disabled_by_id' => null,
+            'disable_reason' => 'Motivo',
+        ]));
+    })->throws(QueryException::class);
+
+    it('rejects a reason without disabled_at', function () {
+        DB::table('patients')->insert(validPatientAttributes([
+            'disabled_at' => null,
+            'disabled_by_id' => null,
+            'disable_reason' => 'Motivo',
+        ]));
+    })->throws(QueryException::class);
+
+    it('rejects a disabling user that does not exist', function () {
+        DB::table('patients')->insert(validPatientAttributes([
+            'disabled_at' => now(),
+            'disabled_by_id' => 999_999,
+            'disable_reason' => 'Motivo',
+        ]));
+    })->throws(QueryException::class);
+
+    it('derives is_disabled from disabled_at', function () {
+        $active = Patient::factory()->create();
+        $disabled = Patient::factory()->disabled()->create();
+
+        expect($active->fresh()->is_disabled)->toBeFalse()
+            ->and($disabled->fresh()->is_disabled)->toBeTrue();
+    });
+
+    it('keeps a disabled patient resolvable from its consultation', function () {
+        $patient = Patient::factory()->disabled()->create();
+        $consultation = MedicalConsultation::factory()->create(['patient_id' => $patient->id]);
+
+        expect($consultation->fresh()->patient)->not->toBeNull()
+            ->and($consultation->patient->is($patient))->toBeTrue();
     });
 });

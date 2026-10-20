@@ -19,7 +19,8 @@ permiso fuera de este enum se rechaza en la validación (`Rule::enum`):
 | `patients.view`         | Ver pacientes.                               |
 | `patients.create`       | Crear pacientes.                             |
 | `patients.update`       | Editar pacientes.                            |
-| `patients.delete`       | Eliminar pacientes.                          |
+| `patients.disable`      | Deshabilitar y volver a habilitar pacientes. |
+| `patients.audit`        | Consultar el historial de cambios de un paciente. |
 | `consultations.view`    | Ver consultas.                               |
 | `consultations.create`  | Crear consultas.                             |
 | `consultations.update`  | Editar consultas.                            |

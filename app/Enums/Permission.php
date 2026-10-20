@@ -9,7 +9,8 @@ enum Permission: string
     case PatientsView = 'patients.view';
     case PatientsCreate = 'patients.create';
     case PatientsUpdate = 'patients.update';
-    case PatientsDelete = 'patients.delete';
+    case PatientsDisable = 'patients.disable';
+    case PatientsAudit = 'patients.audit';
     case ConsultationsView = 'consultations.view';
     case ConsultationsCreate = 'consultations.create';
     case ConsultationsUpdate = 'consultations.update';

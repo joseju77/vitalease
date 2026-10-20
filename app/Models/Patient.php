@@ -57,6 +57,8 @@ class Patient extends Model
             'sex_at_birth' => SexAtBirth::class,
             'marital_status' => MaritalStatus::class,
             'blood_type' => BloodType::class,
+            'disabled_at' => 'immutable_datetime',
+            'is_disabled' => 'boolean',
             'created_at' => 'immutable_datetime',
             'updated_at' => 'immutable_datetime',
         ];
@@ -86,6 +88,14 @@ class Patient extends Model
     public function familyMedicalUnit(): BelongsTo
     {
         return $this->belongsTo(FamilyMedicalUnit::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function disabledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'disabled_by_id');
     }
 
     /**
