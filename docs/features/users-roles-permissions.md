@@ -8,7 +8,7 @@
 
 ## Catálogo de permisos
 
-Los permisos son un catálogo **cerrado**, definido en el enum `App\Enums\Permission` (11 casos). Cualquier nombre de
+Los permisos son un catálogo **cerrado**, definido en el enum `App\Enums\Permission` (18 casos). Cualquier nombre de
 permiso fuera de este enum se rechaza en la validación (`Rule::enum`):
 
 | Permiso                | Descripción                                |
@@ -23,12 +23,24 @@ permiso fuera de este enum se rechaza en la validación (`Rule::enum`):
 | `consultations.view`    | Ver consultas.                               |
 | `consultations.create`  | Crear consultas.                             |
 | `consultations.update`  | Editar consultas.                            |
-| `consultations.delete`  | Eliminar consultas.                          |
+| `consultations.void`    | Anular y restaurar las consultas propias.    |
+| `consultations.void-any`| Anular y restaurar la consulta de cualquier médico; también permite ver las anuladas. |
+| `consultations.view-voided` | Ver las consultas anuladas de cualquier médico. |
+| `consultations.audit`   | Consultar el historial de cambios de una consulta. |
+| `inventory.view`        | Consultar el inventario de medicamentos.     |
+| `inventory.create`      | Dar de alta medicamentos y registrar entradas. |
+| `inventory.update`      | Editar medicamentos y registrar ajustes.     |
+| `inventory.delete`      | Eliminar medicamentos sin movimientos.       |
 
-`patients` y `consultations` usan granularidad CRUD (cuatro permisos independientes cada uno) en vez de un único
-permiso `*.manage` por módulo. `users.manage`, `roles.manage` y `reports.generate` son permisos únicos, sin
-granularidad adicional. El seeder (`RolePermissionSeeder`) crea los 11 permisos a partir de `Permission::cases()`, así
-que el enum es siempre la fuente de verdad — nunca se comparan cadenas sueltas.
+`patients` e `inventory` usan granularidad CRUD (cuatro permisos independientes cada uno) en vez de un único permiso
+`*.manage` por módulo. `consultations` conserva ver, crear y editar, pero **no tiene permiso de eliminación**: una
+consulta nunca se borra, se anula (`consultations.void`), y tres permisos adicionales cubren anular la de cualquier
+médico (`consultations.void-any`), ver las anuladas (`consultations.view-voided`) y leer su historial de cambios
+(`consultations.audit`). El antiguo permiso `consultations.delete` se renombró a `consultations.void`. Ver
+[consultas médicas](medical-consultations.md#autorización) para las reglas de cada uno. `users.manage`,
+`roles.manage` y `reports.generate` son permisos únicos, sin granularidad adicional. El seeder
+(`RolePermissionSeeder`) crea los 18 permisos a partir de `Permission::cases()`, así que el enum es siempre la fuente de
+verdad — nunca se comparan cadenas sueltas.
 
 ## Catálogo de roles
 
@@ -48,6 +60,21 @@ incondicional cuando el rol es `super-admin`, y `RoleController::update()`/`Role
 misma comprobación como defensa en profundidad. La razón es que el acceso de `super-admin` no depende de sus
 permisos asignados (ver más abajo), sino de que su nombre coincida literalmente con la cadena `'super-admin'` en el
 bypass registrado en `AppServiceProvider`; renombrarlo o borrarlo rompería ese bypass en silencio.
+
+## Roles de demostración
+
+`php artisan demo:seed` (`make seed-demo`) crea, además de `super-admin`, estos roles y usuarios fijos (los usuarios
+`medicoN@vitalease.test` adicionales comparten el rol Médico):
+
+| Rol                    | Permisos                                                                                                              | Usuario demo                                                  |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
+| `Médico`               | `consultations.view`, `consultations.create`, `consultations.update`, `consultations.void`                            | `medico.demo@vitalease.test` (además `patients.view` directo) |
+| `Administrador`        | `users.manage`, `roles.manage`                                                                                        | `administrador@vitalease.test`                                |
+| `Coordinación médica`  | `consultations.view`, `consultations.view-voided`, `consultations.void-any`, `consultations.audit`, `patients.view`   | `coordinacion@vitalease.test`                                 |
+
+Coordinación médica puede ver y anular o restaurar cualquier consulta y leer su historial, pero no crearlas ni
+editarlas. El Médico solo anula y restaura las suyas y no ve el historial de cambios. El usuario `super-admin` es
+`superadmin@vitalease.test`.
 
 ## El rol `super-admin`
 
