@@ -11,12 +11,15 @@ import RestoreConsultationDialog from '@/components/consultations/RestoreConsult
 import VoidConsultationDialog from '@/components/consultations/VoidConsultationDialog.vue';
 import VoidedBanner from '@/components/consultations/VoidedBanner.vue';
 import { Button } from '@/components/ui/button';
+import { useConsultationFlashToast } from '@/composables/useConsultationFlashToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatDateTime } from '@/lib/formatDateTime';
 import type { ConsultationAggregate, PatientProfile } from '@/types/consultations';
 
 defineOptions({ layout: (h: any, page: any) => h(AppLayout, { title: 'Detalle de consulta' }, () => page) });
 defineProps<{ consultation: ConsultationAggregate; patientProfile: PatientProfile }>();
+
+useConsultationFlashToast();
 </script>
 
 <template>

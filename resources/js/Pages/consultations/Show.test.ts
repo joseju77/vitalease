@@ -1,10 +1,15 @@
 /* eslint-disable vue/one-component-per-file -- minimal inline test doubles for Inertia's Head and Link. */
 import { mount, VueWrapper } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { index as dashboard } from '@/actions/App/Http/Controllers/DashboardController';
 import { edit } from '@/actions/App/Http/Controllers/MedicalConsultationController';
-import type { ConsultationAggregate, PatientProfile } from '@/types/consultations';
+import type { ConsultationAggregate, ConsultationFlash, PatientProfile } from '@/types/consultations';
+
+const { pageState, toastSuccess } = vi.hoisted(() => ({
+    pageState: { flash: {} as { consultation?: ConsultationFlash } },
+    toastSuccess: vi.fn(),
+}));
 
 vi.mock('@inertiajs/vue3', async (importOriginal) => {
     const actual = await importOriginal<typeof import('@inertiajs/vue3')>();
@@ -23,8 +28,11 @@ vi.mock('@inertiajs/vue3', async (importOriginal) => {
                 () =>
                     h('a', { href: props.href }, slots.default?.()),
         }),
+        usePage: () => pageState,
     };
 });
+
+vi.mock('vue-sonner', () => ({ toast: { success: toastSuccess } }));
 
 /** The persistent layout is applied by Inertia, not by a direct mount; stubbing it skips its asset imports. */
 vi.mock('@/layouts/AppLayout.vue', () => ({ default: {} }));
@@ -130,6 +138,22 @@ function definitionFor(wrapper: VueWrapper, term: string): string {
 }
 
 describe('Pages/consultations/Show.vue', () => {
+    beforeEach(() => {
+        pageState.flash = {};
+        toastSuccess.mockClear();
+    });
+
+    it.each([
+        ['voided', 'Consulta CON-0009 anulada'],
+        ['restored', 'Consulta CON-0009 restaurada'],
+    ] as const)('toasts the %s flash after redirecting to the detail page', (action, message) => {
+        pageState.flash = { consultation: { uuid: 'consultation-uuid-9', code: 'CON-0009', action } };
+
+        mountShow();
+
+        expect(toastSuccess).toHaveBeenCalledWith(message);
+    });
+
     it('titles the page with the consultation code, physician, and patient', () => {
         const wrapper = mountShow();
 

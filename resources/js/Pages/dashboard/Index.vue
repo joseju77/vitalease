@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
-import { toast } from 'vue-sonner';
+import { Head, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { index as dashboardIndex } from '@/actions/App/Http/Controllers/DashboardController';
 import ConsultationList from '@/components/consultations/ConsultationList.vue';
 import PatientSearch from '@/components/consultations/PatientSearch.vue';
 import PatientSummaryDialog from '@/components/consultations/PatientSummaryDialog.vue';
 import { Card, CardContent } from '@/components/ui/card';
+import { useConsultationFlashToast } from '@/composables/useConsultationFlashToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { ConsultationListItem, PatientSearchResult } from '@/types/consultations';
 
@@ -22,8 +22,6 @@ defineProps<{
         createConsultation: boolean;
     };
 }>();
-
-const page = usePage();
 
 const selectedPatient = ref<PatientSearchResult | null>(null);
 const summaryOpen = ref(false);
@@ -41,25 +39,7 @@ function toggleVoided(includeVoided: boolean) {
     );
 }
 
-const CONSULTATION_ACTION_LABELS: Record<string, string> = {
-    created: 'registrada',
-    updated: 'actualizada',
-    voided: 'anulada',
-    restored: 'restaurada',
-};
-
-watch(
-    () => page.flash?.consultation,
-    (consultation) => {
-        if (!consultation) {
-            return;
-        }
-
-        const actionLabel = CONSULTATION_ACTION_LABELS[consultation.action] ?? 'registrada';
-        toast.success(`Consulta ${consultation.code} ${actionLabel}`);
-    },
-    { immediate: true },
-);
+useConsultationFlashToast();
 </script>
 
 <template>
