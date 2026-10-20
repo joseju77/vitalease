@@ -1,6 +1,6 @@
 # ADR-0005: Taxonomía de permisos y catálogo de roles de la etapa de usuarios/roles/permisos
 
-* Estado: Aceptada
+* Estado: Aceptada; el punto 1 fue modificado por [ADR-0009](0009-bitacora-de-auditoria-de-consultas-medicas.md)
 
 ## Contexto
 
@@ -19,6 +19,9 @@ cambios como decisiones propias de esta etapa — no como una revisión de ADR-0
    y un único permiso `consultations.manage`, cada módulo tiene cuatro permisos independientes: `view`, `create`,
    `update`, `delete` (por ejemplo, `patients.view`, `patients.create`, `patients.update`, `patients.delete`).
    `users.manage`, `roles.manage` y `reports.generate` siguen siendo permisos únicos, sin granularidad adicional.
+
+   > **Modificado por ADR-0009.** Para `consultations`, `delete` se reemplazó por `void` (anular y restaurar las
+   > consultas propias) y se agregaron `void-any`, `view-voided` y `audit`. Ninguna consulta se elimina físicamente.
 
 2. **Un solo rol sembrado, `super-admin`, en vez de `admin` y `staff`.** El plan original sembraba dos roles. El dueño
    del producto descartó `staff` y renombró el rol restante a `super-admin`. Un usuario que no sea

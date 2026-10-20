@@ -27,11 +27,12 @@ function consultationItem(overrides: Partial<ConsultationListItem> = {}): Consul
         uuid: 'consultation-uuid-1',
         code: 'CON-0001',
         created_at: '2026-09-01T10:00:00Z',
+        voided_at: null,
         diagnosis: 'Migraña',
         medical_classification: 1,
         patient: { uuid: 'patient-uuid-1', full_name: 'Ana López Pérez' },
         physician: { name: 'Dra. Ruiz' },
-        can: { update: true, delete: true },
+        can: { update: true, void: true, restore: false, audit: false },
         ...overrides,
     };
 }
@@ -81,5 +82,38 @@ describe('ConsultationList.vue', () => {
         expect(wrapper.text()).toContain('No tienes consultas registradas.');
         expect(wrapper.find('table').exists()).toBe(false);
         expect(wrapper.get('[aria-label="0 consultas"]').text()).toBe('0');
+    });
+
+    it('marks voided consultations with an "Anulada" badge', () => {
+        const wrapper = mount(ConsultationList, {
+            props: {
+                consultations: [
+                    consultationItem(),
+                    consultationItem({
+                        uuid: 'consultation-uuid-2',
+                        code: 'CON-0002',
+                        voided_at: '2026-09-02T10:00:00Z',
+                    }),
+                ],
+            },
+        });
+
+        const rows = wrapper.findAll('tbody tr');
+        expect(rows[0].text()).not.toContain('Anulada');
+        expect(rows[1].text()).toContain('Anulada');
+    });
+
+    it('renders the "Incluir anuladas" toggle reflecting the prop and emitting changes', async () => {
+        const wrapper = mount(ConsultationList, { props: { consultations: [], includeVoided: false } });
+
+        expect(wrapper.text()).toContain('Incluir anuladas');
+        const toggle = wrapper.get('#include-voided');
+        expect(toggle.attributes('aria-checked')).toBe('false');
+
+        await toggle.trigger('click');
+        expect(wrapper.emitted('update:includeVoided')).toEqual([[true]]);
+
+        await wrapper.setProps({ includeVoided: true });
+        expect(wrapper.get('#include-voided').attributes('aria-checked')).toBe('true');
     });
 });

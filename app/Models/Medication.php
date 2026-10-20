@@ -60,6 +60,14 @@ class Medication extends Model
     }
 
     /**
+     * Human-readable identifier combining name, presentation and concentration.
+     */
+    public function auditLabel(): string
+    {
+        return trim(implode(' ', array_filter([$this->name, $this->presentation, $this->concentration])));
+    }
+
+    /**
      * @return HasMany<InventoryMovement, $this>
      */
     public function inventoryMovements(): HasMany

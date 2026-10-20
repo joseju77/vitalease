@@ -90,8 +90,8 @@ describe('sync', function () {
     });
 });
 
-describe('restoreAll', function () {
-    it('restores stock for every dispensed medication and removes every treatment line', function () {
+describe('reverseAll', function () {
+    it('returns the dispensed stock of every line with reversal movements and keeps the lines', function () {
         $first = Medication::factory()->create(['current_stock' => 20]);
         $second = Medication::factory()->create(['current_stock' => 20]);
         $actor = User::factory()->create();
@@ -103,14 +103,55 @@ describe('restoreAll', function () {
         expect($first->fresh()->current_stock)->toBe(15)
             ->and($second->fresh()->current_stock)->toBe(17);
 
-        DB::transaction(fn () => app(TreatmentDispensation::class)->restoreAll($consultation, $actor));
+        DB::transaction(fn () => app(TreatmentDispensation::class)->reverseAll($consultation, $actor));
 
         expect($first->fresh()->current_stock)->toBe(20)
             ->and($second->fresh()->current_stock)->toBe(20)
-            ->and($consultation->treatments()->count())->toBe(0);
+            ->and($consultation->treatments()->count())->toBe(2);
 
         $reversals = InventoryMovement::query()->where('type', InventoryMovementType::DispensationReversal)->get();
         expect($reversals)->toHaveCount(2)
-            ->and($reversals->pluck('quantity')->sort()->values()->all())->toBe([3, 5]);
+            ->and($reversals->pluck('quantity')->sort()->values()->all())->toBe([3, 5])
+            ->and($reversals->pluck('medical_consultation_id')->unique()->all())->toBe([$consultation->id]);
+    });
+});
+
+describe('redispenseAll', function () {
+    it('dispenses every preserved line again, even for an inactive medication', function () {
+        $active = Medication::factory()->create(['current_stock' => 20]);
+        $inactive = Medication::factory()->create(['current_stock' => 20]);
+        $actor = User::factory()->create();
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create();
+        sync($consultation, [dispensationLine($active, 5), dispensationLine($inactive, 3)], $actor);
+        DB::transaction(fn () => app(TreatmentDispensation::class)->reverseAll($consultation, $actor));
+        $inactive->forceFill(['is_active' => false])->save();
+
+        DB::transaction(fn () => app(TreatmentDispensation::class)->redispenseAll($consultation, $actor));
+
+        expect($active->fresh()->current_stock)->toBe(15)
+            ->and($inactive->fresh()->current_stock)->toBe(17)
+            ->and($consultation->treatments()->count())->toBe(2);
+    });
+
+    it('reports every line without enough stock by position and writes nothing', function () {
+        $first = Medication::factory()->create(['current_stock' => 20]);
+        $second = Medication::factory()->create(['current_stock' => 20]);
+        $actor = User::factory()->create();
+        $consultation = MedicalConsultation::factory()->withoutRegulation()->create();
+        sync($consultation, [dispensationLine($first, 5), dispensationLine($second, 3)], $actor);
+        DB::transaction(fn () => app(TreatmentDispensation::class)->reverseAll($consultation, $actor));
+        $second->forceFill(['current_stock' => 1])->save();
+        $movementCount = InventoryMovement::query()->count();
+
+        try {
+            DB::transaction(fn () => app(TreatmentDispensation::class)->redispenseAll($consultation, $actor));
+            $this->fail('Expected InsufficientStockException was not thrown.');
+        } catch (InsufficientStockException $e) {
+            expect($e->available())->toBe([1 => 1]);
+        }
+
+        expect($first->fresh()->current_stock)->toBe(20)
+            ->and($second->fresh()->current_stock)->toBe(1)
+            ->and(InventoryMovement::query()->count())->toBe($movementCount);
     });
 });

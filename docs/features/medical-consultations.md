@@ -12,8 +12,13 @@ En resumen:
   exactamente una fila de exploración física y una fila opcional de regulación médica (traslado). El agregado siempre se
   escribe en una sola transacción.
 - El usuario autenticado que crea una consulta se convierte en su médico. Solo ese médico (con el permiso
-  correspondiente) puede editarla o eliminarla; `super-admin` omite esta restricción mediante `Gate::before()` (ver
-  [ADR-0005](../adr/0005-permission-taxonomy-and-role-catalog.md)).
+  correspondiente) puede editarla o anularla; `super-admin` omite esta restricción mediante `Gate::before()` (ver
+  [ADR-0005](../adr/0005-permission-taxonomy-and-role-catalog.md)). Quien tenga `consultations.void-any` también puede
+  anular y restaurar consultas de otros médicos.
+- Una consulta **nunca se elimina físicamente**: se anula con un motivo obligatorio y puede restaurarse (ver
+  [Anulación y restauración](#anulación-y-restauración)). Cada cambio queda registrado en una bitácora de auditoría
+  inmutable (ver [Historial de cambios](#historial-de-cambios) y
+  [ADR-0009](../adr/0009-bitacora-de-auditoria-de-consultas-medicas.md)).
 - Los pacientes se localizan mediante Laravel Scout + Meilisearch (ver
   [ADR-0006](../adr/0006-busqueda-de-pacientes-con-scout-y-meilisearch.md)).
 - El tratamiento de una consulta dispensa medicamentos de un inventario real con libro de movimientos (ver
@@ -47,7 +52,13 @@ Nombre de la tabla: `medical_consultations`
 | patient_id             | INTEGER                  | NOT NULL, FK patients(id)                                 | Paciente al que pertenece la consulta; nunca cambia.                                                   |
 | created_at             | TIMESTAMP WITH TIME ZONE | NULLABLE                                                  | Fecha y hora de creación de la consulta.                                                               |
 | updated_at             | TIMESTAMP WITH TIME ZONE | NULLABLE                                                  | Fecha y hora de la última actualización.                                                               |
+| voided_at              | TIMESTAMP WITH TIME ZONE | NULLABLE                                                  | Momento de la anulación vigente; `NULL` mientras la consulta está activa (ver [Anulación](#anulación-y-restauración)). |
+| voided_by_id           | INTEGER                  | NULLABLE, FK users(id) ON DELETE RESTRICT                 | Usuario que anuló la consulta; `NULL` mientras está activa.                                            |
+| void_reason            | VARCHAR(500)             | NULLABLE                                                  | Motivo de la anulación vigente; `NULL` mientras está activa.                                           |
 
+- Las tres columnas de anulación se escriben siempre juntas: `chk_void_state_all_or_none` exige que las tres sean
+  `NULL` o que las tres tengan valor. Restaurar una consulta las vuelve a poner en `NULL`; el motivo y el autor de cada
+  anulación y restauración permanecen en el [historial de cambios](#historial-de-cambios).
 - El índice compuesto sobre (physician_id, created_at) respalda la lista "mis últimas consultas" del dashboard.
 - El índice compuesto sobre (patient_id, created_at) respalda la lista "últimas consultas" del resumen del paciente.
 - Las claves foráneas `physician_id` y `patient_id` **no** se eliminan en cascada: un usuario o un paciente con
@@ -73,8 +84,10 @@ documenta en [inventario de medicamentos](medication-inventory.md) y
   - **Editar** una consulta calcula la diferencia por medicamento entre lo enviado y lo existente: una cantidad
     mayor dispensa la diferencia; una cantidad menor, o quitar la línea por completo, restituye la diferencia como
     un movimiento `DispensationReversal`.
-  - **Eliminar** una consulta restituye el stock de todas sus líneas (`TreatmentDispensation::restoreAll()`) antes
-    de borrar el agregado.
+  - **Anular** una consulta restituye el stock de todas sus líneas (`TreatmentDispensation::reverseAll()`, un
+    movimiento `DispensationReversal` por línea) **sin borrar las líneas**, que se conservan para poder restaurar.
+  - **Restaurar** una consulta vuelve a surtir todas sus líneas (`TreatmentDispensation::redispenseAll()`, un
+    movimiento `Dispensation` por línea). Ver [Anulación y restauración](#anulación-y-restauración).
 - Si una línea dispensaría más de lo disponible, el servicio lanza `InsufficientStockException`, que la petición
   traduce en un error 422 por línea (ver [Validación](#validación)).
 
@@ -167,8 +180,10 @@ El backend solo envía valores enteros crudos; las etiquetas en español de la U
 | medical_consultations | medical_consultations_code_unique                     | UNIQUE (code)                         |
 | medical_consultations | medical_consultations_physician_id_created_at_index   | INDEX (physician_id, created_at)      |
 | medical_consultations | medical_consultations_patient_id_created_at_index     | INDEX (patient_id, created_at)        |
+| medical_consultations | medical_consultations_voided_at_index                 | INDEX (voided_at)                     |
 | medical_consultations | medical_consultations_physician_id_foreign            | FK (physician_id) → users(id)         |
 | medical_consultations | medical_consultations_patient_id_foreign              | FK (patient_id) → patients(id)        |
+| medical_consultations | medical_consultations_voided_by_id_foreign            | FK (voided_by_id) → users(id), RESTRICT |
 | physical_examinations | physical_examinations_medical_consultation_id_foreign | FK (medical_consultation_id), CASCADE |
 | vital_signs           | vital_signs_medical_consultation_id_foreign           | FK (medical_consultation_id), CASCADE |
 | medical_regulations   | medical_regulations_medical_consultation_id_foreign   | FK (medical_consultation_id), CASCADE |
@@ -181,6 +196,7 @@ El backend solo envía valores enteros crudos; las etiquetas en español de la U
 | medical_consultations | chk_condition_domain              | `condition BETWEEN 1 AND 5`               |
 | medical_consultations | chk_prognosis_domain              | `prognosis BETWEEN 1 AND 5`               |
 | medical_consultations | chk_medical_classification_domain | `medical_classification BETWEEN 1 AND 10` |
+| medical_consultations | chk_void_state_all_or_none        | `voided_at`, `voided_by_id` y `void_reason` son los tres `NULL` o los tres con valor |
 | vital_signs           | chk_glasgow_domain                | `glasgow BETWEEN 3 AND 15`                |
 | vital_signs           | chk_oxygen_saturation_domain      | `oxygen_saturation BETWEEN 0 AND 100`     |
 | medical_regulations   | chk_transfer_type_domain          | `transfer_type BETWEEN 1 AND 3`           |
@@ -223,26 +239,43 @@ reemplaza.
 
 ## Autorización
 
-El módulo usa cinco permisos de `App\Enums\Permission`:
+El módulo usa ocho permisos de `App\Enums\Permission`:
 
-| Permiso                | Otorga                                                                            |
-|------------------------|-----------------------------------------------------------------------------------|
-| `consultations.view`   | Dashboard, detalle de la consulta, endpoint de últimas consultas.                 |
-| `consultations.create` | Página de nueva consulta y guardado de una consulta nueva.                        |
-| `consultations.update` | Edición de una consulta — **solo las propias**.                                   |
-| `consultations.delete` | Eliminación de una consulta — **solo las propias**.                               |
-| `patients.view`        | Búsqueda de pacientes y (junto con `consultations.view`) el resumen del paciente. |
+| Permiso                     | Otorga                                                                                                     |
+|-----------------------------|------------------------------------------------------------------------------------------------------------|
+| `consultations.view`        | Dashboard, detalle de la consulta, endpoint de últimas consultas.                                          |
+| `consultations.create`      | Página de nueva consulta y guardado de una consulta nueva.                                                 |
+| `consultations.update`      | Edición de una consulta — **solo las propias**.                                                            |
+| `consultations.void`        | Anular y restaurar una consulta — **solo las propias** (sustituye al antiguo `consultations.delete`).      |
+| `consultations.void-any`    | Anular y restaurar la consulta de **cualquier** médico; también permite ver las anuladas.                  |
+| `consultations.view-voided` | Ver las consultas anuladas de cualquier médico (detalle y resumen del paciente), sin poder anular.         |
+| `consultations.audit`       | Leer el historial de cambios de una consulta (no exige ser su médico).                                     |
+| `patients.view`             | Búsqueda de pacientes y (junto con `consultations.view`) el resumen del paciente.                          |
 
-- `MedicalConsultationPolicy::update()` y `::delete()` exigen el permiso **y** la propiedad:
-  `$consultation->physician_id === $user->id`. Tener solo `consultations.update` no permite a un usuario editar la
-  consulta de un colega.
+Reglas de `MedicalConsultationPolicy`:
+
+| Habilidad  | Regla                                                                                                                                              |
+|------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `view`     | Requiere `consultations.view`. Si la consulta está anulada, además: ser su médico, o tener `consultations.view-voided` o `consultations.void-any`. |
+| `update`   | Consulta **no anulada**, `consultations.update` **y** propiedad (`$consultation->physician_id === $user->id`).                                      |
+| `void`     | Consulta **no anulada**, y `consultations.void-any` o (`consultations.void` y propiedad).                                                           |
+| `restore`  | Consulta **anulada**, y la misma regla que `void`.                                                                                                  |
+| `audit`    | Solo `consultations.audit`; no depende de la propiedad ni del estado.                                                                               |
+
+- Tener solo `consultations.update` no permite a un usuario editar la consulta de un colega; lo mismo aplica a
+  `consultations.void` sin `consultations.void-any`.
 - `super-admin` nunca se trata como caso especial en una Policy. Su acceso irrestricto (incluidas las consultas de otros
   médicos) proviene únicamente del callback `Gate::before()` en `AppServiceProvider` (ver
   [ADR-0005](../adr/0005-permission-taxonomy-and-role-catalog.md)
-  y [usuarios, roles y permisos](users-roles-permissions.md)).
-- Tanto los controladores como las páginas exponen los flags `can.update` / `can.delete` para que la UI oculte Editar y
-  Eliminar en las consultas que el usuario no puede modificar; el middleware `can:` del servidor sigue siendo el límite
-  real (HTTP 403 en caso contrario).
+  y [usuarios, roles y permisos](users-roles-permissions.md)). Como esa omisión salta la Policy, el servicio
+  `ConsultationVoiding` vuelve a comprobar el estado dentro de la transacción y rechaza una anulación o restauración
+  inválida (HTTP 422) también para `super-admin`.
+- Una consulta anulada no puede editarse ni anularse de nuevo: sus rutas de edición, actualización y anulación
+  responden 404 para todos, porque la ruta no resuelve consultas anuladas. Solo las rutas de detalle, restauración e
+  historial las resuelven.
+- Tanto los controladores como las páginas exponen los flags `can.update` / `can.void` / `can.restore` / `can.audit`
+  para que la UI oculte Editar, Anular, Restaurar e Historial de cambios; el middleware `can:` del servidor sigue
+  siendo el límite real (HTTP 403 en caso contrario).
 - La barra lateral muestra la entrada "Consultas" solo a los usuarios con `consultations.view`.
 
 > **Decisión de producto deliberada:** la tarjeta plegable del perfil del paciente en las páginas de creación, detalle
@@ -250,6 +283,70 @@ El módulo usa cinco permisos de `App\Enums\Permission`:
 > contactos de emergencia, padecimientos, historial ginecológico) a cualquiera que pueda abrir esas páginas. Abrir la
 > página de creación solo requiere `consultations.create`, y la página de detalle solo `consultations.view` — ahí no se
 > comprueba `patients.view`.
+
+## Anulación y restauración
+
+Una consulta no se elimina: se **anula**. Anular conserva la consulta, sus signos vitales, su exploración, su regulación
+y todas sus líneas de tratamiento; solo marca `voided_at`, `voided_by_id` y `void_reason`. Los modelos usan
+`SoftDeletes` con `voided_at` como columna de borrado lógico, de modo que las consultas anuladas quedan fuera de las
+consultas normales.
+
+`App\Services\MedicalConsultations\ConsultationVoiding` ejecuta ambas operaciones en una única transacción: bloquea la
+fila de la consulta (`lockForUpdate`), vuelve a comprobar su estado y mueve el stock una sola vez. De dos peticiones
+concurrentes, exactamente una surte efecto; la otra recibe un 422.
+
+| Operación | Motivo                                       | Efecto sobre el stock                                                                                                                | Resultado                                                                     |
+|-----------|----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| Anular    | `reason` obligatorio, cadena de máx. 500     | Devuelve al inventario el stock de **todas** las líneas (un movimiento `DispensationReversal` por línea); las líneas no se borran.      | Rellena las tres columnas de anulación y registra un evento `voided`.         |
+| Restaurar | `reason` obligatorio, cadena de máx. 500     | Vuelve a surtir **todas** las líneas (un movimiento `Dispensation` por línea). Admite medicamentos inactivos, pero no existencia insuficiente. | Vacía las tres columnas de anulación y registra un evento `restored`.        |
+
+- Anular **siempre** devuelve el stock y restaurar **siempre** vuelve a surtirlo; no existe una opción para omitirlo.
+- Si al restaurar alguna línea excede la existencia actual de su medicamento, **no se escribe nada** (ni stock ni estado):
+  la petición responde 422 con un error por línea, con clave `treatment.N` (`N` es la posición base cero de la línea,
+  ordenada por id) y el mensaje "No se puede restaurar: existencia insuficiente de :medication. Disponible: :available.".
+  La consulta sigue anulada.
+- Anular una consulta ya anulada, o restaurar una que no lo está, responde 422 con un error en la clave `consultation`
+  ("La consulta ya fue anulada." / "La consulta no está anulada."). Es la última barrera, que cubre la concurrencia y a
+  `super-admin`; en el flujo normal la ruta rechaza antes la petición (404 al anular una consulta ya anulada, 403 al
+  restaurar una que no lo está; ver [Autorización](#autorización)).
+- Una consulta puede anularse y restaurarse varias veces; cada ciclo queda en el historial con su motivo y autor.
+- El código de la consulta (`MC-YYMMDD-NNNN`) no se reutiliza: la fila sigue existiendo, así que la siguiente consulta
+  del día continúa la secuencia.
+
+### Visibilidad de las consultas anuladas
+
+- **Dashboard**: "Mis últimas consultas" oculta las anuladas por defecto. El interruptor "Incluir anuladas" (parámetro
+  `include_voided`) las muestra, con la insignia "Anulada", entre las 10 últimas consultas propias del usuario.
+- **Resumen del paciente**: lista hasta 5 consultas recientes e incluye las anuladas que el usuario puede ver, con la
+  insignia "Anulada". Quien no tiene `consultations.view-voided` ni `consultations.void-any` solo ve las anuladas que
+  son propias.
+- **Detalle** (`consultations/Show`): una consulta anulada solo se abre para su médico y para quienes tienen
+  `consultations.view-voided` o `consultations.void-any`; el resto recibe 403. La página muestra el aviso "Anulada" con
+  la fecha, quién la anuló y el motivo, oculta el botón Editar y ofrece "Restaurar consulta" en lugar de "Anular
+  consulta" cuando `can.restore` es verdadero.
+
+## Historial de cambios
+
+Cada creación, edición, anulación y restauración queda registrada en la tabla `audits` (paquete
+`owen-it/laravel-auditing`, ver [ADR-0009](../adr/0009-bitacora-de-auditoria-de-consultas-medicas.md)). La bitácora es
+**inmutable**: `App\Models\Audit` lanza una `LogicException` ante cualquier actualización o eliminación y nunca se
+purga.
+
+- Se auditan la consulta y sus cuatro entidades dependientes (`VitalSigns`, `PhysicalExamination`, `MedicalRegulation` y
+  las líneas de `MedicalConsultationTreatment`). Todas llevan la etiqueta `consultation:{id}`.
+- Un guardado del formulario modifica varias tablas pero se muestra como **un solo cambio**: todas las filas de
+  auditoría de una operación comparten el mismo `batch_id`, y el historial agrupa por ese lote.
+- Anular y restaurar registran un único evento personalizado (`voided` / `restored`) con el motivo; los movimientos de
+  stock que provocan se consultan en el libro de movimientos del inventario, no en el historial.
+- Cada grupo indica **quién** (nombre del usuario), **cuándo** y **qué**: el tipo de evento (Creación, Modificación,
+  Anulación o Restauración), el motivo cuando aplica y, para las modificaciones, una tabla Campo / Anterior / Nuevo
+  por sección (consulta, signos vitales, exploración física, regulación, tratamiento). Los valores de enums se muestran
+  con su etiqueta en español y las líneas de tratamiento con el nombre, presentación y concentración del medicamento.
+
+`GET /consultations/{consultation}/history` (permiso `consultations.audit`) devuelve JSON con `data` (grupos, del más
+reciente al más antiguo, 20 por página) y `next_cursor` (`null` al final); el cursor se envía como `?cursor=`. En la
+interfaz, el botón "Historial de cambios" de la página de detalle abre un diálogo con estados de carga, vacío ("Esta
+consulta no tiene cambios registrados.") y error, y un botón "Cargar más".
 
 ## Indexación para la búsqueda de pacientes
 
@@ -286,18 +383,22 @@ Todas las rutas requieren `auth`; la autorización la aplica el middleware `can:
 | GET    | `/dashboard/consultations`             | `dashboard.consultations.latest` | `consultations.view`                   | JSON, las 10 últimas consultas propias                                                          |
 | GET    | `/consultations/create?patient={uuid}` | `consultations.create`           | `consultations.create`                 | Inertia `consultations/Create` (422 ante un UUID mal formado, 404 ante un paciente desconocido) |
 | POST   | `/consultations`                       | `consultations.store`            | `consultations.create`                 | Redirect a `dashboard.index` con flash                                                          |
-| GET    | `/consultations/{consultation}`        | `consultations.show`             | `consultations.view`                   | Inertia `consultations/Show`                                                                    |
+| GET    | `/consultations/{consultation}`        | `consultations.show`             | `view` (ver [Autorización](#autorización)) | Inertia `consultations/Show` (también resuelve consultas anuladas)                          |
 | GET    | `/consultations/{consultation}/edit`   | `consultations.edit`             | `consultations.update` + propiedad     | Inertia `consultations/Edit`                                                                    |
 | PUT    | `/consultations/{consultation}`        | `consultations.update`           | `consultations.update` + propiedad     | Redirect a `dashboard.index` con flash                                                          |
-| DELETE | `/consultations/{consultation}`        | `consultations.destroy`          | `consultations.delete` + propiedad     | Redirect a `dashboard.index` con flash                                                          |
+| POST   | `/consultations/{consultation}/void`   | `consultations.void`             | `void` (ver [Autorización](#autorización)) | Redirect a `consultations.show` con flash                                                   |
+| POST   | `/consultations/{consultation}/restore` | `consultations.restore`         | `restore` (ver [Autorización](#autorización)) | Redirect a `consultations.show` con flash                                                |
+| GET    | `/consultations/{consultation}/history` | `consultations.history`         | `consultations.audit`                  | JSON, una página de grupos de cambios (parámetro opcional `cursor`)                             |
 
-`{patient}` y `{consultation}` se resuelven por `uuid`, nunca por el id numérico. La eliminación es definitiva (hard
-delete); las filas hijas se eliminan mediante la cascada de la base de datos.
+`{patient}` y `{consultation}` se resuelven por `uuid`, nunca por el id numérico. **No existe ninguna ruta de
+eliminación**: no hay `DELETE /consultations/{consultation}` y la consulta y sus filas hijas nunca se borran. Las rutas
+de anulación y restauración requieren el campo `reason` (ver [Anulación y restauración](#anulación-y-restauración)).
 
 ### Flujo de la interfaz
 
 1. **Dashboard** (`dashboard/Index.vue`): la barra de búsqueda de pacientes (visible solo con `patients.view`) y la
-   tabla "Mis últimas consultas" con las 10 últimas consultas propias del usuario.
+   tabla "Mis últimas consultas" con las 10 últimas consultas propias del usuario. Las anuladas se ocultan salvo que se
+   active "Incluir anuladas".
 2. **Búsqueda → resumen**: al seleccionar un resultado se abre `PatientSummaryDialog`, que obtiene el resumen del
    paciente y lista hasta 5 consultas recientes (cada una enlaza a su página de detalle).
 3. **Nueva consulta**: el botón "Nueva consulta" del diálogo (visible solo con `consultations.create`) abre
@@ -308,11 +409,16 @@ delete); las filas hijas se eliminan mediante la cascada de la base de datos.
    **no** valida la existencia en el navegador: un intento de dispensar más de lo disponible solo se rechaza en la
    respuesta del servidor (ver [Tratamiento](#tratamiento)).
 5. **Guardar**: `ConsultationForm` envía el agregado; si tiene éxito, el usuario regresa al dashboard con un toast de
-   Sonner como "Consulta MC-260923-0007 registrada" (o "actualizada" / "eliminada" tras editar o eliminar).
-6. **Detalle** (`consultations/Show`): detalle de solo lectura; el botón Editar aparece solo cuando `can.update` es
-   verdadero.
-7. **Edición** (`consultations/Edit`): el mismo formulario, precargado; cuando `can.delete` es verdadero también ofrece
-   "Eliminar consulta", que pide confirmación en un `AlertDialog` antes de enviar el DELETE.
+   Sonner como "Consulta MC-260923-0007 registrada" (o "actualizada" tras editar).
+6. **Detalle** (`consultations/Show`): detalle de solo lectura. Los botones dependen de los flags `can`: Editar
+   (`can.update`), "Anular consulta" (`can.void`), "Restaurar consulta" (`can.restore`) e "Historial de cambios"
+   (`can.audit`). Una consulta anulada muestra el aviso "Anulada" (fecha, autor y motivo).
+7. **Anular / restaurar**: cada acción abre un `AlertDialog` que exige el motivo (obligatorio, máx. 500 caracteres) y
+   explica el efecto sobre el inventario. Tras confirmar, el usuario regresa a la página de detalle con un toast como
+   "Consulta MC-260923-0007 anulada" (o "restaurada"). Si la
+   restauración se rechaza por existencia insuficiente, el diálogo muestra el error de cada línea y la consulta sigue
+   anulada.
+8. **Edición** (`consultations/Edit`): el mismo formulario, precargado. La edición ya no ofrece eliminar la consulta.
 
 En las páginas de creación, detalle y edición, `PatientProfileCard` se ubica encima del formulario o del detalle. Inicia
 plegada ("Mostrar" / "Ocultar") y agrupa el perfil en pestañas: "Datos generales", "Contacto", "Contactos de
@@ -334,8 +440,16 @@ php artisan db:seed --class=PatientSeeder
 - Solo siembra pacientes, no consultas. Ejecuta `php artisan scout:import "App\Models\Patient"` después si los pacientes
   todavía no aparecen en la búsqueda.
 
+`make seed-demo` (`php artisan demo:seed`, ver [inventario de medicamentos](medication-inventory.md#datos-de-desarrollo))
+también siembra consultas con historial de auditoría: `DemoConsultationHistorySeeder` aplica, mediante los servicios
+reales y con un usuario autor, ediciones, una línea de tratamiento agregada y otra quitada, anulaciones por el médico
+demo y por Coordinación médica, y una anulación seguida de restauración, siempre con motivos en español. Los usuarios
+demo incluyen `coordinacion@vitalease.test` (ver [usuarios, roles y permisos](users-roles-permissions.md)).
+
 ## Fuera de alcance
 
+- **La eliminación física de consultas** no existe: una consulta solo se anula, y el paciente y el médico de una
+  consulta nunca cambian.
 - **Las firmas y un flujo de revisor/revisión** se eliminaron de esta etapa: una consulta no tiene firma, ni revisor, ni
   estado de revisión.
 - **Los reportes y exportaciones** (PDF, Excel) de consultas corresponden a una etapa posterior; nada en este módulo
@@ -375,7 +489,12 @@ erDiagram
         int patient_id
         timestamp created_at
         timestamp updated_at
+        timestamp voided_at
+        int voided_by_id
+        string void_reason
     }
+
+    MedicalConsultation }o--o| User: voided_by
 
     Medication {
         int id

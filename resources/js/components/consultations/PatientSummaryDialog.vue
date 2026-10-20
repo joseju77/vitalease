@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { patientSummary as patientSummaryAction } from '@/actions/App/Http/Controllers/DashboardController';
 import { create, show } from '@/actions/App/Http/Controllers/MedicalConsultationController';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -149,7 +150,10 @@ const createConsultationHref = create.url({ query: { patient: props.patient.uuid
                                 class="block rounded-md border p-2 text-sm hover:bg-muted"
                             >
                                 <div class="flex items-center justify-between">
-                                    <span class="font-medium">{{ consultation.code }}</span>
+                                    <span class="flex items-center gap-2 font-medium">
+                                        {{ consultation.code }}
+                                        <Badge v-if="consultation.voided_at" variant="destructive">Anulada</Badge>
+                                    </span>
                                     <span class="text-xs text-muted-foreground">
                                         {{ formatDateTime(consultation.created_at) }}
                                     </span>

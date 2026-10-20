@@ -163,8 +163,10 @@ editar una consulta contra sus líneas existentes, dentro de la misma transacci�
   `DispensationReversal` por la cantidad restituida.
 - Un medicamento que ya no aparece en las líneas enviadas se elimina de `medical_consultation_treatments` y su
   cantidad completa se restituye como `DispensationReversal`.
-- Eliminar una consulta llama a `TreatmentDispensation::restoreAll()`, que sincroniza contra una lista vacía de
-  líneas: restituye todo el stock dispensado antes de que la consulta se borre.
+- Anular una consulta llama a `TreatmentDispensation::reverseAll()`, que registra un `DispensationReversal` por línea
+  y conserva las líneas; restaurarla llama a `TreatmentDispensation::redispenseAll()`, que registra un `Dispensation`
+  por línea y se rechaza por completo si alguna excede la existencia (ver
+  [consultas médicas](medical-consultations.md#anulación-y-restauración)). Las consultas ya no se eliminan.
 - Si algún delta positivo excede la existencia disponible del medicamento, se lanza `InsufficientStockException`,
   que `StoreMedicalConsultationRequest`/`UpdateMedicalConsultationRequest` traducen en un error 422 por línea, con
   clave `treatment.N.quantity_dispensed` (`N` es el índice base cero de la línea).

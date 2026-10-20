@@ -15,7 +15,16 @@ describe('formatPermissionLabel', () => {
     });
 
     it('formats another CRUD action as "<Resource>: <Verb>"', () => {
-        expect(formatPermissionLabel('consultations.delete')).toBe('Consultas: Eliminar');
+        expect(formatPermissionLabel('patients.delete')).toBe('Pacientes: Eliminar');
+    });
+
+    it.each([
+        ['consultations.void', 'Consultas: Anular'],
+        ['consultations.void-any', 'Consultas: Anular de cualquier médico'],
+        ['consultations.view-voided', 'Consultas: Ver anuladas'],
+        ['consultations.audit', 'Consultas: Consultar historial de cambios'],
+    ])('labels the voiding permission %s', (permission, label) => {
+        expect(formatPermissionLabel(permission)).toBe(label);
     });
 });
 

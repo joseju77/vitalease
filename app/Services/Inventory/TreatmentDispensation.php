@@ -37,9 +37,7 @@ final class TreatmentDispensation
      */
     public function sync(MedicalConsultation $consultation, array $lines, User $actor): void
     {
-        if (DB::transactionLevel() === 0) {
-            throw new LogicException('TreatmentDispensation::sync() must be called inside a database transaction.');
-        }
+        $this->assertInTransaction(__FUNCTION__);
 
         $uuidToId = Medication::query()
             ->whereIn('uuid', array_column($lines, 'medication_uuid'))
@@ -103,7 +101,12 @@ final class TreatmentDispensation
         $removedIds = $old->keys()->diff(array_keys($new));
 
         if ($removedIds->isNotEmpty()) {
-            $consultation->treatments()->whereIn('medication_id', $removedIds)->delete();
+            // Model-by-model deletes so each removed line writes its audit.
+            $old->each(function (MedicalConsultationTreatment $line) use ($removedIds): void {
+                if ($removedIds->contains($line->medication_id)) {
+                    $line->delete();
+                }
+            });
         }
 
         foreach ($new as $medicationId => $line) {
@@ -120,11 +123,82 @@ final class TreatmentDispensation
     }
 
     /**
-     * Restore all stock dispensed for a consultation's treatment lines and
-     * remove them. Must run inside an open database transaction.
+     * Return to stock everything the consultation's treatment lines
+     * dispensed, writing one `DispensationReversal` movement per line. The
+     * lines themselves are preserved so the consultation can be restored.
+     *
+     * Must run inside an open database transaction.
+     *
+     * @throws LogicException When called outside a database transaction.
      */
-    public function restoreAll(MedicalConsultation $consultation, User $actor): void
+    public function reverseAll(MedicalConsultation $consultation, User $actor): void
     {
-        $this->sync($consultation, [], $actor);
+        $this->assertInTransaction(__FUNCTION__);
+
+        $lines = $consultation->treatments()->orderBy('id')->get();
+        $locked = $this->stockLedger->lock($lines->pluck('medication_id')->sort()->values()->all());
+
+        foreach ($lines as $line) {
+            $this->stockLedger->record(
+                $locked->get($line->medication_id),
+                InventoryMovementType::DispensationReversal,
+                $line->quantity_dispensed,
+                $actor,
+                $consultation,
+            );
+        }
+    }
+
+    /**
+     * Dispense again everything the consultation's preserved treatment
+     * lines call for, writing one `Dispensation` movement per line. Inactive
+     * medications do not block this, but stock does: when any line lacks
+     * stock nothing is written and every offending line is reported.
+     *
+     * Must run inside an open database transaction.
+     *
+     * @throws LogicException When called outside a database transaction.
+     * @throws InsufficientStockException When any line exceeds its medication's current stock, keyed by line position (ordered by line id).
+     */
+    public function redispenseAll(MedicalConsultation $consultation, User $actor): void
+    {
+        $this->assertInTransaction(__FUNCTION__);
+
+        $lines = $consultation->treatments()->orderBy('id')->get();
+        $locked = $this->stockLedger->lock($lines->pluck('medication_id')->sort()->values()->all());
+
+        $insufficient = [];
+
+        foreach ($lines->values() as $position => $line) {
+            $available = $locked->get($line->medication_id)->current_stock;
+
+            if ($line->quantity_dispensed > $available) {
+                $insufficient[$position] = $available;
+            }
+        }
+
+        if ($insufficient !== []) {
+            throw new InsufficientStockException($insufficient);
+        }
+
+        foreach ($lines as $line) {
+            $this->stockLedger->record(
+                $locked->get($line->medication_id),
+                InventoryMovementType::Dispensation,
+                -$line->quantity_dispensed,
+                $actor,
+                $consultation,
+            );
+        }
+    }
+
+    /**
+     * @throws LogicException When called outside a database transaction.
+     */
+    private function assertInTransaction(string $method): void
+    {
+        if (DB::transactionLevel() === 0) {
+            throw new LogicException("TreatmentDispensation::{$method}() must be called inside a database transaction.");
+        }
     }
 }

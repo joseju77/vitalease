@@ -3,6 +3,7 @@
 return [
     'attributes' => [
         'patient_uuid' => 'paciente',
+        'reason' => 'motivo',
         'consultation.current_condition' => 'condición actual',
         'consultation.diagnosis' => 'diagnóstico',
         'condition' => 'estado',
@@ -42,5 +43,8 @@ return [
         'diastolic_not_less_than_systolic' => 'La presión arterial diastólica debe ser menor que la sistólica.',
         'duplicate_medication' => 'No se puede repetir el mismo medicamento en el tratamiento.',
         'inactive_medication' => 'El medicamento seleccionado no existe o está inactivo.',
+        'already_voided' => 'La consulta ya fue anulada.',
+        'not_voided' => 'La consulta no está anulada.',
+        'restore_insufficient_stock' => 'No se puede restaurar: existencia insuficiente de :medication. Disponible: :available.',
     ],
 ];

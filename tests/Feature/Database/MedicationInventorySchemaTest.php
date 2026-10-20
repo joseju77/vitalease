@@ -273,7 +273,7 @@ describe('inventory_movements table constraints', function () {
         expect(fn () => $medication->delete())->toThrow(QueryException::class);
     });
 
-    it('nulls the consultation id and keeps the code snapshot when the consultation is deleted', function () {
+    it('nulls the consultation id and keeps the code snapshot when the consultation row is hard deleted', function () {
         $consultation = MedicalConsultation::factory()->withoutRegulation()->create();
         $medication = Medication::factory()->create();
         $user = User::factory()->create();
@@ -286,7 +286,8 @@ describe('inventory_movements table constraints', function () {
             'medical_consultation_code' => $consultation->code,
         ]));
 
-        $consultation->delete();
+        // `delete()` would only void the consultation; the FK behavior needs a real row delete.
+        $consultation->forceDelete();
 
         $movement = DB::table('inventory_movements')->where('medication_id', $medication->id)->sole();
         expect($movement->medical_consultation_id)->toBeNull()

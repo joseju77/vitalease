@@ -2,8 +2,14 @@
 import { flushPromises, mount, VueWrapper } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { patientSummary, searchPatients } from '@/actions/App/Http/Controllers/DashboardController';
-import type { ConsultationFlash, PatientSearchResult, PatientSummary } from '@/types/consultations';
+import { router } from '@inertiajs/core';
+import { index, patientSummary, searchPatients } from '@/actions/App/Http/Controllers/DashboardController';
+import type {
+    ConsultationFlash,
+    ConsultationListItem,
+    PatientSearchResult,
+    PatientSummary,
+} from '@/types/consultations';
 
 /**
  * The dashboard reads `Head`/`usePage` from `@inertiajs/vue3`, and its patient
@@ -78,9 +84,13 @@ let pendingFetches: PendingFetch[];
 let fetchMock: ReturnType<typeof vi.fn>;
 let wrapper: VueWrapper | null = null;
 
-function mountDashboard(can = { searchPatients: true, createConsultation: true }): VueWrapper {
+function mountDashboard(
+    can = { searchPatients: true, createConsultation: true },
+    latestConsultations: ConsultationListItem[] = [],
+    includeVoided = false,
+): VueWrapper {
     wrapper = mount(DashboardIndex, {
-        props: { latestConsultations: [], can },
+        props: { latestConsultations, filters: { include_voided: includeVoided }, can },
         attachTo: document.body,
     });
     return wrapper;
@@ -233,7 +243,8 @@ describe('Pages/dashboard/Index.vue', () => {
     it.each([
         ['created', 'Consulta CON-0001 registrada'],
         ['updated', 'Consulta CON-0001 actualizada'],
-        ['deleted', 'Consulta CON-0001 eliminada'],
+        ['voided', 'Consulta CON-0001 anulada'],
+        ['restored', 'Consulta CON-0001 restaurada'],
     ] as const)('toasts the %s consultation flash', (action, message) => {
         pageState.flash = { consultation: { uuid: 'consultation-uuid-1', code: 'CON-0001', action } };
 
@@ -247,5 +258,51 @@ describe('Pages/dashboard/Index.vue', () => {
         mountDashboard();
 
         expect(toastSuccess).not.toHaveBeenCalled();
+    });
+
+    describe('voided consultations', () => {
+        const voidedItem: ConsultationListItem = {
+            uuid: 'consultation-uuid-2',
+            code: 'CON-0002',
+            created_at: '2026-09-01T10:00:00Z',
+            voided_at: '2026-09-02T10:00:00Z',
+            diagnosis: 'Migraña',
+            medical_classification: 8,
+            patient: { uuid: 'patient-uuid-1', full_name: 'Ana López' },
+            physician: { name: 'Dra. Ruiz' },
+            can: { update: false, void: false, restore: true, audit: false },
+        };
+
+        it('shows an "Anulada" badge only on voided consultations', () => {
+            const activeItem: ConsultationListItem = { ...voidedItem, uuid: 'u3', code: 'CON-0003', voided_at: null };
+            const target = mountDashboard(undefined, [voidedItem, activeItem], true);
+
+            const rows = target.findAll('tbody tr');
+            expect(rows[0].text()).toContain('Anulada');
+            expect(rows[1].text()).not.toContain('Anulada');
+        });
+
+        it('reflects the include_voided filter in the toggle', () => {
+            const off = mountDashboard();
+            expect(off.get('#include-voided').attributes('aria-checked')).toBe('false');
+            off.unmount();
+
+            const on = mountDashboard(undefined, [], true);
+            expect(on.get('#include-voided').attributes('aria-checked')).toBe('true');
+        });
+
+        it('reloads the dashboard with include_voided when the toggle is switched on and off', async () => {
+            const getSpy = vi.spyOn(router, 'get').mockImplementation(() => {});
+            const target = mountDashboard();
+
+            await target.get('#include-voided').trigger('click');
+            expect(getSpy.mock.calls[0][0]).toBe(index.url({ query: { include_voided: 1 } }));
+            expect(getSpy.mock.calls[0][0]).toContain('include_voided=1');
+
+            await target.setProps({ filters: { include_voided: true } });
+            await target.get('#include-voided').trigger('click');
+            expect(getSpy.mock.calls[1][0]).toBe(index.url());
+            getSpy.mockRestore();
+        });
     });
 });

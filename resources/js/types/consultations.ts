@@ -15,6 +15,7 @@ export interface ConsultationListItem {
     uuid: string;
     code: string;
     created_at: string;
+    voided_at: string | null;
     diagnosis: string;
     medical_classification: number;
     patient: {
@@ -24,10 +25,15 @@ export interface ConsultationListItem {
     physician: {
         name: string;
     };
-    can: {
-        update: boolean;
-        delete: boolean;
-    };
+    can: ConsultationAbilities;
+}
+
+/** Per-consultation abilities; `void`/`restore` already account for the voided state. */
+export interface ConsultationAbilities {
+    update: boolean;
+    void: boolean;
+    restore: boolean;
+    audit: boolean;
 }
 
 /** A single patient search result row, restricted to the Scout-indexed fields. */
@@ -58,7 +64,7 @@ export interface PatientSummary {
 export interface ConsultationFlash {
     uuid: string;
     code: string;
-    action: 'created' | 'updated' | 'deleted';
+    action: 'created' | 'updated' | 'voided' | 'restored';
 }
 
 export interface ConsultationPatient {
@@ -158,12 +164,15 @@ export interface ConsultationAggregate extends Omit<ConsultationFormPayload, 'pa
     uuid: string;
     code: string;
     created_at: string;
+    voided_at: string | null;
+    voided_by: { name: string } | null;
+    void_reason: string | null;
     patient: ConsultationPatient;
     physician: { name: string };
     treatment: TreatmentLine[];
     vital_signs: VitalSignsForm;
     regulation: RegulationForm | null;
-    can: { update: boolean; delete: boolean };
+    can: ConsultationAbilities;
 }
 
 export interface ConsultationFormOptions {
@@ -226,4 +235,30 @@ export interface PatientProfile {
         cesareans: number;
         abortions: number;
     } | null;
+}
+
+/** One field change inside a history group; labels and enum values are already Spanish. */
+export interface ConsultationHistoryChange {
+    section: string;
+    item: string | null;
+    field: string;
+    old: string | number | boolean | null;
+    new: string | number | boolean | null;
+}
+
+/** One save, void or restore of a consultation, as returned by the history endpoint. */
+export interface ConsultationHistoryGroup {
+    id: string;
+    event: 'created' | 'updated' | 'voided' | 'restored';
+    event_label: string;
+    occurred_at: string;
+    actor: { name: string } | null;
+    reason: string | null;
+    changes: ConsultationHistoryChange[];
+}
+
+/** A page of history groups, newest first; `next_cursor` is null on the last page. */
+export interface ConsultationHistoryPage {
+    data: ConsultationHistoryGroup[];
+    next_cursor: number | null;
 }

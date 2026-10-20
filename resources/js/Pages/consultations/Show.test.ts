@@ -1,10 +1,15 @@
 /* eslint-disable vue/one-component-per-file -- minimal inline test doubles for Inertia's Head and Link. */
 import { mount, VueWrapper } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { index as dashboard } from '@/actions/App/Http/Controllers/DashboardController';
 import { edit } from '@/actions/App/Http/Controllers/MedicalConsultationController';
-import type { ConsultationAggregate, PatientProfile } from '@/types/consultations';
+import type { ConsultationAggregate, ConsultationFlash, PatientProfile } from '@/types/consultations';
+
+const { pageState, toastSuccess } = vi.hoisted(() => ({
+    pageState: { flash: {} as { consultation?: ConsultationFlash } },
+    toastSuccess: vi.fn(),
+}));
 
 vi.mock('@inertiajs/vue3', async (importOriginal) => {
     const actual = await importOriginal<typeof import('@inertiajs/vue3')>();
@@ -23,8 +28,11 @@ vi.mock('@inertiajs/vue3', async (importOriginal) => {
                 () =>
                     h('a', { href: props.href }, slots.default?.()),
         }),
+        usePage: () => pageState,
     };
 });
+
+vi.mock('vue-sonner', () => ({ toast: { success: toastSuccess } }));
 
 /** The persistent layout is applied by Inertia, not by a direct mount; stubbing it skips its asset imports. */
 vi.mock('@/layouts/AppLayout.vue', () => ({ default: {} }));
@@ -58,6 +66,9 @@ function consultation(overrides: Partial<ConsultationAggregate> = {}): Consultat
         uuid: 'consultation-uuid-9',
         code: 'CON-0009',
         created_at: '2026-09-01T10:00:00Z',
+        voided_at: null,
+        voided_by: null,
+        void_reason: null,
         patient: { uuid: 'patient-uuid-1', full_name: 'Ana López', enrollment_number: 'A-100' },
         physician: { name: 'Dra. Ruiz' },
         consultation: { current_condition: 'Cefalea intensa', diagnosis: 'Migraña sin aura' },
@@ -108,7 +119,7 @@ function consultation(overrides: Partial<ConsultationAggregate> = {}): Consultat
             clinic_id: '',
             receiver_physician: 'Dr. Soto',
         },
-        can: { update: true, delete: true },
+        can: { update: true, void: true, restore: false, audit: false },
         ...overrides,
     };
 }
@@ -127,6 +138,22 @@ function definitionFor(wrapper: VueWrapper, term: string): string {
 }
 
 describe('Pages/consultations/Show.vue', () => {
+    beforeEach(() => {
+        pageState.flash = {};
+        toastSuccess.mockClear();
+    });
+
+    it.each([
+        ['voided', 'Consulta CON-0009 anulada'],
+        ['restored', 'Consulta CON-0009 restaurada'],
+    ] as const)('toasts the %s flash after redirecting to the detail page', (action, message) => {
+        pageState.flash = { consultation: { uuid: 'consultation-uuid-9', code: 'CON-0009', action } };
+
+        mountShow();
+
+        expect(toastSuccess).toHaveBeenCalledWith(message);
+    });
+
     it('titles the page with the consultation code, physician, and patient', () => {
         const wrapper = mountShow();
 
@@ -181,17 +208,85 @@ describe('Pages/consultations/Show.vue', () => {
     });
 
     it('shows the edit link only when the user can update the consultation', () => {
-        const editable = mountShow({ can: { update: true, delete: true } });
+        const editable = mountShow({ can: { update: true, void: true, restore: false, audit: false } });
         const editLink = editable.findAll('a').find((link) => link.text() === 'Editar');
         expect(editLink?.attributes('href')).toBe(edit.url('consultation-uuid-9'));
 
-        const readOnly = mountShow({ can: { update: false, delete: true } });
+        const readOnly = mountShow({ can: { update: false, void: true, restore: false, audit: false } });
         expect(readOnly.findAll('a').some((link) => link.text() === 'Editar')).toBe(false);
     });
 
+    it('hides the edit link for a voided consultation even when the user can update', () => {
+        const wrapper = mountShow({
+            voided_at: '2026-09-02T09:00:00Z',
+            can: { update: true, void: false, restore: true, audit: false },
+        });
+
+        expect(wrapper.findAll('a').some((link) => link.text() === 'Editar')).toBe(false);
+    });
+
     it('never offers a delete control on the detail page', () => {
-        const wrapper = mountShow({ can: { update: true, delete: true } });
+        const wrapper = mountShow({ can: { update: true, void: true, restore: false, audit: false } });
 
         expect(wrapper.text()).not.toContain('Eliminar');
+    });
+
+    describe('void, restore and history controls', () => {
+        const voidedAt = '2026-09-02T09:00:00Z';
+
+        function buttonLabels(wrapper: VueWrapper): string[] {
+            return wrapper.findAll('button').map((button) => button.text());
+        }
+
+        it('offers voiding only when the user can void an active consultation', () => {
+            const allowed = mountShow({ can: { update: true, void: true, restore: false, audit: false } });
+            expect(buttonLabels(allowed)).toContain('Anular consulta');
+
+            const denied = mountShow({ can: { update: true, void: false, restore: false, audit: false } });
+            expect(buttonLabels(denied)).not.toContain('Anular consulta');
+        });
+
+        it('shows no banner for an active consultation', () => {
+            const wrapper = mountShow();
+
+            expect(wrapper.find('[data-testid="voided-banner"]').exists()).toBe(false);
+            expect(buttonLabels(wrapper)).not.toContain('Restaurar consulta');
+        });
+
+        it('shows the banner and restore, but no edit or void, for a voided consultation', () => {
+            const wrapper = mountShow({
+                voided_at: voidedAt,
+                voided_by: { name: 'Dr. Soto' },
+                void_reason: 'Registro duplicado',
+                can: { update: true, void: true, restore: true, audit: false },
+            });
+
+            const banner = wrapper.get('[data-testid="voided-banner"]');
+            expect(banner.text()).toContain('Anulada');
+            expect(banner.text()).toContain('Dr. Soto');
+            expect(banner.text()).toContain('Registro duplicado');
+            expect(buttonLabels(wrapper)).toContain('Restaurar consulta');
+            expect(buttonLabels(wrapper)).not.toContain('Anular consulta');
+            expect(wrapper.findAll('a').some((link) => link.text() === 'Editar')).toBe(false);
+        });
+
+        it('hides restore from users who cannot restore', () => {
+            const wrapper = mountShow({
+                voided_at: voidedAt,
+                voided_by: { name: 'Dr. Soto' },
+                void_reason: 'Registro duplicado',
+                can: { update: false, void: false, restore: false, audit: false },
+            });
+
+            expect(buttonLabels(wrapper)).not.toContain('Restaurar consulta');
+        });
+
+        it('shows the history button only with the audit ability', () => {
+            const audited = mountShow({ can: { update: true, void: true, restore: false, audit: true } });
+            expect(buttonLabels(audited)).toContain('Historial de cambios');
+
+            const plain = mountShow({ can: { update: true, void: true, restore: false, audit: false } });
+            expect(buttonLabels(plain)).not.toContain('Historial de cambios');
+        });
     });
 });

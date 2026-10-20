@@ -22,15 +22,23 @@ class DemoUserSeeder extends Seeder
     public const string DEMO_PHYSICIAN_EMAIL = 'medico.demo@vitalease.test';
 
     /**
-     * Number of fixed demo accounts (super-admin, demo physician,
-     * administrador) counted towards the `$users` total.
+     * Deterministic email for the medical coordination account, the demo
+     * user who can audit consultations and void any of them.
      */
-    private const int FIXED_ACCOUNT_COUNT = 3;
+    public const string DEMO_COORDINATOR_EMAIL = 'coordinacion@vitalease.test';
+
+    /**
+     * Number of fixed demo accounts (super-admin, demo physician,
+     * administrador, medical coordination) counted towards the `$users`
+     * total.
+     */
+    public const int FIXED_ACCOUNT_COUNT = 4;
 
     /**
      * Seed realistic demo users covering every role the application
      * distinguishes: a super-admin, a demo physician with full clinical
-     * access, `$users - 3` other physicians, and an administrator. Names
+     * access, `$users - 4` other physicians, an administrator and a medical
+     * coordinator (consultation audit and voiding). Names
      * come from a curated Mexican pool (fakerphp ships no `es_MX` locale)
      * and a dedicated `es_ES`-scoped Faker instance, so the application's
      * default Faker locale is never touched.
@@ -48,13 +56,22 @@ class DemoUserSeeder extends Seeder
             Permission::ConsultationsView->value,
             Permission::ConsultationsCreate->value,
             Permission::ConsultationsUpdate->value,
-            Permission::ConsultationsDelete->value,
+            Permission::ConsultationsVoid->value,
         ]);
 
         $administrador = Role::findOrCreate('Administrador', 'web');
         $administrador->syncPermissions([
             Permission::UsersManage->value,
             Permission::RolesManage->value,
+        ]);
+
+        $coordinacion = Role::findOrCreate('Coordinación médica', 'web');
+        $coordinacion->syncPermissions([
+            Permission::ConsultationsView->value,
+            Permission::ConsultationsViewVoided->value,
+            Permission::ConsultationsVoidAny->value,
+            Permission::ConsultationsAudit->value,
+            Permission::PatientsView->value,
         ]);
 
         User::factory()->superAdmin()->create([
@@ -86,6 +103,13 @@ class DemoUserSeeder extends Seeder
                 'email' => 'administrador@vitalease.test',
             ])
             ->assignRole($administrador);
+
+        User::factory()
+            ->create([
+                'name' => $this->randomFullName($people, $faker, female: false),
+                'email' => self::DEMO_COORDINATOR_EMAIL,
+            ])
+            ->assignRole($coordinacion);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
