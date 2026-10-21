@@ -32,6 +32,14 @@ Route::middleware('auth')
     ->group(function () {
         Route::get('/patients', 'index')->name('index')->middleware('can:viewAny,App\Models\Patient');
         Route::get('/patients/{patient}', 'show')->name('show')->whereUuid('patient')->middleware('can:view,patient');
+        Route::get('/patients/{patient}/edit', 'edit')
+            ->name('edit')
+            ->whereUuid('patient')
+            ->middleware('can:update,patient');
+        Route::put('/patients/{patient}', 'update')
+            ->name('update')
+            ->whereUuid('patient')
+            ->middleware('can:update,patient');
         Route::get('/patients/{patient}/history', 'history')
             ->name('history')
             ->whereUuid('patient')

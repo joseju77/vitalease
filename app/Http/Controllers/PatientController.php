@@ -9,6 +9,7 @@ use App\Enums\KinshipType;
 use App\Enums\MaritalStatus;
 use App\Enums\SexAtBirth;
 use App\Http\Requests\Patients\StorePatientRegistrationRequest;
+use App\Http\Requests\Patients\UpdatePatientRequest;
 use App\Models\Enrollment;
 use App\Models\FamilyMedicalUnit;
 use App\Models\MedicalConsultation;
@@ -18,8 +19,10 @@ use App\Services\Patients\PatientHistory;
 use App\Services\Patients\PatientWriter;
 use App\Support\ConsultationListItem;
 use App\Support\PatientAbilities;
+use App\Support\Patients\PatientEditPayload;
 use App\Support\Patients\PatientProfile;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -146,16 +149,47 @@ class PatientController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('patients/Register', [
-            'sexAtBirthOptions' => array_column(SexAtBirth::cases(), 'value'),
-            'maritalStatusOptions' => array_column(MaritalStatus::cases(), 'value'),
-            'bloodTypeOptions' => array_column(BloodType::cases(), 'value'),
-            'kinshipTypeOptions' => array_column(KinshipType::cases(), 'value'),
-            'ailmentTypeOptions' => array_column(AilmentType::cases(), 'value'),
-            'contraceptiveMethodOptions' => array_column(ContraceptiveMethod::cases(), 'value'),
-            'familyMedicalUnits' => FamilyMedicalUnit::query()->orderBy('id')->get(['id', 'name', 'address']),
-            'enrollments' => Enrollment::query()->orderBy('id')->get(['id', 'name', 'segment']),
+        return Inertia::render('patients/Register', $this->registrationMetadata());
+    }
+
+    /**
+     * Display the edit form prefilled with the stored aggregate, plus the
+     * same catalogs the registration form uses and the neighborhoods of the
+     * patient's current postal code. A disabled patient has no edit page,
+     * not even for `super-admin` (whose policy checks always pass).
+     */
+    public function edit(Patient $patient): Response
+    {
+        abort_if($patient->disabled_at !== null, 403);
+
+        $form = PatientEditPayload::for($patient);
+        $zipCode = $form['contact_information']['zip_code'];
+
+        return Inertia::render('patients/Edit', [
+            ...$this->registrationMetadata(),
+            'patient' => [
+                'uuid' => $patient->uuid,
+                'full_name' => $this->fullName($patient),
+            ],
+            'form' => $form,
+            'neighborhoods' => $zipCode === null
+                ? []
+                : Neighborhood::query()->where('zip_code', $zipCode)->orderBy('id')->get(['id', 'name']),
         ]);
+    }
+
+    /**
+     * Replace the patient aggregate with the submitted one (see
+     * `PatientWriter::update`). Duplicate values and a patient disabled in
+     * the meantime come back as validation errors.
+     */
+    public function update(UpdatePatientRequest $request, Patient $patient, PatientWriter $writer): RedirectResponse
+    {
+        $writer->update($patient, $request->validated());
+
+        Inertia::flash('patientUpdated', true);
+
+        return redirect()->route('patients.show', $patient);
     }
 
     /**
@@ -191,6 +225,10 @@ class PatientController extends Controller
     {
         try {
             $writer->register($request->validated());
+        } catch (UniqueConstraintViolationException) {
+            return back()->withErrors([
+                'registration' => __('modules/patients/registration.duplicate_registration'),
+            ]);
         } catch (Throwable $exception) {
             report($exception);
 
@@ -211,5 +249,24 @@ class PatientController extends Controller
             $patient->last_name,
             $patient->second_last_name,
         ])));
+    }
+
+    /**
+     * The enum options and catalogs the registration and edit forms share.
+     *
+     * @return array<string, mixed>
+     */
+    private function registrationMetadata(): array
+    {
+        return [
+            'sexAtBirthOptions' => array_column(SexAtBirth::cases(), 'value'),
+            'maritalStatusOptions' => array_column(MaritalStatus::cases(), 'value'),
+            'bloodTypeOptions' => array_column(BloodType::cases(), 'value'),
+            'kinshipTypeOptions' => array_column(KinshipType::cases(), 'value'),
+            'ailmentTypeOptions' => array_column(AilmentType::cases(), 'value'),
+            'contraceptiveMethodOptions' => array_column(ContraceptiveMethod::cases(), 'value'),
+            'familyMedicalUnits' => FamilyMedicalUnit::query()->orderBy('id')->get(['id', 'name', 'address']),
+            'enrollments' => Enrollment::query()->orderBy('id')->get(['id', 'name', 'segment']),
+        ];
     }
 }

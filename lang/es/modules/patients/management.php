@@ -49,4 +49,14 @@ return [
         'gynecological_history.cesareans' => 'cesáreas',
         'gynecological_history.abortions' => 'abortos',
     ],
+
+    'duplicates' => [
+        'social_security_number' => 'Ya existe un paciente con este número de seguridad social.',
+        'enrollment_number' => 'Ya existe un paciente con este número de inscripción en la misma inscripción.',
+        'institutional_email' => 'Ya existe un paciente con este correo institucional.',
+    ],
+
+    'errors' => [
+        'patient_disabled' => 'El paciente está deshabilitado y no puede editarse.',
+    ],
 ];
