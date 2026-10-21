@@ -12,11 +12,10 @@ use App\Http\Requests\Patients\StorePatientRegistrationRequest;
 use App\Models\Enrollment;
 use App\Models\FamilyMedicalUnit;
 use App\Models\Neighborhood;
-use App\Models\Patient;
+use App\Services\Patients\PatientWriter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -66,38 +65,15 @@ class PatientController extends Controller
      * Persist a complete anonymous patient registration aggregate.
      *
      * The patient and every applicable extension are created inside one
-     * transaction. Any failure after validation rolls back every row and
-     * reports the exception; the client only ever sees a generic error,
-     * never a patient id, aggregate field, or medical value.
+     * transaction and one audit batch (see `PatientWriter`). Any failure
+     * after validation rolls back every row and reports the exception; the
+     * client only ever sees a generic error, never a patient id, aggregate
+     * field, or medical value.
      */
-    public function store(StorePatientRegistrationRequest $request): RedirectResponse
+    public function store(StorePatientRegistrationRequest $request, PatientWriter $writer): RedirectResponse
     {
         try {
-            DB::transaction(function () use ($request): void {
-                $patient = Patient::query()->create($request->safe()->input('patient'));
-
-                $contactInformation = $request->safe()->input('contact_information');
-                unset($contactInformation['zip_code']);
-                $patient->contactInformation()->create($contactInformation);
-
-                foreach ($request->safe()->input('emergency_contacts', []) as $emergencyContact) {
-                    $patient->emergencyContacts()->create($emergencyContact);
-                }
-
-                foreach ($request->safe()->input('ailments', []) as $ailment) {
-                    $patient->ailments()->create($ailment);
-                }
-
-                $otherAilments = $request->safe()->input('other_ailments');
-                if ($otherAilments !== null) {
-                    $patient->otherAilments()->create($otherAilments);
-                }
-
-                $gynecologicalHistory = $request->safe()->input('gynecological_history');
-                if ($gynecologicalHistory !== null) {
-                    $patient->gynecologicalHistory()->create($gynecologicalHistory);
-                }
-            });
+            $writer->register($request->validated());
         } catch (Throwable $exception) {
             report($exception);
 

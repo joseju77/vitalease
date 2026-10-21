@@ -14,4 +14,12 @@ class FamilyMedicalUnit extends Model
     use HasFactory;
 
     public $timestamps = false;
+
+    /**
+     * Human-readable identifier shown in the audit history.
+     */
+    public function auditLabel(): string
+    {
+        return $this->name;
+    }
 }
