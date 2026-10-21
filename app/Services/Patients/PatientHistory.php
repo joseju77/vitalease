@@ -94,6 +94,11 @@ final readonly class PatientHistory extends AuditHistory
         return 'modules/patients';
     }
 
+    protected function omitsEmptyToEmptyChanges(): bool
+    {
+        return true;
+    }
+
     protected function nullActorName(): ?string
     {
         return __('modules/patients/history.self_registration');

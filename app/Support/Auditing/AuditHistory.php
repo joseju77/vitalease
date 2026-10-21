@@ -92,6 +92,16 @@ abstract readonly class AuditHistory
     }
 
     /**
+     * Whether a field that is null on both sides is left out of the changes.
+     * A created row stores its empty optional fields as null, which reads as
+     * a meaningless "empty to empty" change; subjects opt in to hide them.
+     */
+    protected function omitsEmptyToEmptyChanges(): bool
+    {
+        return false;
+    }
+
+    /**
      * One page of history groups, newest first.
      *
      * `$cursor` is the `next_cursor` of the previous page; `next_cursor` is
@@ -206,6 +216,10 @@ abstract readonly class AuditHistory
         $changes = [];
 
         foreach ($fields as $field) {
+            if ($this->omitsEmptyToEmptyChanges() && ($old[$field] ?? null) === null && ($new[$field] ?? null) === null) {
+                continue;
+            }
+
             $changes[] = [
                 'section' => __($this->langNamespace().'/history.sections.'.$section),
                 'item' => $item,
