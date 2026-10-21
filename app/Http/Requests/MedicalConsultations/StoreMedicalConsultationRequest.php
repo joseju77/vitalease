@@ -5,6 +5,7 @@ namespace App\Http\Requests\MedicalConsultations;
 use App\Enums\MedicalClassification;
 use App\Enums\MedicalState;
 use App\Enums\TransferType;
+use App\Models\Patient;
 use Illuminate\Foundation\Http\Attributes\FailOnUnknownFields;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -85,8 +86,33 @@ class StoreMedicalConsultationRequest extends FormRequest
     public function after(): array
     {
         return [
+            $this->validatePatientIsActive(...),
             $this->validateDiastolicLessThanSystolic(...),
         ];
+    }
+
+    /**
+     * Reject a consultation for a disabled patient. `ConsultationWriter`
+     * checks again under a lock, so a patient disabled meanwhile is caught
+     * too.
+     */
+    private function validatePatientIsActive(Validator $validator): void
+    {
+        if ($validator->errors()->has('patient_uuid')) {
+            return;
+        }
+
+        $disabled = Patient::query()
+            ->where('uuid', $this->input('patient_uuid'))
+            ->whereNotNull('disabled_at')
+            ->exists();
+
+        if ($disabled) {
+            $validator->errors()->add(
+                'patient_uuid',
+                __('modules/patients/management.errors.consultation_patient_disabled')
+            );
+        }
     }
 
     /**

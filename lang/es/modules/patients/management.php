@@ -2,6 +2,7 @@
 
 return [
     'attributes' => [
+        'reason' => 'motivo',
         'patient.first_name' => 'nombre',
         'patient.last_name' => 'apellido paterno',
         'patient.second_last_name' => 'apellido materno',
@@ -58,5 +59,8 @@ return [
 
     'errors' => [
         'patient_disabled' => 'El paciente está deshabilitado y no puede editarse.',
+        'already_disabled' => 'El paciente ya está deshabilitado.',
+        'not_disabled' => 'El paciente no está deshabilitado.',
+        'consultation_patient_disabled' => 'El paciente está deshabilitado y no admite nuevas consultas.',
     ],
 ];

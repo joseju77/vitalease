@@ -6,6 +6,7 @@ use App\Models\MedicalConsultation;
 use App\Models\Patient;
 use App\Models\User;
 use App\Support\ConsultationListItem;
+use App\Support\PatientAbilities;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,7 +37,9 @@ class DashboardController extends Controller
 
     /**
      * Look up patients by name or enrollment number for the staff search
-     * bar, restricted to the Scout-indexed fields.
+     * bar, restricted to the Scout-indexed fields. Disabled patients are
+     * included and flagged `is_disabled` so the bar can show them as not
+     * selectable.
      */
     public function searchPatients(Request $request): JsonResponse
     {
@@ -73,6 +76,10 @@ class DashboardController extends Controller
                 'sex_at_birth' => $patient->sex_at_birth->value,
                 'blood_type' => $patient->blood_type->value,
                 'enrollment_number' => $patient->enrollment_number,
+                'is_disabled' => $patient->disabled_at !== null,
+            ],
+            'can' => [
+                'createConsultation' => PatientAbilities::for($request->user(), $patient)['createConsultation'],
             ],
             'latest_consultations' => $consultations
                 ->map(fn (MedicalConsultation $consultation): array => ConsultationListItem::for($consultation, $request->user()))
@@ -120,6 +127,7 @@ class DashboardController extends Controller
             'last_name' => $patient->last_name,
             'second_last_name' => $patient->second_last_name,
             'enrollment_number' => $patient->enrollment_number,
+            'is_disabled' => $patient->disabled_at !== null,
         ];
     }
 }

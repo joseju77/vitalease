@@ -41,6 +41,8 @@ class MedicalConsultationController extends Controller
 
         $patient = Patient::query()->where('uuid', $patientUuid)->firstOrFail();
 
+        abort_if($patient->disabled_at !== null, 403);
+
         return Inertia::render('consultations/Create', [
             'patient' => $this->mapPatient($patient),
             'patientProfile' => PatientProfile::for($patient, $request->user()),

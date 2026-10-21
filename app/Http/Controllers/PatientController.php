@@ -8,6 +8,8 @@ use App\Enums\ContraceptiveMethod;
 use App\Enums\KinshipType;
 use App\Enums\MaritalStatus;
 use App\Enums\SexAtBirth;
+use App\Http\Requests\Patients\DisablePatientRequest;
+use App\Http\Requests\Patients\EnablePatientRequest;
 use App\Http\Requests\Patients\StorePatientRegistrationRequest;
 use App\Http\Requests\Patients\UpdatePatientRequest;
 use App\Models\Enrollment;
@@ -15,6 +17,7 @@ use App\Models\FamilyMedicalUnit;
 use App\Models\MedicalConsultation;
 use App\Models\Neighborhood;
 use App\Models\Patient;
+use App\Services\Patients\PatientDisabling;
 use App\Services\Patients\PatientHistory;
 use App\Services\Patients\PatientWriter;
 use App\Support\ConsultationListItem;
@@ -190,6 +193,31 @@ class PatientController extends Controller
         Inertia::flash('patientUpdated', true);
 
         return redirect()->route('patients.show', $patient);
+    }
+
+    /**
+     * Disable the patient. Nothing is deleted: consultations and every other
+     * record stay intact. A reason is required.
+     */
+    public function disable(DisablePatientRequest $request, Patient $patient, PatientDisabling $disabling): RedirectResponse
+    {
+        $disabled = $disabling->disable($patient, $request->user(), $request->validated('reason'));
+
+        Inertia::flash('patientDisabled', true);
+
+        return redirect()->route('patients.show', $disabled);
+    }
+
+    /**
+     * Enable a disabled patient again. A reason is required.
+     */
+    public function enable(EnablePatientRequest $request, Patient $patient, PatientDisabling $disabling): RedirectResponse
+    {
+        $enabled = $disabling->enable($patient, $request->user(), $request->validated('reason'));
+
+        Inertia::flash('patientEnabled', true);
+
+        return redirect()->route('patients.show', $enabled);
     }
 
     /**

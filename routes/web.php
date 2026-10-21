@@ -40,6 +40,14 @@ Route::middleware('auth')
             ->name('update')
             ->whereUuid('patient')
             ->middleware('can:update,patient');
+        Route::post('/patients/{patient}/disable', 'disable')
+            ->name('disable')
+            ->whereUuid('patient')
+            ->middleware('can:disable,patient');
+        Route::post('/patients/{patient}/enable', 'enable')
+            ->name('enable')
+            ->whereUuid('patient')
+            ->middleware('can:enable,patient');
         Route::get('/patients/{patient}/history', 'history')
             ->name('history')
             ->whereUuid('patient')
