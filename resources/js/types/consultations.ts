@@ -185,10 +185,11 @@ export interface ConsultationFormOptions {
 /**
  * The read-only patient profile shown on the consultation create, show, and
  * edit pages (`patientProfile` prop, built by
- * `MedicalConsultationController::mapPatientProfile`). Enum fields are raw
+ * `App\Support\Patients\PatientProfile`). Enum fields are raw
  * integers labeled via `lib/patientLabels.ts`; dates are `Y-m-d` strings.
  * Optional one-to-one blocks are `null` and one-to-many blocks are empty
- * arrays when the patient did not register them.
+ * arrays when the patient did not register them. The social security number,
+ * emails and phone numbers are `null` for viewers without `patients.view`.
  */
 export interface PatientProfile {
     first_name: string;
@@ -205,17 +206,17 @@ export interface PatientProfile {
     external_enrollment: string | null;
     family_medical_unit: { name: string; address: string } | null;
     other_family_medical_unit: string | null;
-    social_security_number: string;
+    social_security_number: string | null;
     contact_information: {
         address: string;
-        phone_number: string;
-        personal_email: string;
+        phone_number: string | null;
+        personal_email: string | null;
         institutional_email: string | null;
         neighborhood: string | null;
         zip_code: string | null;
         municipality: string | null;
     } | null;
-    emergency_contacts: { name: string; phone_number: string; kinship_type: number }[];
+    emergency_contacts: { name: string; phone_number: string | null; kinship_type: number }[];
     ailments: { ailment_type: number; diagnosed_at: string; treatment_notes: string | null }[];
     other_ailments: { surgeries: string | null; allergies: string | null; others: string | null } | null;
     gynecological_history: {

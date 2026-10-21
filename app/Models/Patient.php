@@ -205,6 +205,7 @@ class Patient extends Model implements AuditableContract
             'last_name' => $this->last_name,
             'second_last_name' => $this->second_last_name,
             'enrollment_number' => $this->enrollment_number,
+            'is_disabled' => $this->disabled_at !== null,
         ];
     }
 }

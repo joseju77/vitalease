@@ -150,7 +150,7 @@ return [
                     'second_last_name',
                     'enrollment_number',
                 ],
-                'filterableAttributes' => [],
+                'filterableAttributes' => ['is_disabled'],
                 'sortableAttributes' => [],
             ],
             Medication::class => [

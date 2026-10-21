@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MedicalConsultation;
 use App\Models\Patient;
 use App\Models\User;
-use App\Support\MedicalConsultationAbilities;
+use App\Support\ConsultationListItem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -75,7 +75,7 @@ class DashboardController extends Controller
                 'enrollment_number' => $patient->enrollment_number,
             ],
             'latest_consultations' => $consultations
-                ->map(fn (MedicalConsultation $consultation): array => $this->mapConsultationItem($consultation, $request->user()))
+                ->map(fn (MedicalConsultation $consultation): array => ConsultationListItem::for($consultation, $request->user()))
                 ->all(),
         ]);
     }
@@ -105,7 +105,7 @@ class DashboardController extends Controller
             ->latest()
             ->take(10)
             ->get()
-            ->map(fn (MedicalConsultation $consultation): array => $this->mapConsultationItem($consultation, $user))
+            ->map(fn (MedicalConsultation $consultation): array => ConsultationListItem::for($consultation, $user))
             ->all();
     }
 
@@ -121,40 +121,5 @@ class DashboardController extends Controller
             'second_last_name' => $patient->second_last_name,
             'enrollment_number' => $patient->enrollment_number,
         ];
-    }
-
-    /**
-     * Map a consultation, its eager-loaded `patient` and `physician`
-     * relations, into the shared dashboard item shape.
-     *
-     * @return array<string, mixed>
-     */
-    private function mapConsultationItem(MedicalConsultation $consultation, User $currentUser): array
-    {
-        return [
-            'uuid' => $consultation->uuid,
-            'code' => $consultation->code,
-            'created_at' => $consultation->created_at->toISOString(),
-            'voided_at' => $consultation->voided_at?->toISOString(),
-            'diagnosis' => $consultation->diagnosis,
-            'medical_classification' => $consultation->medical_classification->value,
-            'patient' => [
-                'uuid' => $consultation->patient->uuid,
-                'full_name' => $this->fullName($consultation->patient),
-            ],
-            'physician' => [
-                'name' => $consultation->physician->name,
-            ],
-            'can' => MedicalConsultationAbilities::for($currentUser, $consultation),
-        ];
-    }
-
-    private function fullName(Patient $patient): string
-    {
-        return trim(implode(' ', array_filter([
-            $patient->first_name,
-            $patient->last_name,
-            $patient->second_last_name,
-        ])));
     }
 }
