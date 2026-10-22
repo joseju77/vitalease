@@ -27,6 +27,7 @@ describe('listing users', function () {
             ->component('users/Index', false)
             ->has('users.data', 15)
             ->where('users.total', 21)
+            ->where('permissionDependencies', Permission::dependencyMap())
         );
     });
 });
@@ -256,6 +257,79 @@ describe('role and permission assignment', function () {
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['permissions.0']);
+    });
+
+    it('rejects direct permissions whose dependency is neither submitted nor granted by a submitted role', function () {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+
+        $response = $this->actingAs($admin)->putJson(route('users.authorization', $target), [
+            'roles' => [],
+            'permissions' => [Permission::InventoryCreate->value],
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors([
+            'permissions' => '«Crear en inventario» requiere «Ver inventario».',
+        ]);
+        expect($target->fresh()->permissions)->toHaveCount(0);
+    });
+
+    it('accepts direct permissions whose dependency is also submitted directly', function () {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        PermissionModel::findOrCreate(Permission::InventoryView->value, 'web');
+        PermissionModel::findOrCreate(Permission::InventoryCreate->value, 'web');
+
+        $response = $this->actingAs($admin)->put(route('users.authorization', $target), [
+            'roles' => [],
+            'permissions' => [Permission::InventoryView->value, Permission::InventoryCreate->value],
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+        expect($target->fresh()->permissions->pluck('name')->all())->toEqualCanonicalizing([
+            Permission::InventoryView->value,
+            Permission::InventoryCreate->value,
+        ]);
+    });
+
+    it('accepts a direct permission whose dependency is granted by a submitted role', function () {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        PermissionModel::findOrCreate(Permission::PatientsView->value, 'web');
+        PermissionModel::findOrCreate(Permission::ConsultationsView->value, 'web');
+        Role::create(['name' => 'reception', 'guard_name' => 'web'])
+            ->givePermissionTo(Permission::PatientsView->value);
+
+        $response = $this->actingAs($admin)->put(route('users.authorization', $target), [
+            'roles' => ['reception'],
+            'permissions' => [Permission::ConsultationsView->value],
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+        expect($target->fresh()->hasDirectPermission(Permission::ConsultationsView->value))->toBeTrue()
+            ->and($target->fresh()->hasRole('reception'))->toBeTrue();
+    });
+
+    it('rejects a direct permission whose dependency belongs to a role that was not submitted', function () {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        PermissionModel::findOrCreate(Permission::PatientsView->value, 'web');
+        Role::create(['name' => 'reception', 'guard_name' => 'web'])
+            ->givePermissionTo(Permission::PatientsView->value);
+        Role::create(['name' => 'empty', 'guard_name' => 'web']);
+
+        $response = $this->actingAs($admin)->putJson(route('users.authorization', $target), [
+            'roles' => ['empty'],
+            'permissions' => [Permission::ConsultationsView->value],
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors([
+            'permissions' => '«Ver consultas» requiere «Ver pacientes».',
+        ]);
     });
 
     it('keeps a permission effective when revoked directly but still granted through a role', function () {

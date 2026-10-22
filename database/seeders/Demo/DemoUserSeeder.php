@@ -71,6 +71,7 @@ class DemoUserSeeder extends Seeder
         $coordinacion->syncPermissions([
             Permission::ConsultationsView->value,
             Permission::ConsultationsViewVoided->value,
+            Permission::ConsultationsVoid->value,
             Permission::ConsultationsVoidAny->value,
             Permission::ConsultationsAudit->value,
             Permission::PatientsView->value,

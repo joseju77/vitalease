@@ -47,6 +47,7 @@ class UserController extends Controller
             'users' => $users,
             'roleCatalog' => Role::query()->pluck('name'),
             'permissionCatalog' => Permission::values(),
+            'permissionDependencies' => Permission::dependencyMap(),
         ]);
     }
 

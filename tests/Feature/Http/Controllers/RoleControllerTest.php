@@ -26,6 +26,7 @@ describe('listing roles', function () {
         $response->assertInertia(fn ($page) => $page
             ->component('roles/Index', false)
             ->has('roles', 2)
+            ->where('permissionDependencies', Permission::dependencyMap())
         );
     });
 });
@@ -49,6 +50,60 @@ describe('creating roles', function () {
             Permission::PatientsView->value,
             Permission::PatientsCreate->value,
         ]);
+    });
+
+    it('rejects creating a role that grants a permission without its dependency', function () {
+        $admin = User::factory()->superAdmin()->create();
+
+        $response = $this->actingAs($admin)->postJson(route('roles.store'), [
+            'name' => 'editor',
+            'permissions' => [Permission::ConsultationsView->value],
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors([
+            'permissions' => '«Ver consultas» requiere «Ver pacientes».',
+        ]);
+        expect(Role::where('name', 'editor')->exists())->toBeFalse();
+    });
+
+    it('rejects creating a role with consultations.void-any alone, reporting every transitive dependency', function () {
+        $admin = User::factory()->superAdmin()->create();
+
+        $response = $this->actingAs($admin)->postJson(route('roles.store'), [
+            'name' => 'editor',
+            'permissions' => [Permission::ConsultationsVoidAny->value],
+        ]);
+
+        $response->assertStatus(422);
+        expect($response->json('errors.permissions'))->toBe([
+            '«Anular consultas de cualquier médico» requiere «Anular consultas».',
+            '«Anular consultas de cualquier médico» requiere «Ver consultas».',
+            '«Anular consultas de cualquier médico» requiere «Ver pacientes».',
+        ]);
+    });
+
+    it('allows creating a role with consultations.void-any and its full dependency chain', function () {
+        $admin = User::factory()->superAdmin()->create();
+        $permissions = [
+            Permission::PatientsView->value,
+            Permission::ConsultationsView->value,
+            Permission::ConsultationsVoid->value,
+            Permission::ConsultationsVoidAny->value,
+        ];
+        foreach ($permissions as $permission) {
+            PermissionModel::findOrCreate($permission, 'web');
+        }
+
+        $response = $this->actingAs($admin)->post(route('roles.store'), [
+            'name' => 'coordinator',
+            'permissions' => $permissions,
+        ]);
+
+        $response->assertRedirect(route('roles.index'));
+        $response->assertSessionHasNoErrors();
+        expect(Role::findByName('coordinator', 'web')->permissions->pluck('name')->all())
+            ->toEqualCanonicalizing($permissions);
     });
 
     it('rejects creating a role with a duplicate name', function () {
@@ -75,6 +130,19 @@ describe('creating roles', function () {
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['permissions.0']);
     });
+
+    it('skips the dependency check when the permission set already failed the catalog check', function () {
+        $admin = User::factory()->superAdmin()->create();
+
+        $response = $this->actingAs($admin)->postJson(route('roles.store'), [
+            'name' => 'editor',
+            'permissions' => ['ghost.permission', Permission::ConsultationsView->value],
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['permissions.0']);
+        $response->assertJsonMissingValidationErrors(['permissions']);
+    });
 });
 
 describe('updating roles', function () {
@@ -87,14 +155,39 @@ describe('updating roles', function () {
 
         $response = $this->actingAs($admin)->patch(route('roles.update', $role), [
             'name' => 'senior-editor',
-            'permissions' => [Permission::PatientsUpdate->value],
+            'permissions' => [Permission::PatientsView->value, Permission::PatientsUpdate->value],
         ]);
 
         $response->assertRedirect(route('roles.index'));
 
         $role->refresh();
         expect($role->name)->toBe('senior-editor');
-        expect($role->permissions->pluck('name')->all())->toBe([Permission::PatientsUpdate->value]);
+        expect($role->permissions->pluck('name')->all())->toEqualCanonicalizing([
+            Permission::PatientsView->value,
+            Permission::PatientsUpdate->value,
+        ]);
+    });
+
+    it('rejects updating a role to drop a dependency its remaining permissions need', function () {
+        $admin = User::factory()->superAdmin()->create();
+        PermissionModel::findOrCreate(Permission::PatientsView->value, 'web');
+        PermissionModel::findOrCreate(Permission::PatientsUpdate->value, 'web');
+        $role = Role::create(['name' => 'editor', 'guard_name' => 'web']);
+        $role->givePermissionTo(Permission::PatientsView->value, Permission::PatientsUpdate->value);
+
+        $response = $this->actingAs($admin)->patchJson(route('roles.update', $role), [
+            'name' => 'editor',
+            'permissions' => [Permission::PatientsUpdate->value],
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors([
+            'permissions' => '«Actualizar pacientes» requiere «Ver pacientes».',
+        ]);
+        expect($role->fresh()->permissions->pluck('name')->all())->toEqualCanonicalizing([
+            Permission::PatientsView->value,
+            Permission::PatientsUpdate->value,
+        ]);
     });
 
     it('allows a role to keep its own current name on update', function () {

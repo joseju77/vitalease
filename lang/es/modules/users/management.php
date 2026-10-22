@@ -28,6 +28,7 @@ return [
             'present' => 'Debes indicar los permisos del usuario, aunque sea una lista vacía.',
             'array' => 'Los permisos deben enviarse como una lista.',
             'enum' => 'Uno de los permisos seleccionados no es válido.',
+            'requires' => '«:permission» requiere «:requirement».',
         ],
     ],
 ];

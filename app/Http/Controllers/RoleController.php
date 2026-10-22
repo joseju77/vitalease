@@ -27,6 +27,7 @@ class RoleController extends Controller
                     'permissions' => $role->permissions->pluck('name')->all(),
                 ]),
             'permissionCatalog' => Permission::values(),
+            'permissionDependencies' => Permission::dependencyMap(),
         ]);
     }
 

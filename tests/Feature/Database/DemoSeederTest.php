@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\InventoryMovementType;
+use App\Enums\Permission;
 use App\Enums\SexAtBirth;
 use App\Models\Audit;
 use App\Models\InventoryMovement;
@@ -26,6 +27,7 @@ use Database\Seeders\LocationSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 
 function seedDemoCatalogs(): void
 {
@@ -223,6 +225,21 @@ describe('DemoSeeder curated consultation history', function () {
             ->and($coordinator->can('consultations.create'))->toBeFalse()
             ->and($physician->can('consultations.void'))->toBeTrue()
             ->and($physician->can('consultations.audit'))->toBeFalse();
+    });
+
+    it('gives every demo role a permission set that satisfies the permission dependency map', function () {
+        seedSmallDemoData(users: 4, patients: 6, consultations: 15);
+
+        $demoRoles = Role::query()->with('permissions:name')->where('name', '!=', 'super-admin')->get();
+
+        expect($demoRoles->pluck('name')->all())
+            ->toEqualCanonicalizing(['Médico', 'Administrador', 'Coordinación médica']);
+
+        foreach ($demoRoles as $role) {
+            $granted = $role->permissions->map(fn ($permission): Permission => Permission::from($permission->name))->all();
+
+            expect(Permission::missingDependencies($granted))->toBe([], "Role {$role->name} misses dependencies");
+        }
     });
 
     it('audits only the curated consultations and records edits, voids and one restore through the real services', function () {
