@@ -99,7 +99,7 @@ describe('DemoSeeder', function () {
                 ->toBe($femalePatientIds->count());
         }
 
-        $regulations = MedicalRegulation::query()->with('medicalConsultation')->get();
+        $regulations = MedicalRegulation::query()->with(['medicalConsultation' => fn ($query) => $query->withTrashed()])->get();
 
         expect($regulations)->not->toBeEmpty();
 
