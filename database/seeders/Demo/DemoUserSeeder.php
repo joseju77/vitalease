@@ -57,6 +57,8 @@ class DemoUserSeeder extends Seeder
             Permission::ConsultationsCreate->value,
             Permission::ConsultationsUpdate->value,
             Permission::ConsultationsVoid->value,
+            Permission::PatientsView->value,
+            Permission::PatientsUpdate->value,
         ]);
 
         $administrador = Role::findOrCreate('Administrador', 'web');
@@ -72,6 +74,9 @@ class DemoUserSeeder extends Seeder
             Permission::ConsultationsVoidAny->value,
             Permission::ConsultationsAudit->value,
             Permission::PatientsView->value,
+            Permission::PatientsUpdate->value,
+            Permission::PatientsDisable->value,
+            Permission::PatientsAudit->value,
         ]);
 
         User::factory()->superAdmin()->create([
@@ -84,7 +89,6 @@ class DemoUserSeeder extends Seeder
             'email' => self::DEMO_PHYSICIAN_EMAIL,
         ]);
         $demoPhysician->assignRole($medico);
-        $demoPhysician->givePermissionTo(Permission::PatientsView->value);
 
         for ($index = 1; $index <= $physicianCount; $index++) {
             $isFemale = $faker->boolean();

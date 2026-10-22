@@ -44,6 +44,8 @@ class DemoSeeder extends Seeder
             $this->call(DemoConsultationSeeder::class, parameters: ['consultations' => $consultations]);
             $this->call(DemoConsultationHistorySeeder::class);
         });
+
+        $this->call(DemoPatientHistorySeeder::class);
     }
 
     /**
