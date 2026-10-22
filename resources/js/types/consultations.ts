@@ -43,6 +43,8 @@ export interface PatientSearchResult {
     last_name: string;
     second_last_name: string | null;
     enrollment_number: string | null;
+    /** Disabled patients are listed but cannot be selected for a new consultation. */
+    is_disabled: boolean;
 }
 
 /** The patient summary dialog payload: basic data plus the 5 latest consultations. */
@@ -56,7 +58,9 @@ export interface PatientSummary {
         sex_at_birth: number;
         blood_type: number;
         enrollment_number: string | null;
+        is_disabled: boolean;
     };
+    can: { createConsultation: boolean };
     latest_consultations: ConsultationListItem[];
 }
 

@@ -2,6 +2,7 @@
 import { onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
 import { computed, ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -10,6 +11,10 @@ type SearchOption = {
     value: string;
     label: string;
     description?: string | null;
+    /** Renders the option greyed out and not selectable. */
+    disabled?: boolean;
+    /** Short text shown next to the label, e.g. a status. */
+    badge?: string | null;
 };
 
 const props = withDefaults(
@@ -91,10 +96,14 @@ function select(value: string): void {
                 v-for="option in searched && !loading ? options : []"
                 :key="option.value"
                 type="button"
-                class="flex w-full flex-col rounded-md px-3 py-2 text-left text-sm outline-none hover:bg-accent focus-visible:bg-accent"
+                :disabled="option.disabled"
+                class="flex w-full flex-col rounded-md px-3 py-2 text-left text-sm outline-none hover:bg-accent focus-visible:bg-accent disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent"
                 @click="select(option.value)"
             >
-                <span class="font-medium">{{ option.label }}</span>
+                <span class="flex items-center gap-2 font-medium">
+                    {{ option.label }}
+                    <Badge v-if="option.badge" variant="secondary">{{ option.badge }}</Badge>
+                </span>
                 <span v-if="option.description" class="text-xs text-muted-foreground">{{ option.description }}</span>
             </button>
         </div>

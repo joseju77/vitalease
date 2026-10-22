@@ -7,15 +7,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePermissions } from '@/composables/usePermissions';
 import { medicalClassificationLabel } from '@/lib/consultationLabels';
 import { formatDateTime } from '@/lib/formatDateTime';
 import { BLOOD_TYPE_LABELS, SEX_AT_BIRTH_LABELS } from '@/lib/patientLabels';
+import { show as patientShow } from '@/routes/patients';
 import type { PatientSearchResult, PatientSummary } from '@/types/consultations';
 
 const props = defineProps<{
     patient: PatientSearchResult;
     canCreateConsultation: boolean;
 }>();
+
+const { can } = usePermissions();
 
 const open = defineModel<boolean>('open', { default: false });
 
@@ -114,7 +118,17 @@ const createConsultationHref = create.url({ query: { patient: props.patient.uuid
                 <div class="grid grid-cols-2 gap-3 text-sm">
                     <div>
                         <p class="text-muted-foreground">Nombre completo</p>
-                        <p class="font-medium">{{ fullName() }}</p>
+                        <p class="flex flex-wrap items-center gap-2 font-medium">
+                            <Link
+                                v-if="can('patients.view')"
+                                :href="patientShow(summary.patient.uuid).url"
+                                class="hover:underline"
+                            >
+                                {{ fullName() }}
+                            </Link>
+                            <template v-else>{{ fullName() }}</template>
+                            <Badge v-if="summary.patient.is_disabled" variant="secondary">Deshabilitado</Badge>
+                        </p>
                     </div>
                     <div>
                         <p class="text-muted-foreground">Número de inscripción</p>
@@ -166,7 +180,7 @@ const createConsultationHref = create.url({ query: { patient: props.patient.uuid
                     </ul>
                 </div>
 
-                <Button v-if="canCreateConsultation" as-child class="w-full">
+                <Button v-if="canCreateConsultation && summary.can.createConsultation" as-child class="w-full">
                     <Link :href="createConsultationHref">Nueva consulta</Link>
                 </Button>
             </div>

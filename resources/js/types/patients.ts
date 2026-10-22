@@ -1,3 +1,5 @@
+import type { PatientProfile } from '@/types/consultations';
+
 /**
  * Types for the public multi-step patient registration flow.
  *
@@ -122,4 +124,47 @@ export interface PatientRegistrationMetadata {
     contraceptiveMethodOptions: number[];
     familyMedicalUnits: FamilyMedicalUnit[];
     enrollments: Enrollment[];
+}
+
+/** The `patients.index` status filter; `active` is the server default. */
+export type PatientStatusFilter = 'active' | 'disabled' | 'all';
+
+/** One identifying-fields-only row, as mapped by `PatientController::index`. */
+export interface PatientIndexRow {
+    uuid: string;
+    full_name: string;
+    enrollment: string | null;
+    enrollment_number: string | null;
+    is_disabled: boolean;
+}
+
+/** The `patients.index` query filters, echoed back in the `filters` prop. */
+export interface PatientIndexFilters {
+    q: string | null;
+    status: PatientStatusFilter;
+}
+
+/** Disable data of the current disabled state, as mapped by `PatientController::show`. */
+export interface PatientDisabledInfo {
+    at: string;
+    by: string | null;
+    reason: string;
+}
+
+/** Per-patient abilities from `App\Support\PatientAbilities`, state already applied. */
+export interface PatientAbilities {
+    update: boolean;
+    disable: boolean;
+    enable: boolean;
+    audit: boolean;
+    createConsultation: boolean;
+}
+
+/** The patient header payload of `PatientController::show`; `profile` is the shared read-only profile. */
+export interface PatientDetail {
+    uuid: string;
+    full_name: string;
+    is_disabled: boolean;
+    disabled: PatientDisabledInfo | null;
+    profile: PatientProfile;
 }

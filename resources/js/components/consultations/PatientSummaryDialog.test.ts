@@ -28,6 +28,7 @@ const patient: PatientSearchResult = {
     last_name: 'López',
     second_last_name: 'Pérez',
     enrollment_number: 'A-100',
+    is_disabled: false,
 };
 
 function consultationItem(overrides: Partial<ConsultationListItem> = {}): ConsultationListItem {
@@ -56,7 +57,9 @@ function summary(latestConsultations: ConsultationListItem[] = []): PatientSumma
             sex_at_birth: 2,
             blood_type: 8,
             enrollment_number: 'A-100',
+            is_disabled: false,
         },
+        can: { createConsultation: true },
         latest_consultations: latestConsultations,
     };
 }

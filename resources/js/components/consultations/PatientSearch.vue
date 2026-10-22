@@ -28,6 +28,8 @@ const options = computed(() =>
         value: patient.uuid,
         label: fullName(patient),
         description: patient.enrollment_number,
+        disabled: patient.is_disabled,
+        badge: patient.is_disabled ? 'Deshabilitado' : null,
     })),
 );
 
@@ -97,7 +99,7 @@ onBeforeUnmount(() => {
 
 function select(value: string) {
     const patient = results.value.find((result) => result.uuid === value);
-    if (!patient) return;
+    if (!patient || patient.is_disabled) return;
 
     emit('select', patient);
     query.value = '';
