@@ -23,6 +23,7 @@ export const ACTION_LABELS: Record<string, string> = {
     create: 'Crear',
     update: 'Actualizar',
     delete: 'Eliminar',
+    disable: 'Deshabilitar y habilitar',
     void: 'Anular',
     'void-any': 'Anular de cualquier médico',
     'view-voided': 'Ver anuladas',

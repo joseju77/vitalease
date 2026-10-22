@@ -8,7 +8,7 @@
 
 ## Catálogo de permisos
 
-Los permisos son un catálogo **cerrado**, definido en el enum `App\Enums\Permission` (18 casos). Cualquier nombre de
+Los permisos son un catálogo **cerrado**, definido en el enum `App\Enums\Permission` (19 casos). Cualquier nombre de
 permiso fuera de este enum se rechaza en la validación (`Rule::enum`):
 
 | Permiso                | Descripción                                |
@@ -19,7 +19,8 @@ permiso fuera de este enum se rechaza en la validación (`Rule::enum`):
 | `patients.view`         | Ver pacientes.                               |
 | `patients.create`       | Crear pacientes.                             |
 | `patients.update`       | Editar pacientes.                            |
-| `patients.delete`       | Eliminar pacientes.                          |
+| `patients.disable`      | Deshabilitar y volver a habilitar pacientes. |
+| `patients.audit`        | Consultar el historial de cambios de un paciente. |
 | `consultations.view`    | Ver consultas.                               |
 | `consultations.create`  | Crear consultas.                             |
 | `consultations.update`  | Editar consultas.                            |
@@ -32,14 +33,19 @@ permiso fuera de este enum se rechaza en la validación (`Rule::enum`):
 | `inventory.update`      | Editar medicamentos y registrar ajustes.     |
 | `inventory.delete`      | Eliminar medicamentos sin movimientos.       |
 
-`patients` e `inventory` usan granularidad CRUD (cuatro permisos independientes cada uno) en vez de un único permiso
-`*.manage` por módulo. `consultations` conserva ver, crear y editar, pero **no tiene permiso de eliminación**: una
+`inventory` usa granularidad CRUD (cuatro permisos independientes) en vez de un único permiso `*.manage` por módulo.
+`patients` conserva ver, crear y editar, pero **no tiene permiso de eliminación**: un paciente nunca se borra, se
+deshabilita (`patients.disable`, que también lo vuelve a habilitar) y `patients.audit` da acceso a su historial de
+cambios. El antiguo permiso `patients.delete` se renombró a `patients.disable`. `patients.create` sigue definido pero
+sin uso, porque el registro de pacientes es público; `patients.update` se aplica desde la Etapa 8.
+Ver [gestión de pacientes](patient-management.md#permisos) para las reglas de cada uno. `consultations` conserva ver,
+crear y editar, pero **no tiene permiso de eliminación**: una
 consulta nunca se borra, se anula (`consultations.void`), y tres permisos adicionales cubren anular la de cualquier
 médico (`consultations.void-any`), ver las anuladas (`consultations.view-voided`) y leer su historial de cambios
 (`consultations.audit`). El antiguo permiso `consultations.delete` se renombró a `consultations.void`. Ver
 [consultas médicas](medical-consultations.md#autorización) para las reglas de cada uno. `users.manage`,
 `roles.manage` y `reports.generate` son permisos únicos, sin granularidad adicional. El seeder
-(`RolePermissionSeeder`) crea los 18 permisos a partir de `Permission::cases()`, así que el enum es siempre la fuente de
+(`RolePermissionSeeder`) crea los 19 permisos a partir de `Permission::cases()`, así que el enum es siempre la fuente de
 verdad — nunca se comparan cadenas sueltas.
 
 ## Catálogo de roles
@@ -68,12 +74,14 @@ bypass registrado en `AppServiceProvider`; renombrarlo o borrarlo rompería ese 
 
 | Rol                    | Permisos                                                                                                              | Usuario demo                                                  |
 |------------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
-| `Médico`               | `consultations.view`, `consultations.create`, `consultations.update`, `consultations.void`                            | `medico.demo@vitalease.test` (además `patients.view` directo) |
+| `Médico`               | `consultations.view`, `consultations.create`, `consultations.update`, `consultations.void`, `patients.view`, `patients.update` | `medico.demo@vitalease.test`                                  |
 | `Administrador`        | `users.manage`, `roles.manage`                                                                                        | `administrador@vitalease.test`                                |
-| `Coordinación médica`  | `consultations.view`, `consultations.view-voided`, `consultations.void-any`, `consultations.audit`, `patients.view`   | `coordinacion@vitalease.test`                                 |
+| `Coordinación médica`  | `consultations.view`, `consultations.view-voided`, `consultations.void-any`, `consultations.audit`, `patients.view`, `patients.update`, `patients.disable`, `patients.audit` | `coordinacion@vitalease.test` |
 
 Coordinación médica puede ver y anular o restaurar cualquier consulta y leer su historial, pero no crearlas ni
-editarlas. El Médico solo anula y restaura las suyas y no ve el historial de cambios. El usuario `super-admin` es
+editarlas. El Médico solo anula y restaura las suyas y no ve el historial de cambios. En pacientes, el Médico busca,
+ve y edita; Coordinación médica además deshabilita, vuelve a habilitar y lee el historial de cambios (ver
+[gestión de pacientes](patient-management.md)). El usuario `super-admin` es
 `superadmin@vitalease.test`.
 
 ## El rol `super-admin`

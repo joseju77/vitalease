@@ -25,6 +25,14 @@ declare module '@inertiajs/core' {
              * or `inventory.show`; the inventory pages render a toast from it.
              */
             medication?: MedicationFlash;
+            /**
+             * One-time confirmations flashed by
+             * `PatientController::{update,disable,enable}` on redirect to
+             * `patients.show`; the page renders a toast from each.
+             */
+            patientUpdated?: boolean;
+            patientDisabled?: boolean;
+            patientEnabled?: boolean;
         };
     }
 }

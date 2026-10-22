@@ -8,10 +8,9 @@ use App\Models\User;
 use App\Services\Inventory\InsufficientStockException;
 use App\Services\Inventory\TreatmentDispensation;
 use App\Support\Auditing\AuditBatch;
+use App\Support\Auditing\CustomAudit;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Validation\ValidationException;
-use OwenIt\Auditing\Events\AuditCustom;
 
 /**
  * Retires a consultation (void) or brings it back (restore) atomically.
@@ -55,7 +54,7 @@ final readonly class ConsultationVoiding
                 'void_reason' => $reason,
             ])->saveQuietly();
 
-            $this->recordAudit($locked, 'voided', $reason);
+            CustomAudit::record($locked, 'voided', ['reason' => $reason]);
 
             return $locked;
         }));
@@ -88,7 +87,7 @@ final readonly class ConsultationVoiding
                     'void_reason' => null,
                 ])->saveQuietly();
 
-                $this->recordAudit($locked, 'restored', $reason);
+                CustomAudit::record($locked, 'restored', ['reason' => $reason]);
 
                 return $locked;
             }));
@@ -108,31 +107,6 @@ final readonly class ConsultationVoiding
             ->whereKey($consultation->getKey())
             ->lockForUpdate()
             ->firstOrFail();
-    }
-
-    /**
-     * Record a custom audit event (not a full attribute snapshot) carrying
-     * the reason. The actor and the batch are resolved by the audit
-     * resolvers like any other audit.
-     */
-    private function recordAudit(MedicalConsultation $consultation, string $event, string $reason): void
-    {
-        if (! MedicalConsultation::isAuditingEnabled()) {
-            return;
-        }
-
-        $consultation->auditEvent = $event;
-        $consultation->isCustomEvent = true;
-        $consultation->auditCustomOld = [];
-        $consultation->auditCustomNew = ['reason' => $reason];
-
-        try {
-            Event::dispatch(new AuditCustom($consultation));
-        } finally {
-            $consultation->isCustomEvent = false;
-            $consultation->auditCustomOld = null;
-            $consultation->auditCustomNew = null;
-        }
     }
 
     /**

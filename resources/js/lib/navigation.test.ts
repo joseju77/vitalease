@@ -11,7 +11,7 @@ describe('NAV_GROUPS', () => {
         expect(shape).toEqual([
             {
                 label: undefined,
-                items: [{ title: 'Pacientes', href: '#', permission: 'patients.view' }],
+                items: [{ title: 'Pacientes', href: '/patients', permission: 'patients.view' }],
             },
             {
                 label: 'ATENCIÓN MÉDICA',

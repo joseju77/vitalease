@@ -88,4 +88,49 @@ describe('PatientProfileCard', () => {
 
         expect(tabLabels(wrapper)).toContain('Historial ginecológico');
     });
+    it('omits the sensitive fields the server withheld instead of showing them as not recorded', async () => {
+        const wrapper = await mountExpanded(
+            minimalProfile({
+                social_security_number: null,
+                contact_information: {
+                    address: 'Calle 1',
+                    phone_number: null,
+                    personal_email: null,
+                    institutional_email: null,
+                    neighborhood: 'Centro',
+                    zip_code: '44100',
+                    municipality: 'Guadalajara',
+                },
+            }),
+        );
+
+        expect(wrapper.text()).not.toContain('Número de seguridad social');
+        await wrapper.findAll('[role="tab"]')[1].trigger('mousedown');
+        await flushPromises();
+        expect(wrapper.text()).not.toContain('Correo personal');
+        expect(wrapper.text()).not.toContain('Teléfono');
+        expect(wrapper.text()).toContain('Calle 1');
+    });
+
+    it('shows the sensitive fields when the server sent them', async () => {
+        const wrapper = await mountExpanded(
+            minimalProfile({
+                contact_information: {
+                    address: 'Calle 1',
+                    phone_number: '+521234567890',
+                    personal_email: 'ana@example.test',
+                    institutional_email: null,
+                    neighborhood: null,
+                    zip_code: null,
+                    municipality: null,
+                },
+            }),
+        );
+
+        expect(wrapper.text()).toContain('12345678901');
+        await wrapper.findAll('[role="tab"]')[1].trigger('mousedown');
+        await flushPromises();
+        expect(wrapper.text()).toContain('ana@example.test');
+        expect(wrapper.text()).toContain('+521234567890');
+    });
 });

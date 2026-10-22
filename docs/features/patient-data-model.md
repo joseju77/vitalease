@@ -95,6 +95,10 @@ Table name: `patients`
 | social_security_number    | VARCHAR(11)              | NOT NULL, UNIQUE, CHECK (social_security_number ~ '^[0-9]{11}$')   | Patient's social security number.                            |
 | created_at                | TIMESTAMP WITH TIME ZONE | NOT NULL                                                           | Timestamp when the patient record was created.               |
 | updated_at                | TIMESTAMP WITH TIME ZONE | NOT NULL                                                           | Timestamp of the last patient record update.                 |
+| disabled_at               | TIMESTAMP WITH TIME ZONE | NULLABLE, indexed                                                  | When the patient was disabled; NULL while active.            |
+| disabled_by_id            | INTEGER                  | NULLABLE, FK users(id) ON DELETE RESTRICT                          | User who disabled the patient.                               |
+| disable_reason            | VARCHAR(500)             | NULLABLE                                                           | Reason given when disabling the patient.                     |
+| is_disabled               | BOOLEAN                  | GENERATED ALWAYS AS (disabled_at IS NOT NULL) STORED               | Read-only flag used to filter by status (database and search). |
 
 - Unique constraint on (enrollment_id, enrollment_number) so enrollment numbers are unique within one program.
 - Check constraint on enrollment enforces a strict either/or:
@@ -104,6 +108,17 @@ Table name: `patients`
   other_family_medical_unit must be null, and vice versa.
     - family_medical_unit_id NULL -> other_family_medical_unit NOT NULL
     - family_medical_unit_id NOT NULL -> other_family_medical_unit NULL
+- Check constraint `chk_disable_state_all_or_none` requires `disabled_at`, `disabled_by_id` and `disable_reason` to be all
+  set or all NULL, so a half-disabled patient cannot exist.
+- The three disable columns hold only the **current** disabling: they are cleared when the patient is re-enabled and
+  overwritten on a new disabling. The full disable/enable history lives in the audit trail (see
+  [Auditing](#auditing)).
+- A patient is **disabled, never deleted**: the model does not use `SoftDeletes` (a global scope would make
+  `$consultation->patient` return `null` for disabled patients) and the application exposes no delete route.
+- `is_disabled` is a stored generated column. It is never written by the application; the indexed search document
+  computes its own value from `disabled_at`, because the generated attribute is stale in memory right after a save.
+- The unique constraints on `social_security_number`, (`enrollment_id`, `enrollment_number`) and
+  `institutional_email` are **global**: disabled patients keep occupying them. There are no partial unique indexes.
 
 - `SexAtBirth` PHP enum, `sex_at_birth` values:
     - 1: Male
@@ -241,6 +256,25 @@ Table name: `patient_gynecological_history`
     - 10: Other
     - 11: None
 
+## Auditing
+
+`Patient` and its five child models (`PatientContactInformation`, `PatientEmergencyContact`, `PatientAilment`,
+`PatientOtherAilment`, `PatientGynecologicalHistory`) are audited with `owen-it/laravel-auditing`, as consultations are
+(see [medical consultations](medical-consultations.md#historial-de-cambios) and
+[ADR-0010](../adr/0010-gestion-deshabilitacion-y-auditoria-de-pacientes.md)).
+
+- Every audit row of a patient carries the tag `patient:{patient_id}`, so one tag returns the whole history, and the
+  rows written by one operation share a `batch_id`.
+- `uuid`, the disable columns, `is_disabled` and timestamps are not recorded as changes. Catalog foreign keys
+  (`enrollment_id`, `family_medical_unit_id`, `neighborhood_id`) are kept so readable labels can be resolved for both the
+  old and the new value.
+- Disabling and enabling write one custom event (`disabled`, `enabled`) with the reason instead of copying attributes.
+- Anonymous self-registration is audited with a NULL user (shown as "Autorregistro").
+- Social security number, emails and phone numbers are stored in clear text in `audits`; protection is by access
+  (`patients.audit` to read the history).
+- Rows of the multi-row children are matched by a natural key on edit: ailments by `ailment_type`, emergency contacts by
+  `phone_number`.
+
 ## Named Unique and Index Constraints
 
 | Table                          | Constraint name                                              | Columns                          |
@@ -254,6 +288,7 @@ Table name: `patient_gynecological_history`
 | patients                        | patients_uuid_unique                                            | UNIQUE (uuid)                       |
 | patients                        | patients_social_security_number_unique                          | UNIQUE (social_security_number)     |
 | patients                        | patients_enrollment_id_enrollment_number_unique                 | UNIQUE (enrollment_id, enrollment_number) |
+| patients                        | patients_disabled_at_index                                      | INDEX (disabled_at)                 |
 | patient_contact_information      | patient_contact_information_institutional_email_unique          | UNIQUE INDEX (institutional_email) WHERE NOT NULL |
 | patient_emergency_contacts       | patient_emergency_contacts_patient_id_index                     | INDEX (patient_id)                  |
 | patient_emergency_contacts       | patient_emergency_contacts_patient_id_phone_number_unique        | UNIQUE (patient_id, phone_number)   |
@@ -272,6 +307,7 @@ Table name: `patient_gynecological_history`
 | patients                         | chk_social_security_number_format      | `social_security_number ~ '^[0-9]{11}$'`                                                 |
 | patients                         | chk_enrollment_consistency             | Strict either/or between (enrollment_id, enrollment_number) and external_enrollment.     |
 | patients                         | chk_family_medical_unit_consistency    | Strict either/or between family_medical_unit_id and other_family_medical_unit, and vice versa. |
+| patients                         | chk_disable_state_all_or_none          | `disabled_at`, `disabled_by_id` and `disable_reason` are all NULL or all NOT NULL.       |
 | patient_contact_information       | chk_phone_number_format                | `phone_number ~ '^\+[1-9]\d{1,14}$'`                                                     |
 | patient_emergency_contacts        | chk_phone_number_format                | `phone_number ~ '^\+[1-9]\d{1,14}$'`                                                     |
 | patient_emergency_contacts        | chk_kinship_type_domain                | `kinship_type IN (1, 2, 3, 4, 5, 6)`                                                     |
@@ -339,6 +375,10 @@ erDiagram
         int family_medical_unit_id
         string other_family_medical_unit
         string social_security_number
+        timestamp disabled_at
+        int disabled_by_id
+        string disable_reason
+        boolean is_disabled
         timestamp created_at
         timestamp updated_at
     }

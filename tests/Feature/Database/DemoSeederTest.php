@@ -9,11 +9,15 @@ use App\Models\MedicalConsultationTreatment;
 use App\Models\MedicalRegulation;
 use App\Models\Medication;
 use App\Models\Patient;
+use App\Models\PatientAilment;
+use App\Models\PatientContactInformation;
+use App\Models\PatientEmergencyContact;
 use App\Models\PatientGynecologicalHistory;
 use App\Models\PhysicalExamination;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\Demo\DemoConsultationSeeder;
+use Database\Seeders\Demo\DemoPatientHistorySeeder;
 use Database\Seeders\Demo\DemoSeeder;
 use Database\Seeders\Demo\DemoUserSeeder;
 use Database\Seeders\EnrollmentSeeder;
@@ -95,7 +99,7 @@ describe('DemoSeeder', function () {
                 ->toBe($femalePatientIds->count());
         }
 
-        $regulations = MedicalRegulation::query()->with('medicalConsultation')->get();
+        $regulations = MedicalRegulation::query()->with(['medicalConsultation' => fn ($query) => $query->withTrashed()])->get();
 
         expect($regulations)->not->toBeEmpty();
 
@@ -233,7 +237,7 @@ describe('DemoSeeder curated consultation history', function () {
 
         $auditedIds = $audited->pluck('id');
 
-        foreach (Audit::query()->get() as $audit) {
+        foreach (Audit::query()->where('tags', 'like', 'consultation:%')->get() as $audit) {
             expect($audit->tags)->toMatch('/^consultation:(\d+)$/')
                 ->and($auditedIds->contains((int) substr((string) $audit->tags, strlen('consultation:'))))->toBeTrue();
         }
@@ -336,5 +340,117 @@ describe('DemoSeeder curated consultation history', function () {
 
         expect(MedicalConsultation::withTrashed()->count())->toBe(2)
             ->and(MedicalConsultation::withTrashed()->whereHas('audits')->count())->toBe(2);
+    });
+});
+
+describe('DemoSeeder curated patient history', function () {
+    it('gives Médico and Coordinación médica the patient permissions without a direct grant', function () {
+        seedSmallDemoData(users: 4, patients: 6, consultations: 15);
+
+        $physician = User::query()->where('email', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL)->firstOrFail();
+        $coordinator = User::query()->where('email', DemoUserSeeder::DEMO_COORDINATOR_EMAIL)->firstOrFail();
+
+        expect($physician->getDirectPermissions())->toBeEmpty()
+            ->and($physician->can('patients.view'))->toBeTrue()
+            ->and($physician->can('patients.update'))->toBeTrue()
+            ->and($physician->can('patients.disable'))->toBeFalse()
+            ->and($physician->can('patients.audit'))->toBeFalse()
+            ->and($coordinator->can('patients.view'))->toBeTrue()
+            ->and($coordinator->can('patients.update'))->toBeTrue()
+            ->and($coordinator->can('patients.disable'))->toBeTrue()
+            ->and($coordinator->can('patients.audit'))->toBeTrue();
+    });
+
+    it('edits, disables and re-enables the first demo patients through the real services', function () {
+        seedSmallDemoData(users: 4, patients: 20, consultations: 15);
+
+        $physician = User::query()->where('email', DemoUserSeeder::DEMO_PHYSICIAN_EMAIL)->firstOrFail();
+        $coordinator = User::query()->where('email', DemoUserSeeder::DEMO_COORDINATOR_EMAIL)->firstOrFail();
+        $patients = Patient::query()->orderBy('id')->limit(DemoPatientHistorySeeder::CURATED_COUNT)->get();
+        $events = fn (Patient $patient) => Audit::query()->where('tags', "patient:{$patient->id}")->orderBy('id')->get();
+
+        // 1. contact information changed by the physician
+        $contact = $events($patients[0])->firstWhere('auditable_type', (new PatientContactInformation)->getMorphClass());
+        expect($contact->event)->toBe('updated')
+            ->and($contact->user_id)->toBe($physician->id)
+            ->and($contact->new_values)->toHaveKey('phone_number');
+
+        // 2. emergency contact added
+        expect($events($patients[1])->contains(fn (Audit $a): bool => $a->event === 'created' && $a->auditable_type === (new PatientEmergencyContact)->getMorphClass()))->toBeTrue();
+
+        // 3. emergency contact removed by coordination
+        $removed = $events($patients[2])->firstWhere('event', 'deleted');
+        expect($removed->auditable_type)->toBe((new PatientEmergencyContact)->getMorphClass())
+            ->and($removed->user_id)->toBe($coordinator->id);
+
+        // 4. ailment added
+        expect($events($patients[3])->contains(fn (Audit $a): bool => $a->event === 'created' && $a->auditable_type === (new PatientAilment)->getMorphClass()))->toBeTrue();
+
+        // 5. disabled with a reason
+        $disabled = $patients[4]->fresh();
+        $disableAudit = $events($patients[4])->firstWhere('event', 'disabled');
+        expect($disabled->disabled_at)->not->toBeNull()
+            ->and($disabled->disabled_by_id)->toBe($coordinator->id)
+            ->and($disabled->disable_reason)->not->toBeEmpty()
+            ->and($disableAudit->user_id)->toBe($coordinator->id)
+            ->and($disableAudit->new_values['reason'])->toBe($disabled->disable_reason)
+            ->and($events($patients[4])->where('event', 'updated'))->toBeEmpty();
+
+        // 6. disabled then re-enabled: current state clean, both events audited
+        $reenabled = $patients[5]->fresh();
+        expect($reenabled->disabled_at)->toBeNull()
+            ->and($reenabled->disabled_by_id)->toBeNull()
+            ->and($reenabled->disable_reason)->toBeNull()
+            ->and($events($patients[5])->pluck('event')->all())->toBe(['disabled', 'enabled']);
+
+        expect(Patient::query()->whereNotNull('disabled_at')->count())->toBe(1);
+    });
+
+    it('keeps patient audits chronological, batch-grouped and limited to the curated patients', function () {
+        seedSmallDemoData(users: 4, patients: 20, consultations: 15);
+
+        $curatedIds = Patient::query()->orderBy('id')->limit(DemoPatientHistorySeeder::CURATED_COUNT)->pluck('id');
+        $audits = Audit::query()->where('tags', 'like', 'patient:%')->orderBy('id')->get();
+
+        expect($audits)->not->toBeEmpty();
+
+        foreach ($audits as $audit) {
+            expect($curatedIds->contains((int) substr((string) $audit->tags, strlen('patient:'))))->toBeTrue()
+                ->and($audit->user_id)->not->toBeNull()
+                ->and($audit->created_at->lessThanOrEqualTo(now()))->toBeTrue();
+        }
+
+        foreach ($audits->groupBy('tags') as $group) {
+            $previous = $group->first()->created_at;
+
+            foreach ($group as $audit) {
+                expect($audit->created_at->greaterThanOrEqualTo($previous))->toBeTrue();
+                $previous = $audit->created_at;
+            }
+        }
+
+        expect(Patient::query()->whereNotIn('id', $curatedIds)->whereHas('audits')->count())->toBe(0);
+    });
+
+    it('excludes the disabled demo patient from the default index but lists it with the disabled filter', function () {
+        seedSmallDemoData(users: 4, patients: 20, consultations: 15);
+
+        $disabled = Patient::query()->whereNotNull('disabled_at')->firstOrFail();
+        $coordinator = User::query()->where('email', DemoUserSeeder::DEMO_COORDINATOR_EMAIL)->firstOrFail();
+
+        $this->actingAs($coordinator)->get(route('patients.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('patients.data', fn ($rows) => ! collect($rows)->pluck('uuid')->contains($disabled->uuid)));
+
+        $this->actingAs($coordinator)->get(route('patients.index', ['status' => 'disabled']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->where('patients.data', fn ($rows) => collect($rows)->pluck('uuid')->contains($disabled->uuid)));
+    });
+
+    it('seeds fewer patients than the curated count without failing', function () {
+        seedSmallDemoData(users: 4, patients: 2, consultations: 5);
+
+        expect(Patient::query()->count())->toBe(2)
+            ->and(Patient::query()->whereNotNull('disabled_at')->count())->toBe(0);
     });
 });

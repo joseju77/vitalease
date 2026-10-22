@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\MedicalConsultation;
 use App\Models\Patient;
 use App\Models\User;
-use App\Support\MedicalConsultationAbilities;
+use App\Support\ConsultationListItem;
+use App\Support\PatientAbilities;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,7 +37,9 @@ class DashboardController extends Controller
 
     /**
      * Look up patients by name or enrollment number for the staff search
-     * bar, restricted to the Scout-indexed fields.
+     * bar, restricted to the Scout-indexed fields. Disabled patients are
+     * included and flagged `is_disabled` so the bar can show them as not
+     * selectable.
      */
     public function searchPatients(Request $request): JsonResponse
     {
@@ -73,9 +76,13 @@ class DashboardController extends Controller
                 'sex_at_birth' => $patient->sex_at_birth->value,
                 'blood_type' => $patient->blood_type->value,
                 'enrollment_number' => $patient->enrollment_number,
+                'is_disabled' => $patient->disabled_at !== null,
+            ],
+            'can' => [
+                'createConsultation' => PatientAbilities::for($request->user(), $patient)['createConsultation'],
             ],
             'latest_consultations' => $consultations
-                ->map(fn (MedicalConsultation $consultation): array => $this->mapConsultationItem($consultation, $request->user()))
+                ->map(fn (MedicalConsultation $consultation): array => ConsultationListItem::for($consultation, $request->user()))
                 ->all(),
         ]);
     }
@@ -105,7 +112,7 @@ class DashboardController extends Controller
             ->latest()
             ->take(10)
             ->get()
-            ->map(fn (MedicalConsultation $consultation): array => $this->mapConsultationItem($consultation, $user))
+            ->map(fn (MedicalConsultation $consultation): array => ConsultationListItem::for($consultation, $user))
             ->all();
     }
 
@@ -120,41 +127,7 @@ class DashboardController extends Controller
             'last_name' => $patient->last_name,
             'second_last_name' => $patient->second_last_name,
             'enrollment_number' => $patient->enrollment_number,
+            'is_disabled' => $patient->disabled_at !== null,
         ];
-    }
-
-    /**
-     * Map a consultation, its eager-loaded `patient` and `physician`
-     * relations, into the shared dashboard item shape.
-     *
-     * @return array<string, mixed>
-     */
-    private function mapConsultationItem(MedicalConsultation $consultation, User $currentUser): array
-    {
-        return [
-            'uuid' => $consultation->uuid,
-            'code' => $consultation->code,
-            'created_at' => $consultation->created_at->toISOString(),
-            'voided_at' => $consultation->voided_at?->toISOString(),
-            'diagnosis' => $consultation->diagnosis,
-            'medical_classification' => $consultation->medical_classification->value,
-            'patient' => [
-                'uuid' => $consultation->patient->uuid,
-                'full_name' => $this->fullName($consultation->patient),
-            ],
-            'physician' => [
-                'name' => $consultation->physician->name,
-            ],
-            'can' => MedicalConsultationAbilities::for($currentUser, $consultation),
-        ];
-    }
-
-    private function fullName(Patient $patient): string
-    {
-        return trim(implode(' ', array_filter([
-            $patient->first_name,
-            $patient->last_name,
-            $patient->second_last_name,
-        ])));
     }
 }

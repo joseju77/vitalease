@@ -17,6 +17,7 @@ use App\Models\PatientEmergencyContact;
 use App\Models\PatientGynecologicalHistory;
 use App\Models\PatientOtherAilment;
 use Database\Seeders\Concerns\LoadsCatalog;
+use Database\Seeders\Concerns\RunsWithAuditing;
 use Faker\Generator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -27,6 +28,7 @@ use JsonException;
 class DemoPatientSeeder extends Seeder
 {
     use LoadsCatalog;
+    use RunsWithAuditing;
 
     /**
      * Default number of demo patients to seed.
@@ -59,13 +61,16 @@ class DemoPatientSeeder extends Seeder
         $familyMedicalUnitIds = FamilyMedicalUnit::query()->pluck('id');
         $neighborhoodIds = Neighborhood::query()->pluck('id');
 
-        Patient::withoutSyncingToSearch(function () use ($count, $people, $faker, $enrollmentIds, $familyMedicalUnitIds, $neighborhoodIds) {
+        // The baseline patients carry no audit history, even when the
+        // environment enables console auditing; only the curated history
+        // seeder opts in.
+        $this->withoutAuditing(fn () => Patient::withoutSyncingToSearch(function () use ($count, $people, $faker, $enrollmentIds, $familyMedicalUnitIds, $neighborhoodIds) {
             DB::transaction(function () use ($count, $people, $faker, $enrollmentIds, $familyMedicalUnitIds, $neighborhoodIds) {
                 for ($i = 0; $i < $count; $i++) {
                     $this->createPatient($people, $faker, $enrollmentIds, $familyMedicalUnitIds, $neighborhoodIds);
                 }
             });
-        });
+        }));
     }
 
     /**

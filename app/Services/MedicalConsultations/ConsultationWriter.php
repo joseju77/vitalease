@@ -9,6 +9,7 @@ use App\Services\Inventory\InsufficientStockException;
 use App\Services\Inventory\TreatmentDispensation;
 use App\Support\Auditing\AuditBatch;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Writes a consultation aggregate (consultation, vital signs, physical
@@ -42,11 +43,24 @@ final readonly class ConsultationWriter
      *
      * @param  ConsultationData  $data
      *
+     * The patient is re-read under a shared lock, serialising with a
+     * concurrent disable (which takes `FOR UPDATE`): a patient disabled
+     * meanwhile is rejected, for every actor.
+     *
      * @throws InsufficientStockException When a treatment line exceeds the available stock.
+     * @throws ValidationException When the patient is disabled (error on `patient_uuid`).
      */
     public function create(Patient $patient, array $data, User $actor): MedicalConsultation
     {
         return $this->auditBatch->within(fn (): MedicalConsultation => DB::transaction(function () use ($patient, $data, $actor): MedicalConsultation {
+            $patient = Patient::query()->whereKey($patient->getKey())->sharedLock()->firstOrFail();
+
+            if ($patient->disabled_at !== null) {
+                throw ValidationException::withMessages([
+                    'patient_uuid' => [__('modules/patients/management.errors.consultation_patient_disabled')],
+                ]);
+            }
+
             $consultation = MedicalConsultation::query()->create([
                 'current_condition' => $data['consultation']['current_condition'],
                 'diagnosis' => $data['consultation']['diagnosis'],

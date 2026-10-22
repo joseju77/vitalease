@@ -64,6 +64,7 @@ const anaResult: PatientSearchResult = {
     last_name: 'López',
     second_last_name: 'Pérez',
     enrollment_number: 'A-100',
+    is_disabled: false,
 };
 
 const anaSummary: PatientSummary = {
@@ -76,7 +77,9 @@ const anaSummary: PatientSummary = {
         sex_at_birth: 2,
         blood_type: 1,
         enrollment_number: 'A-100',
+        is_disabled: false,
     },
+    can: { createConsultation: true },
     latest_consultations: [],
 };
 

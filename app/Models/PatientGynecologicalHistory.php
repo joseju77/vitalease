@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
 #[Fillable([
     'patient_id',
@@ -27,8 +29,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'cesareans',
     'abortions',
 ])]
-class PatientGynecologicalHistory extends Model
+class PatientGynecologicalHistory extends Model implements AuditableContract
 {
+    use Auditable;
+
     /** @use HasFactory<PatientGynecologicalHistoryFactory> */
     use HasFactory;
 
@@ -39,6 +43,23 @@ class PatientGynecologicalHistory extends Model
     public $incrementing = false;
 
     public $timestamps = false;
+
+    /**
+     * Attributes that never appear in audit values.
+     *
+     * @var list<string>
+     */
+    protected array $auditExclude = ['patient_id'];
+
+    /**
+     * Tag every audit with its patient so the full history is one query.
+     *
+     * @return list<string>
+     */
+    public function generateTags(): array
+    {
+        return ['patient:'.$this->patient_id];
+    }
 
     /**
      * Get the attributes that should be cast.

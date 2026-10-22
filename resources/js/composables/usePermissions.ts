@@ -12,17 +12,19 @@ import type { AppPageProps } from '@/types';
  * the real authorization boundary is always enforced server-side.
  */
 export function usePermissions() {
+    // `props` can be undefined before the first page is set (e.g. components mounted outside a page), so every
+    // read is optional and defaults to no permissions.
     const page = usePage<AppPageProps>();
 
     function can(permission: string): boolean {
-        if (page.props.auth.is_super_admin) {
+        if (page.props?.auth?.is_super_admin) {
             return true;
         }
 
-        return page.props.auth.permissions.includes(permission);
+        return page.props?.auth?.permissions?.includes(permission) ?? false;
     }
 
-    const isSuperAdmin = computed(() => page.props.auth.is_super_admin);
+    const isSuperAdmin = computed(() => page.props?.auth?.is_super_admin ?? false);
 
     return { can, isSuperAdmin };
 }

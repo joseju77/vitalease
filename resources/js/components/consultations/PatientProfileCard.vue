@@ -7,163 +7,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDate } from '@/lib/formatDateTime';
+import { AILMENT_TYPE_LABELS, enumLabel, KINSHIP_TYPE_LABELS } from '@/lib/patientLabels';
 import {
-    AILMENT_TYPE_LABELS,
-    BLOOD_TYPE_LABELS,
-    CONTRACEPTIVE_METHOD_LABELS,
-    enumLabel,
-    KINSHIP_TYPE_LABELS,
-    MARITAL_STATUS_LABELS,
-    SEX_AT_BIRTH_FEMALE,
-    SEX_AT_BIRTH_LABELS,
-} from '@/lib/patientLabels';
+    contactFields,
+    generalFields,
+    gynecologicalHistoryFields,
+    hasValue,
+    otherAilmentFields,
+    showsGynecologicalHistory,
+} from '@/lib/patientProfileFields';
 import type { PatientProfile } from '@/types/consultations';
 
 const props = defineProps<{ profile: PatientProfile }>();
-
-/** A read-only definition-list entry; `null` or empty values render as "No registrado". */
-interface ProfileField {
-    label: string;
-    value: string | number | null;
-}
 
 const NOT_RECORDED = 'No registrado';
 const dtClass = 'text-sm text-muted-foreground';
 const ddClass = 'mt-1 font-medium break-words whitespace-pre-line';
 const emptyStateClass = 'rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground';
 
-function hasValue(value: string | number | null): boolean {
-    return value !== null && value !== '';
-}
-
-function yesNo(value: boolean): string {
-    return value ? 'Sí' : 'No';
-}
-
-function withUnit(value: number | null, unit: string): string | null {
-    return value === null ? null : `${value} ${unit}`;
-}
-
-/** Shown for Female patients, or whenever a history exists regardless of the recorded sex. */
-const showsGynecologicalHistory = computed(
-    () => props.profile.sex_at_birth === SEX_AT_BIRTH_FEMALE || props.profile.gynecological_history !== null,
-);
-
-const generalFields = computed<ProfileField[]>(() => {
-    const profile = props.profile;
-    const fullName = [profile.first_name, profile.last_name, profile.second_last_name].filter(Boolean).join(' ');
-    const enrollmentFields: ProfileField[] =
-        profile.enrollment !== null
-            ? [
-                  { label: 'Inscripción', value: profile.enrollment },
-                  { label: 'Número de inscripción', value: profile.enrollment_number },
-              ]
-            : [{ label: 'Inscripción externa', value: profile.external_enrollment }];
-    const familyMedicalUnitFields: ProfileField[] =
-        profile.family_medical_unit !== null
-            ? [
-                  { label: 'Unidad médica familiar', value: profile.family_medical_unit.name },
-                  { label: 'Dirección de la unidad', value: profile.family_medical_unit.address },
-              ]
-            : [{ label: 'Unidad médica familiar (otra)', value: profile.other_family_medical_unit }];
-
-    return [
-        { label: 'Nombre completo', value: fullName },
-        { label: 'Fecha de nacimiento', value: formatDate(profile.birth_date) },
-        { label: 'Edad', value: `${profile.age} años` },
-        { label: 'Sexo al nacer', value: enumLabel(SEX_AT_BIRTH_LABELS, profile.sex_at_birth) },
-        { label: 'Estado civil', value: enumLabel(MARITAL_STATUS_LABELS, profile.marital_status) },
-        { label: 'Tipo de sangre', value: enumLabel(BLOOD_TYPE_LABELS, profile.blood_type) },
-        { label: 'Número de seguridad social', value: profile.social_security_number },
-        ...enrollmentFields,
-        ...familyMedicalUnitFields,
-    ];
-});
-
-const contactFields = computed<ProfileField[]>(() => {
-    const contact = props.profile.contact_information;
-
-    if (contact === null) {
-        return [];
-    }
-
-    return [
-        { label: 'Teléfono', value: contact.phone_number },
-        { label: 'Correo personal', value: contact.personal_email },
-        { label: 'Correo institucional', value: contact.institutional_email },
-        { label: 'Dirección', value: contact.address },
-        { label: 'Colonia', value: contact.neighborhood },
-        { label: 'Código postal', value: contact.zip_code },
-        { label: 'Municipio', value: contact.municipality },
-    ];
-});
-
-const otherAilmentFields = computed<ProfileField[]>(() => {
-    const otherAilments = props.profile.other_ailments;
-
-    if (otherAilments === null) {
-        return [];
-    }
-
-    return [
-        { label: 'Cirugías', value: otherAilments.surgeries },
-        { label: 'Alergias', value: otherAilments.allergies },
-        { label: 'Otros', value: otherAilments.others },
-    ];
-});
-
-const gynecologicalHistoryFields = computed<ProfileField[]>(() => {
-    const history = props.profile.gynecological_history;
-
-    if (history === null) {
-        return [];
-    }
-
-    const papSmearResult =
-        history.last_pap_smear_was_positive === null
-            ? null
-            : history.last_pap_smear_was_positive
-              ? 'Positivo'
-              : 'Negativo';
-
-    return [
-        { label: 'Edad de la menarca', value: withUnit(history.menarche, 'años') },
-        { label: 'Duración del ciclo', value: withUnit(history.cycle_duration, 'días') },
-        { label: 'Intensidad del ciclo', value: `${history.cycle_intensity} de 10` },
-        { label: 'Nivel de flujo', value: history.cycle_flow_level },
-        { label: 'Presenta cólicos', value: yesNo(history.has_cramps) },
-        { label: 'Ciclo regular', value: yesNo(history.is_cycle_regular) },
-        { label: 'Fecha del último ciclo', value: formatDate(history.last_cycle_date) },
-        { label: 'Edad de inicio de vida sexual', value: withUnit(history.sexual_activity_start_age, 'años') },
-        {
-            label: 'Método anticonceptivo',
-            value:
-                history.contraceptive_method === null
-                    ? null
-                    : enumLabel(CONTRACEPTIVE_METHOD_LABELS, history.contraceptive_method),
-        },
-        {
-            label: 'Fecha del último papanicolaou',
-            value: history.last_pap_smear_date === null ? null : formatDate(history.last_pap_smear_date),
-        },
-        { label: 'Resultado del último papanicolaou', value: papSmearResult },
-        { label: 'Embarazos', value: history.pregnancies },
-        { label: 'Partos vaginales', value: history.vaginal_deliveries },
-        { label: 'Cesáreas', value: history.cesareans },
-        { label: 'Abortos', value: history.abortions },
-    ];
-});
+const hasGynecologicalTab = computed(() => showsGynecologicalHistory(props.profile));
+const generalFieldList = computed(() => generalFields(props.profile));
+const contactFieldList = computed(() => contactFields(props.profile));
+const otherAilmentFieldList = computed(() => otherAilmentFields(props.profile));
+const gynecologicalHistoryFieldList = computed(() => gynecologicalHistoryFields(props.profile));
 
 /** Tabs rendered as a definition list; an empty `fields` list shows the tab's empty state. */
 const definitionListTabs = computed(() => [
-    { value: 'general', fields: generalFields.value, emptyMessage: '' },
-    { value: 'contact', fields: contactFields.value, emptyMessage: 'Sin datos de contacto registrados.' },
-    { value: 'other-ailments', fields: otherAilmentFields.value, emptyMessage: 'Sin otros padecimientos registrados.' },
-    ...(showsGynecologicalHistory.value
+    { value: 'general', fields: generalFieldList.value, emptyMessage: '' },
+    { value: 'contact', fields: contactFieldList.value, emptyMessage: 'Sin datos de contacto registrados.' },
+    {
+        value: 'other-ailments',
+        fields: otherAilmentFieldList.value,
+        emptyMessage: 'Sin otros padecimientos registrados.',
+    },
+    ...(hasGynecologicalTab.value
         ? [
               {
                   value: 'gynecological-history',
-                  fields: gynecologicalHistoryFields.value,
+                  fields: gynecologicalHistoryFieldList.value,
                   emptyMessage: 'Sin historial ginecológico registrado.',
               },
           ]
@@ -203,7 +84,7 @@ const isOpen = ref(false);
                                 <TabsTrigger value="emergency-contacts">Contactos de emergencia</TabsTrigger>
                                 <TabsTrigger value="ailments">Padecimientos</TabsTrigger>
                                 <TabsTrigger value="other-ailments">Otros padecimientos</TabsTrigger>
-                                <TabsTrigger v-if="showsGynecologicalHistory" value="gynecological-history">
+                                <TabsTrigger v-if="hasGynecologicalTab" value="gynecological-history">
                                     Historial ginecológico
                                 </TabsTrigger>
                             </TabsList>
@@ -233,7 +114,9 @@ const isOpen = ref(false);
                                     <span class="text-sm text-muted-foreground sm:text-base sm:text-foreground">
                                         {{ enumLabel(KINSHIP_TYPE_LABELS, contact.kinship_type) }}
                                     </span>
-                                    <span class="tabular-nums">{{ contact.phone_number }}</span>
+                                    <span v-if="contact.phone_number !== null" class="tabular-nums">{{
+                                        contact.phone_number
+                                    }}</span>
                                 </li>
                             </ul>
                             <p v-else :class="emptyStateClass">Sin contactos de emergencia registrados.</p>

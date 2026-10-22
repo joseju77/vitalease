@@ -45,6 +45,6 @@ describe('usePermissions', () => {
 
         const { can } = usePermissions();
 
-        expect(can('patients.delete')).toBe(false);
+        expect(can('patients.disable')).toBe(false);
     });
 });

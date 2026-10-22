@@ -27,6 +27,34 @@ Route::controller(PatientController::class)
     });
 
 Route::middleware('auth')
+    ->controller(PatientController::class)
+    ->name('patients.')
+    ->group(function () {
+        Route::get('/patients', 'index')->name('index')->middleware('can:viewAny,App\Models\Patient');
+        Route::get('/patients/{patient}', 'show')->name('show')->whereUuid('patient')->middleware('can:view,patient');
+        Route::get('/patients/{patient}/edit', 'edit')
+            ->name('edit')
+            ->whereUuid('patient')
+            ->middleware('can:update,patient');
+        Route::put('/patients/{patient}', 'update')
+            ->name('update')
+            ->whereUuid('patient')
+            ->middleware('can:update,patient');
+        Route::post('/patients/{patient}/disable', 'disable')
+            ->name('disable')
+            ->whereUuid('patient')
+            ->middleware('can:disable,patient');
+        Route::post('/patients/{patient}/enable', 'enable')
+            ->name('enable')
+            ->whereUuid('patient')
+            ->middleware('can:enable,patient');
+        Route::get('/patients/{patient}/history', 'history')
+            ->name('history')
+            ->whereUuid('patient')
+            ->middleware('can:audit,patient');
+    });
+
+Route::middleware('auth')
     ->controller(UserController::class)
     ->name('users.')
     ->group(function () {

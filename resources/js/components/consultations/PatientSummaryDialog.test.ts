@@ -5,6 +5,8 @@ import { patientSummary } from '@/actions/App/Http/Controllers/DashboardControll
 import { create, show } from '@/actions/App/Http/Controllers/MedicalConsultationController';
 import type { ConsultationListItem, PatientSearchResult, PatientSummary } from '@/types/consultations';
 
+const { pageState } = vi.hoisted(() => ({ pageState: { props: {} as Record<string, unknown> } }));
+
 vi.mock('@inertiajs/vue3', async (importOriginal) => {
     const actual = await importOriginal<typeof import('@inertiajs/vue3')>();
 
@@ -17,6 +19,7 @@ vi.mock('@inertiajs/vue3', async (importOriginal) => {
                 () =>
                     h('a', { href: props.href }, slots.default?.()),
         }),
+        usePage: () => pageState,
     };
 });
 
@@ -28,6 +31,7 @@ const patient: PatientSearchResult = {
     last_name: 'López',
     second_last_name: 'Pérez',
     enrollment_number: 'A-100',
+    is_disabled: false,
 };
 
 function consultationItem(overrides: Partial<ConsultationListItem> = {}): ConsultationListItem {
@@ -56,7 +60,9 @@ function summary(latestConsultations: ConsultationListItem[] = []): PatientSumma
             sex_at_birth: 2,
             blood_type: 8,
             enrollment_number: 'A-100',
+            is_disabled: false,
         },
+        can: { createConsultation: true },
         latest_consultations: latestConsultations,
     };
 }
@@ -91,6 +97,7 @@ function dialogLinks(): HTMLAnchorElement[] {
 
 describe('PatientSummaryDialog.vue', () => {
     beforeEach(() => {
+        pageState.props = {};
         fetchMock = vi.fn();
         vi.stubGlobal('fetch', fetchMock);
     });
@@ -223,5 +230,55 @@ describe('PatientSummaryDialog.vue', () => {
         expect(active.textContent).not.toContain('Anulada');
         expect(voided.textContent).toContain('Anulada');
         expect(dialogElement().textContent).not.toContain('Incluir anuladas');
+    });
+    it('links the patient name to the patient detail page when the viewer has patients.view', async () => {
+        pageState.props = { auth: { permissions: ['patients.view'], is_super_admin: false } };
+        respondWith(summary());
+
+        await mountDialog({ open: true });
+
+        const nameLink = dialogLinks().find((link) => link.textContent?.trim() === 'Ana López Pérez');
+        expect(nameLink?.getAttribute('href')).toBe('/patients/patient-uuid-1');
+    });
+
+    it('shows the name as plain text without patients.view', async () => {
+        respondWith(summary());
+
+        await mountDialog({ open: true });
+
+        expect(dialogElement().textContent).toContain('Ana López Pérez');
+        expect(dialogLinks().some((link) => link.textContent?.trim() === 'Ana López Pérez')).toBe(false);
+    });
+
+    it('never exposes sensitive fields such as the social security number, emails or phones', async () => {
+        respondWith(summary([consultationItem()]));
+
+        await mountDialog({ open: true });
+
+        const text = dialogElement().textContent ?? '';
+        expect(text).not.toContain('seguridad social');
+        expect(text).not.toContain('Correo');
+        expect(text).not.toContain('Teléfono');
+        expect(text).not.toContain('@');
+    });
+
+    it('marks a disabled patient with a badge and hides the new consultation link even when the viewer may create consultations', async () => {
+        const disabled = summary();
+        disabled.patient.is_disabled = true;
+        disabled.can.createConsultation = false;
+        respondWith(disabled);
+
+        await mountDialog({ open: true, canCreateConsultation: true });
+
+        expect(dialogElement().textContent).toContain('Deshabilitado');
+        expect(dialogLinks().some((link) => link.textContent?.trim() === 'Nueva consulta')).toBe(false);
+    });
+
+    it('does not mark an active patient as disabled', async () => {
+        respondWith(summary());
+
+        await mountDialog({ open: true });
+
+        expect(dialogElement().textContent).not.toContain('Deshabilitado');
     });
 });

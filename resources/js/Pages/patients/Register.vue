@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -10,12 +10,8 @@ import DemographicsStep from '@/components/patients/DemographicsStep.vue';
 import EmergencyContactsStep from '@/components/patients/EmergencyContactsStep.vue';
 import GynecologicalHistoryStep from '@/components/patients/GynecologicalHistoryStep.vue';
 import { store } from '@/actions/App/Http/Controllers/PatientController';
-import { SEX_AT_BIRTH_FEMALE } from '@/lib/patientLabels';
-import type {
-    PatientGynecologicalHistory,
-    PatientRegistrationMetadata,
-    PatientRegistrationPayload,
-} from '@/types/patients';
+import { usePatientAggregateForm } from '@/composables/usePatientAggregateForm';
+import type { PatientRegistrationMetadata } from '@/types/patients';
 
 defineProps<PatientRegistrationMetadata>();
 
@@ -37,81 +33,7 @@ const TOTAL_STEPS = computed(() => STEP_TITLES.value.length);
 
 const stepIndex = ref(0);
 
-/**
- * `gynecological_history` stays a full object in local form state at all
- * times (never `null` while editing) so `GynecologicalHistoryStep` can own a
- * plain, non-nullable `v-model` like every other step. It is only
- * destructured out of the submitted payload for non-Female patients in
- * `submit()` below — the payload type itself still allows `null`, which this
- * default object also satisfies.
- */
-const DEFAULT_GYNECOLOGICAL_HISTORY: PatientGynecologicalHistory = {
-    menarche: null,
-    has_cramps: false,
-    is_cycle_regular: false,
-    cycle_intensity: null,
-    cycle_duration: null,
-    cycle_flow_level: null,
-    last_cycle_date: '',
-    sexual_activity_start_age: null,
-    contraceptive_method: null,
-    last_pap_smear_date: null,
-    last_pap_smear_was_positive: null,
-    pregnancies: null,
-    vaginal_deliveries: null,
-    cesareans: null,
-    abortions: null,
-};
-
-/**
- * The whole multi-step aggregate lives in one `useForm`. Navigating between
- * steps only moves `stepIndex`; nothing is submitted until the final POST
- * from `submit()`.
- */
-const form = useForm<PatientRegistrationPayload>({
-    patient: {
-        first_name: '',
-        last_name: '',
-        second_last_name: null,
-        birth_date: '',
-        sex_at_birth: null,
-        marital_status: null,
-        blood_type: null,
-        enrollment_id: null,
-        enrollment_number: null,
-        external_enrollment: null,
-        family_medical_unit_id: null,
-        other_family_medical_unit: null,
-        social_security_number: '',
-    },
-    contact_information: {
-        address: '',
-        phone_number: '',
-        personal_email: '',
-        institutional_email: null,
-        zip_code: null,
-        neighborhood_id: null,
-    },
-    emergency_contacts: [{ name: '', phone_number: '', kinship_type: null }],
-    ailments: [],
-    other_ailments: null,
-    gynecological_history: { ...DEFAULT_GYNECOLOGICAL_HISTORY },
-});
-
-const isFemaleSelected = computed(() => form.patient.sex_at_birth === SEX_AT_BIRTH_FEMALE);
-
-/**
- * Bridges the payload's nullable `gynecological_history` type to a
- * non-nullable `v-model` for `GynecologicalHistoryStep`. The getter fallback
- * is a safety net only — `form.gynecological_history` is never actually
- * `null` while the form is being edited.
- */
-const gynecologicalHistoryModel = computed<PatientGynecologicalHistory>({
-    get: () => form.gynecological_history ?? DEFAULT_GYNECOLOGICAL_HISTORY,
-    set: (value) => {
-        form.gynecological_history = value;
-    },
-});
+const { form, isFemaleSelected, gynecologicalHistoryModel, transformForSubmit } = usePatientAggregateForm();
 
 const isFirstStep = computed(() => stepIndex.value === 0);
 const isLastStep = computed(() => stepIndex.value === TOTAL_STEPS.value - 1);
@@ -150,19 +72,8 @@ const registrationSucceeded = computed(() => page.flash?.registrationSuccess ===
  */
 const registrationError = computed(() => (form.errors as Partial<Record<string, string>>).registration);
 
-/**
- * `gynecological_history` is only applicable for Female patients; it must be
- * entirely absent from the submitted payload otherwise, not sent as `null`.
- * `contact_information.zip_code` stays in the payload — the request
- * requires the key present even though the controller strips it before
- * persistence.
- */
 function submit() {
-    form.transform((data) => {
-        const { gynecological_history, ...rest } = data;
-
-        return isFemaleSelected.value ? { ...rest, gynecological_history } : rest;
-    }).post(store().url, {
+    transformForSubmit().post(store().url, {
         preserveScroll: true,
     });
 }

@@ -10,4 +10,6 @@ return [
         'pap_smear_pairing' => 'La fecha y el resultado del último papanicolaou deben enviarse juntos o no enviarse.',
         'pregnancy_counts_exceeded' => 'La suma de partos vaginales, cesáreas y abortos no puede superar el número de embarazos.',
     ],
+
+    'duplicate_registration' => 'No fue posible completar el registro con los datos proporcionados. Si ya cuentas con un expediente, acércate a recepción para recibir apoyo.',
 ];

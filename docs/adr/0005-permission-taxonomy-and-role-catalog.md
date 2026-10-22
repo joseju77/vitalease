@@ -1,6 +1,7 @@
 # ADR-0005: Taxonomía de permisos y catálogo de roles de la etapa de usuarios/roles/permisos
 
-* Estado: Aceptada; el punto 1 fue modificado por [ADR-0009](0009-bitacora-de-auditoria-de-consultas-medicas.md)
+* Estado: Aceptada; el punto 1 fue modificado por [ADR-0009](0009-bitacora-de-auditoria-de-consultas-medicas.md) y
+  [ADR-0010](0010-gestion-deshabilitacion-y-auditoria-de-pacientes.md)
 
 ## Contexto
 
@@ -22,6 +23,9 @@ cambios como decisiones propias de esta etapa — no como una revisión de ADR-0
 
    > **Modificado por ADR-0009.** Para `consultations`, `delete` se reemplazó por `void` (anular y restaurar las
    > consultas propias) y se agregaron `void-any`, `view-voided` y `audit`. Ninguna consulta se elimina físicamente.
+
+   > **Modificado por ADR-0010.** Para `patients`, `delete` se reemplazó por `disable` (deshabilitar y volver a
+   > habilitar) y se agregó `audit` (historial de cambios). Ningún paciente se elimina físicamente.
 
 2. **Un solo rol sembrado, `super-admin`, en vez de `admin` y `staff`.** El plan original sembraba dos roles. El dueño
    del producto descartó `staff` y renombró el rol restante a `super-admin`. Un usuario que no sea

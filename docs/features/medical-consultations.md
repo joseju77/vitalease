@@ -19,6 +19,8 @@ En resumen:
   [Anulación y restauración](#anulación-y-restauración)). Cada cambio queda registrado en una bitácora de auditoría
   inmutable (ver [Historial de cambios](#historial-de-cambios) y
   [ADR-0009](../adr/0009-bitacora-de-auditoria-de-consultas-medicas.md)).
+- Un paciente **deshabilitado** no recibe consultas nuevas, pero sus consultas existentes siguen visibles y sin cambios
+  (ver [Pacientes deshabilitados](#pacientes-deshabilitados)).
 - Los pacientes se localizan mediante Laravel Scout + Meilisearch (ver
   [ADR-0006](../adr/0006-busqueda-de-pacientes-con-scout-y-meilisearch.md)).
 - El tratamiento de una consulta dispensa medicamentos de un inventario real con libro de movimientos (ver
@@ -250,7 +252,7 @@ El módulo usa ocho permisos de `App\Enums\Permission`:
 | `consultations.void-any`    | Anular y restaurar la consulta de **cualquier** médico; también permite ver las anuladas.                  |
 | `consultations.view-voided` | Ver las consultas anuladas de cualquier médico (detalle y resumen del paciente), sin poder anular.         |
 | `consultations.audit`       | Leer el historial de cambios de una consulta (no exige ser su médico).                                     |
-| `patients.view`             | Búsqueda de pacientes y (junto con `consultations.view`) el resumen del paciente.                          |
+| `patients.view`             | Búsqueda de pacientes, (junto con `consultations.view`) el resumen del paciente y los datos sensibles del perfil. |
 
 Reglas de `MedicalConsultationPolicy`:
 
@@ -278,11 +280,30 @@ Reglas de `MedicalConsultationPolicy`:
   siendo el límite real (HTTP 403 en caso contrario).
 - La barra lateral muestra la entrada "Consultas" solo a los usuarios con `consultations.view`.
 
-> **Decisión de producto deliberada:** la tarjeta plegable del perfil del paciente en las páginas de creación, detalle
-> y edición muestra el perfil **completo** del paciente (identidad, número de seguridad social, datos de contacto,
-> contactos de emergencia, padecimientos, historial ginecológico) a cualquiera que pueda abrir esas páginas. Abrir la
-> página de creación solo requiere `consultations.create`, y la página de detalle solo `consultations.view` — ahí no se
-> comprueba `patients.view`.
+> **Datos sensibles del perfil.** La tarjeta plegable del perfil del paciente en las páginas de creación, detalle y
+> edición se arma con `App\Support\Patients\PatientProfile`. Quien abre esas páginas (`consultations.create` o
+> `consultations.view`) ve la identidad y los datos clínicos, pero el número de seguridad social, los correos y todos
+> los teléfonos (incluidos los de los contactos de emergencia) solo se envían a quien tiene `patients.view`; para los
+> demás llegan como `null` y la interfaz los omite. La misma regla aplica al resumen del paciente del dashboard.
+> `super-admin` los recibe por el bypass de `Gate::before()`. Ver
+> [gestión de pacientes](patient-management.md#exposición-de-datos-sensibles).
+
+## Pacientes deshabilitados
+
+Deshabilitar un paciente (ver [gestión de pacientes](patient-management.md#deshabilitar-y-habilitar)) no toca sus
+consultas: ninguna fila de consulta, signos vitales, exploración, regulación ni tratamiento cambia, y el inventario no
+se mueve.
+
+| Tema | Comportamiento |
+|------|----------------|
+| Consultas existentes | Siguen visibles, en el detalle de la consulta y en el del paciente, con las reglas de visibilidad de siempre (incluidas las anuladas). |
+| Editar o anular una consulta existente | Sigue permitido con las reglas de siempre; la consulta conserva su paciente. |
+| Página de nueva consulta | `GET /consultations/create?patient={uuid}` responde **403** para cualquier usuario, incluido `super-admin`. |
+| Guardar una consulta nueva | `POST /consultations` falla con un error de validación (422) en `patient_uuid`: "El paciente está deshabilitado y no admite nuevas consultas." |
+| Carrera con una deshabilitación | `ConsultationWriter::create` vuelve a leer al paciente con bloqueo compartido; la deshabilitación toma bloqueo exclusivo, de modo que nunca se crea una consulta sobre un paciente recién deshabilitado. |
+| Búsqueda del dashboard | Los pacientes deshabilitados aparecen marcados ("Deshabilitado") y **no se pueden seleccionar** en el buscador de nueva consulta. |
+| Resumen del paciente | Expone `is_disabled` y `can.createConsultation`; con el paciente deshabilitado no se ofrece "Nueva consulta". |
+| Enlaces al paciente | El nombre del paciente en las páginas de consulta y en el resumen enlaza a `patients/{uuid}` solo si el usuario tiene `patients.view`. |
 
 ## Anulación y restauración
 
@@ -355,7 +376,7 @@ La búsqueda de pacientes sigue [ADR-0006](../adr/0006-busqueda-de-pacientes-con
 | Tema                  | Comportamiento                                                                                                                                                                           |
 |-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Motor                 | Laravel Scout con Meilisearch; el servicio `meilisearch` de `docker-compose.dev.yml` está fijado a `getmeili/meilisearch:v1.54.0`.                                                       |
-| Campos indexados      | `Patient::toSearchableArray()` envía solo `first_name`, `last_name`, `second_last_name`, `enrollment_number`; `config/scout.php` declara esos mismos cuatro como `searchableAttributes`. |
+| Campos indexados      | `Patient::toSearchableArray()` envía `first_name`, `last_name`, `second_last_name`, `enrollment_number` e `is_disabled`; `config/scout.php` declara los cuatro primeros como `searchableAttributes` e `is_disabled` como atributo filtrable. |
 | Cuándo se indexa      | `after_commit` es `true`, por lo que un registro de paciente revertido (rollback) nunca se indexa.                                                                                       |
 | Cómo se indexa        | De forma síncrona (`queue` es `false`); no hay worker de colas.                                                                                                                          |
 | Pruebas               | `phpunit.xml` establece `SCOUT_DRIVER=collection`, por lo que la suite no necesita Meilisearch.                                                                                          |
@@ -378,10 +399,10 @@ Todas las rutas requieren `auth`; la autorización la aplica el middleware `can:
 | Método | URI                                    | Nombre                           | Autorización                           | Respuesta                                                                                       |
 |--------|----------------------------------------|----------------------------------|----------------------------------------|-------------------------------------------------------------------------------------------------|
 | GET    | `/dashboard`                           | `dashboard.index`                | `consultations.view`                   | Inertia `dashboard/Index`                                                                       |
-| GET    | `/dashboard/patients/search`           | `dashboard.patients.search`      | `patients.view`                        | JSON, hasta 10 pacientes                                                                        |
-| GET    | `/dashboard/patients/{patient}`        | `dashboard.patients.summary`     | `patients.view` + `consultations.view` | JSON, datos básicos del paciente + 5 últimas consultas                                          |
+| GET    | `/dashboard/patients/search`           | `dashboard.patients.search`      | `patients.view`                        | JSON, hasta 10 pacientes (incluye deshabilitados con `is_disabled`)                             |
+| GET    | `/dashboard/patients/{patient}`        | `dashboard.patients.summary`     | `patients.view` + `consultations.view` | JSON, datos básicos del paciente (sin datos sensibles si falta `patients.view`) + 5 últimas consultas |
 | GET    | `/dashboard/consultations`             | `dashboard.consultations.latest` | `consultations.view`                   | JSON, las 10 últimas consultas propias                                                          |
-| GET    | `/consultations/create?patient={uuid}` | `consultations.create`           | `consultations.create`                 | Inertia `consultations/Create` (422 ante un UUID mal formado, 404 ante un paciente desconocido) |
+| GET    | `/consultations/create?patient={uuid}` | `consultations.create`           | `consultations.create`                 | Inertia `consultations/Create` (422 ante un UUID mal formado, 404 ante un paciente desconocido, 403 ante un paciente deshabilitado) |
 | POST   | `/consultations`                       | `consultations.store`            | `consultations.create`                 | Redirect a `dashboard.index` con flash                                                          |
 | GET    | `/consultations/{consultation}`        | `consultations.show`             | `view` (ver [Autorización](#autorización)) | Inertia `consultations/Show` (también resuelve consultas anuladas)                          |
 | GET    | `/consultations/{consultation}/edit`   | `consultations.edit`             | `consultations.update` + propiedad     | Inertia `consultations/Edit`                                                                    |
@@ -400,7 +421,9 @@ de anulación y restauración requieren el campo `reason` (ver [Anulación y res
    tabla "Mis últimas consultas" con las 10 últimas consultas propias del usuario. Las anuladas se ocultan salvo que se
    active "Incluir anuladas".
 2. **Búsqueda → resumen**: al seleccionar un resultado se abre `PatientSummaryDialog`, que obtiene el resumen del
-   paciente y lista hasta 5 consultas recientes (cada una enlaza a su página de detalle).
+   paciente y lista hasta 5 consultas recientes (cada una enlaza a su página de detalle). Si el usuario tiene
+   `patients.view`, el nombre enlaza al detalle del paciente; un paciente deshabilitado muestra la insignia
+   "Deshabilitado" y sin botón de nueva consulta.
 3. **Nueva consulta**: el botón "Nueva consulta" del diálogo (visible solo con `consultations.create`) abre
    `consultations/Create` para ese paciente.
 4. **Tratamiento** (`TreatmentRows`): cada línea tiene un selector de medicamento (combobox de medicamentos activos,
@@ -420,7 +443,7 @@ de anulación y restauración requieren el campo `reason` (ver [Anulación y res
    anulada.
 8. **Edición** (`consultations/Edit`): el mismo formulario, precargado. La edición ya no ofrece eliminar la consulta.
 
-En las páginas de creación, detalle y edición, `PatientProfileCard` se ubica encima del formulario o del detalle. Inicia
+En las páginas de creación, detalle y edición, `PatientProfileCard` se ubica encima del formulario o del detalle (omite los campos sensibles que el servidor no envió). Inicia
 plegada ("Mostrar" / "Ocultar") y agrupa el perfil en pestañas: "Datos generales", "Contacto", "Contactos de
 emergencia", "Padecimientos", "Otros padecimientos" y — para pacientes de sexo femenino o cuando existe un registro —
 "Historial ginecológico".
@@ -444,7 +467,9 @@ php artisan db:seed --class=PatientSeeder
 también siembra consultas con historial de auditoría: `DemoConsultationHistorySeeder` aplica, mediante los servicios
 reales y con un usuario autor, ediciones, una línea de tratamiento agregada y otra quitada, anulaciones por el médico
 demo y por Coordinación médica, y una anulación seguida de restauración, siempre con motivos en español. Los usuarios
-demo incluyen `coordinacion@vitalease.test` (ver [usuarios, roles y permisos](users-roles-permissions.md)).
+demo incluyen `coordinacion@vitalease.test` (ver [usuarios, roles y permisos](users-roles-permissions.md)). El
+sembrador de pacientes demo también deja pacientes editados y deshabilitados (ver
+[gestión de pacientes](patient-management.md#datos-de-demostración)).
 
 ## Fuera de alcance
 

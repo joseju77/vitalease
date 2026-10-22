@@ -17,6 +17,14 @@ class Enrollment extends Model
     public $timestamps = false;
 
     /**
+     * Human-readable identifier shown in the audit history.
+     */
+    public function auditLabel(): string
+    {
+        return $this->name;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

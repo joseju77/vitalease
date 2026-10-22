@@ -17,6 +17,14 @@ class Neighborhood extends Model
     public $timestamps = false;
 
     /**
+     * Human-readable identifier (name and postal code) shown in the audit history.
+     */
+    public function auditLabel(): string
+    {
+        return "{$this->name} (CP {$this->zip_code})";
+    }
+
+    /**
      * @return BelongsTo<ZipCode, $this>
      */
     public function zipCode(): BelongsTo

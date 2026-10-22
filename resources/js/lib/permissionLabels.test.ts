@@ -15,7 +15,14 @@ describe('formatPermissionLabel', () => {
     });
 
     it('formats another CRUD action as "<Resource>: <Verb>"', () => {
-        expect(formatPermissionLabel('patients.delete')).toBe('Pacientes: Eliminar');
+        expect(formatPermissionLabel('inventory.delete')).toBe('Inventario: Eliminar');
+    });
+
+    it.each([
+        ['patients.disable', 'Pacientes: Deshabilitar y habilitar'],
+        ['patients.audit', 'Pacientes: Consultar historial de cambios'],
+    ])('labels the patient permission %s', (permission, label) => {
+        expect(formatPermissionLabel(permission)).toBe(label);
     });
 
     it.each([

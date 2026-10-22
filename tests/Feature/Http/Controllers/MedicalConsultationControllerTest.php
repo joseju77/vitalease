@@ -237,7 +237,7 @@ describe('consultation pages and mutation navigation', function () {
     });
 
     it('includes the complete patient profile on the create page', function () {
-        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate)->create();
+        $physician = User::factory()->withPermissions(Permission::ConsultationsCreate, Permission::PatientsView)->create();
         $patient = patientWithCompleteProfile();
 
         $this->actingAs($physician)->get(route('consultations.create', ['patient' => $patient->uuid]))
@@ -249,7 +249,7 @@ describe('consultation pages and mutation navigation', function () {
     });
 
     it('includes the complete patient profile on the consultation pages', function (string $routeName, string $component) {
-        $physician = User::factory()->withPermissions(Permission::ConsultationsView, Permission::ConsultationsUpdate)->create();
+        $physician = User::factory()->withPermissions(Permission::ConsultationsView, Permission::ConsultationsUpdate, Permission::PatientsView)->create();
         $patient = patientWithCompleteProfile();
         $ailment = $patient->ailments()->orderBy('ailment_type')->first() ?? PatientAilment::factory()->for($patient)->create();
         $emergencyContact = $patient->emergencyContacts()->orderBy('id')->first();
