@@ -28,6 +28,7 @@ const props = defineProps<{
     submitLabel: string;
     submittingLabel: string;
     destructive?: boolean;
+    triggerTestId?: string;
 }>();
 
 const REASON_MAX_LENGTH = 500;
@@ -80,7 +81,7 @@ function submit() {
 <template>
     <AlertDialog v-model:open="open">
         <AlertDialogTrigger as-child>
-            <Button type="button" :variant="destructive ? 'destructive' : 'outline'">
+            <Button type="button" :variant="destructive ? 'destructive' : 'outline'" :data-testid="triggerTestId">
                 <slot name="trigger-icon" />{{ triggerLabel }}
             </Button>
         </AlertDialogTrigger>

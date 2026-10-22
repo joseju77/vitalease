@@ -1,3 +1,4 @@
+import type { HistoryChange, HistoryGroup, HistoryPage } from '@/types/history';
 /**
  * Types for the consultation dashboard and detail/form UI. These mirror the
  * JSON shapes returned by `App\Http\Controllers\DashboardController` and the
@@ -243,27 +244,10 @@ export interface PatientProfile {
 }
 
 /** One field change inside a history group; labels and enum values are already Spanish. */
-export interface ConsultationHistoryChange {
-    section: string;
-    item: string | null;
-    field: string;
-    old: string | number | boolean | null;
-    new: string | number | boolean | null;
-}
+export type ConsultationHistoryChange = HistoryChange;
 
 /** One save, void or restore of a consultation, as returned by the history endpoint. */
-export interface ConsultationHistoryGroup {
-    id: string;
-    event: 'created' | 'updated' | 'voided' | 'restored';
-    event_label: string;
-    occurred_at: string;
-    actor: { name: string } | null;
-    reason: string | null;
-    changes: ConsultationHistoryChange[];
-}
+export type ConsultationHistoryGroup = HistoryGroup<'created' | 'updated' | 'voided' | 'restored'>;
 
 /** A page of history groups, newest first; `next_cursor` is null on the last page. */
-export interface ConsultationHistoryPage {
-    data: ConsultationHistoryGroup[];
-    next_cursor: number | null;
-}
+export type ConsultationHistoryPage = HistoryPage<'created' | 'updated' | 'voided' | 'restored'>;

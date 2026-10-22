@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ClipboardList, History, Pencil, Plus, UserCheck, UserX } from '@lucide/vue';
+import { ClipboardList, Pencil, Plus } from '@lucide/vue';
 import {
     create as consultationCreate,
     show as consultationShow,
 } from '@/actions/App/Http/Controllers/MedicalConsultationController';
+import ChangeHistoryDialog from '@/components/history/ChangeHistoryDialog.vue';
+import DisablePatientDialog from '@/components/patients/DisablePatientDialog.vue';
+import EnablePatientDialog from '@/components/patients/EnablePatientDialog.vue';
 import DisabledPatientBanner from '@/components/patients/DisabledPatientBanner.vue';
 import PatientProfileSections from '@/components/patients/PatientProfileSections.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { history as patientHistory } from '@/actions/App/Http/Controllers/PatientController';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { usePatientFlashToast } from '@/composables/usePatientFlashToast';
 import { medicalClassificationLabel } from '@/lib/consultationLabels';
 import { formatDateTime } from '@/lib/formatDateTime';
 import { edit as patientEdit, index as patientsIndex } from '@/routes/patients';
@@ -20,11 +25,17 @@ import type { PatientAbilities, PatientDetail } from '@/types/patients';
 
 defineOptions({ layout: (h: any, page: any) => h(AppLayout, { title: 'Paciente' }, () => page) });
 
-defineProps<{
+const props = defineProps<{
     patient: PatientDetail;
     consultations: ConsultationListItem[];
     can: PatientAbilities;
 }>();
+
+usePatientFlashToast();
+
+function buildHistoryUrl(cursor: number | null): string {
+    return patientHistory.url(props.patient.uuid, cursor === null ? undefined : { query: { cursor } });
+}
 </script>
 
 <template>
@@ -50,15 +61,15 @@ defineProps<{
                 <Button v-if="can.update" variant="outline" as-child>
                     <Link :href="patientEdit(patient.uuid).url"><Pencil aria-hidden="true" />Editar</Link>
                 </Button>
-                <Button v-if="can.disable" type="button" variant="outline" data-testid="disable-patient">
-                    <UserX aria-hidden="true" />Deshabilitar
-                </Button>
-                <Button v-if="can.enable" type="button" variant="outline" data-testid="enable-patient">
-                    <UserCheck aria-hidden="true" />Habilitar
-                </Button>
-                <Button v-if="can.audit" type="button" variant="outline" data-testid="patient-history">
-                    <History aria-hidden="true" />Historial de cambios
-                </Button>
+                <DisablePatientDialog v-if="can.disable" :uuid="patient.uuid" :name="patient.full_name" />
+                <EnablePatientDialog v-if="can.enable" :uuid="patient.uuid" :name="patient.full_name" />
+                <ChangeHistoryDialog
+                    v-if="can.audit"
+                    :build-url="buildHistoryUrl"
+                    :description="`Registro de cambios de ${patient.full_name}.`"
+                    empty-message="Este paciente no tiene cambios registrados."
+                    trigger-test-id="patient-history"
+                />
                 <Button v-if="can.createConsultation && !patient.is_disabled" as-child>
                     <Link :href="consultationCreate.url({ query: { patient: patient.uuid } })">
                         <Plus aria-hidden="true" />Nueva consulta

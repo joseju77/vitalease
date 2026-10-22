@@ -9,6 +9,12 @@ import type { Neighborhood, PatientContactInformation } from '@/types/patients';
 
 const props = defineProps<{
     errors?: Partial<Record<string, string>>;
+    /**
+     * Neighborhoods of the prefilled zip code (edit page). They seed the
+     * select so the stored neighborhood is selectable before, and even
+     * without, the first lookup response.
+     */
+    initialNeighborhoods?: Neighborhood[];
 }>();
 
 const contactInformation = defineModel<PatientContactInformation>({ required: true });
@@ -22,7 +28,7 @@ const zipCode = computed<string>({
     },
 });
 
-const availableNeighborhoods = ref<Neighborhood[]>([]);
+const availableNeighborhoods = ref<Neighborhood[]>([...(props.initialNeighborhoods ?? [])]);
 const isLookupLoading = ref(false);
 const lookupFailed = ref(false);
 let lookupAbortController: AbortController | null = null;
@@ -41,7 +47,22 @@ function pruneNeighborhoodSelection() {
     }
 }
 
-async function lookupNeighborhoods(code: string) {
+/**
+ * A failed lookup empties the catalog and clears the selection, except for
+ * the prefilled lookup of the edit page: there the seeded neighborhoods and
+ * the stored selection stay valid.
+ */
+function registerLookupFailure(keepSelection: boolean) {
+    if (keepSelection && availableNeighborhoods.value.length > 0) {
+        return;
+    }
+
+    availableNeighborhoods.value = [];
+    lookupFailed.value = true;
+    pruneNeighborhoodSelection();
+}
+
+async function lookupNeighborhoods(code: string, keepSelectionOnFailure = false) {
     lookupAbortController?.abort();
     const controller = new AbortController();
     lookupAbortController = controller;
@@ -60,9 +81,7 @@ async function lookupNeighborhoods(code: string) {
         }
 
         if (!response.ok) {
-            availableNeighborhoods.value = [];
-            lookupFailed.value = true;
-            pruneNeighborhoodSelection();
+            registerLookupFailure(keepSelectionOnFailure);
             return;
         }
 
@@ -75,9 +94,7 @@ async function lookupNeighborhoods(code: string) {
             return;
         }
 
-        availableNeighborhoods.value = [];
-        lookupFailed.value = true;
-        pruneNeighborhoodSelection();
+        registerLookupFailure(keepSelectionOnFailure);
     } finally {
         if (!controller.signal.aborted) {
             isLookupLoading.value = false;
@@ -87,19 +104,39 @@ async function lookupNeighborhoods(code: string) {
 
 const debouncedLookup = useDebounceFn(lookupNeighborhoods, 300);
 
-watch(zipCode, (value) => {
-    if (!ZIP_CODE_PATTERN.test(value)) {
-        debouncedLookup.cancel();
-        lookupAbortController?.abort();
-        isLookupLoading.value = false;
-        lookupFailed.value = false;
-        availableNeighborhoods.value = [];
-        pruneNeighborhoodSelection();
-        return;
-    }
+/**
+ * `immediate`: a prefilled zip code (edit page) is looked up right on mount,
+ * without the typing debounce, so the stored neighborhood is selectable.
+ * An empty prefilled zip leaves the (empty) state untouched.
+ */
+watch(
+    zipCode,
+    (value, previous) => {
+        const isInitialRun = previous === undefined;
 
-    debouncedLookup(value);
-});
+        if (!ZIP_CODE_PATTERN.test(value)) {
+            if (isInitialRun) {
+                return;
+            }
+
+            debouncedLookup.cancel();
+            lookupAbortController?.abort();
+            isLookupLoading.value = false;
+            lookupFailed.value = false;
+            availableNeighborhoods.value = [];
+            pruneNeighborhoodSelection();
+            return;
+        }
+
+        if (isInitialRun) {
+            lookupNeighborhoods(value, true);
+            return;
+        }
+
+        debouncedLookup(value);
+    },
+    { immediate: true },
+);
 
 onBeforeUnmount(() => {
     debouncedLookup.cancel();
