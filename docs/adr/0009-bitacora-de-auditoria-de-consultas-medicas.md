@@ -1,6 +1,6 @@
 # ADR-0009: Bitácora de auditoría inmutable y anulación de las consultas médicas
 
-* Estado: Aceptada
+* Estado: Aceptada; el punto 3 fue ampliado por [ADR-0010](0010-gestion-deshabilitacion-y-auditoria-de-pacientes.md)
 
 ## Contexto
 
@@ -26,6 +26,10 @@ mostrarse como un único cambio, no como una fila por tabla.
    para las líneas de tratamiento, que tienen su propio identificador.
 3. **Qué no se audita.** El inventario ya tiene su propio libro de movimientos de solo inserción (ADR-0007), y los
    pacientes se auditarán en una etapa posterior. Las marcas de tiempo no se registran como valores cambiados.
+
+   > **Ampliado por ADR-0010.** La etapa posterior llegó: los pacientes y sus filas hijas se auditan con la etiqueta
+   > `patient:{id}` y la misma infraestructura (ver
+   > [ADR-0010](0010-gestion-deshabilitacion-y-auditoria-de-pacientes.md)).
 4. **Agrupación por lote.** Se agrega la columna `batch_id` (uuid, indexada) a `audits`. Un servicio singleton
    `App\Support\Auditing\AuditBatch` abre un lote por operación lógica (`within()`), y el resolvedor
    `BatchIdResolver`, registrado en `config/audit.php`, lo escribe en cada fila. Todas las auditorías de un guardado

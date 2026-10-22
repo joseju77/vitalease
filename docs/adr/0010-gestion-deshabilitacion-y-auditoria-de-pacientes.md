@@ -59,14 +59,16 @@ anónimo, de modo que también debe auditarse sin usuario autor.
    anterior y del nuevo en el momento de la lectura, y las marcas de tiempo y las columnas de estado no se registran como
    cambios. Deshabilitar y habilitar escriben un solo evento propio (`disabled`, `enabled`) con el motivo, sin copiar los
    atributos. El autorregistro se audita con usuario nulo y se presenta como "Autorregistro", conservando IP y agente de
-   usuario como en la Etapa 7.
+   usuario como en la Etapa 7. Los pacientes del sembrador base de demostración no se auditan; solo el historial curado
+   que se les agrega después a través de los servicios reales.
 9. **Valores en claro en la bitácora.** El NSS, los correos y los teléfonos se guardan sin enmascarar, porque la
    trazabilidad es el objetivo de la bitácora. La protección es de acceso: el historial solo lo ve quien tiene
    `patients.audit`, y los datos sensibles del perfil (NSS, correos y teléfonos) solo se envían a quien tiene
    `patients.view`, también en las páginas de consultas y en el resumen del tablero.
 10. **Historial generalizado.** El servicio de historial de la Etapa 7 se vuelve una plantilla reutilizable con ganchos
     por sujeto, de modo que consultas y pacientes comparten agrupación, paginación por cursor y el mismo diálogo de la
-    interfaz.
+    interfaz. El historial de pacientes oculta los cambios de nulo a nulo que produce un registro nuevo con campos
+    opcionales vacíos.
 11. **Permisos de pacientes (modifica el punto 1 de ADR-0005).** `patients.delete` se renombra a `patients.disable` y
     se agrega `patients.audit` al catálogo cerrado `App\Enums\Permission`; `patients.create` sigue definido y sin uso,
     porque el registro es público. `patients.update` pasa a aplicarse.
