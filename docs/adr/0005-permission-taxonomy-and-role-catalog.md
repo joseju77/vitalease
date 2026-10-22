@@ -1,7 +1,8 @@
 # ADR-0005: Taxonomía de permisos y catálogo de roles de la etapa de usuarios/roles/permisos
 
-* Estado: Aceptada; el punto 1 fue modificado por [ADR-0009](0009-bitacora-de-auditoria-de-consultas-medicas.md) y
-  [ADR-0010](0010-gestion-deshabilitacion-y-auditoria-de-pacientes.md)
+* Estado: Aceptada; el punto 1 fue modificado por [ADR-0009](0009-bitacora-de-auditoria-de-consultas-medicas.md),
+  [ADR-0010](0010-gestion-deshabilitacion-y-auditoria-de-pacientes.md) y
+  [ADR-0011](0011-dependencias-entre-permisos.md)
 
 ## Contexto
 
@@ -26,6 +27,10 @@ cambios como decisiones propias de esta etapa — no como una revisión de ADR-0
 
    > **Modificado por ADR-0010.** Para `patients`, `delete` se reemplazó por `disable` (deshabilitar y volver a
    > habilitar) y se agregó `audit` (historial de cambios). Ningún paciente se elimina físicamente.
+
+   > **Modificado por ADR-0011.** Los permisos ya no son independientes: `Permission::requires()` declara de qué
+   > permisos depende cada uno (por ejemplo, `consultations.view` requiere `patients.view`), y una asignación que deja
+   > una dependencia sin cubrir se rechaza con 422.
 
 2. **Un solo rol sembrado, `super-admin`, en vez de `admin` y `staff`.** El plan original sembraba dos roles. El dueño
    del producto descartó `staff` y renombró el rol restante a `super-admin`. Un usuario que no sea

@@ -13,8 +13,23 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
+import {
+    Field,
+    FieldContent,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+    FieldLegend,
+    FieldSet,
+} from '@/components/ui/field';
 import TextField from '@/components/form/TextField.vue';
+import {
+    grantPermission,
+    permissionRequirementHint,
+    revokePermission,
+    type PermissionDependencyMap,
+} from '@/lib/permissionDependencies';
 import { groupPermissionsByResource, permissionActionLabel } from '@/lib/permissionLabels';
 
 interface EditableRole {
@@ -26,6 +41,7 @@ interface EditableRole {
 const props = defineProps<{
     mode: 'create' | 'edit';
     permissionCatalog: string[];
+    permissionDependencies: PermissionDependencyMap;
     role?: EditableRole;
 }>();
 
@@ -71,15 +87,20 @@ function isPermissionChecked(permission: string): boolean {
     return form.permissions.includes(permission);
 }
 
+/**
+ * Checking a permission also checks everything it requires; unchecking one
+ * also unchecks everything that requires it (see `permissionDependencies.ts`).
+ */
 function togglePermission(permission: string, checked: boolean) {
-    if (checked) {
-        if (!form.permissions.includes(permission)) {
-            form.permissions = [...form.permissions, permission];
-        }
-        return;
-    }
+    const options = { catalog: props.permissionCatalog, dependencies: props.permissionDependencies };
 
-    form.permissions = form.permissions.filter((current) => current !== permission);
+    form.permissions = checked
+        ? grantPermission(form.permissions, permission, options)
+        : revokePermission(form.permissions, permission, options);
+}
+
+function requirementHint(permission: string): string | null {
+    return permissionRequirementHint(permission, props.permissionDependencies);
 }
 
 function submit() {
@@ -141,12 +162,19 @@ function submit() {
                                 :model-value="isPermissionChecked(permission)"
                                 @update:model-value="(value) => togglePermission(permission, value === true)"
                             />
-                            <FieldLabel :for="`role-permission-${permission}`">
-                                {{ permissionLabel(permission) }}
-                            </FieldLabel>
+                            <FieldContent>
+                                <FieldLabel :for="`role-permission-${permission}`">
+                                    {{ permissionLabel(permission) }}
+                                </FieldLabel>
+                                <FieldDescription v-if="requirementHint(permission)" class="text-xs">
+                                    {{ requirementHint(permission) }}
+                                </FieldDescription>
+                            </FieldContent>
                         </Field>
                     </FieldGroup>
                 </FieldSet>
+
+                <FieldError :errors="form.errors.permissions ? [{ message: form.errors.permissions }] : undefined" />
 
                 <DialogFooter>
                     <Button type="button" variant="outline" @click="open = false">Cancelar</Button>

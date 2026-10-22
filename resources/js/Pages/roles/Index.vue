@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import RoleFormDialog from '@/components/roles/RoleFormDialog.vue';
+import type { PermissionDependencyMap } from '@/lib/permissionDependencies';
 import { formatPermissionLabel } from '@/lib/permissionLabels';
 
 defineOptions({
@@ -32,6 +33,7 @@ interface ManagedRole {
 const props = defineProps<{
     roles: ManagedRole[];
     permissionCatalog: string[];
+    permissionDependencies: PermissionDependencyMap;
 }>();
 
 /**
@@ -130,7 +132,12 @@ function performDelete() {
         </Table>
     </div>
 
-    <RoleFormDialog v-model:open="createOpen" mode="create" :permission-catalog="props.permissionCatalog" />
+    <RoleFormDialog
+        v-model:open="createOpen"
+        mode="create"
+        :permission-catalog="props.permissionCatalog"
+        :permission-dependencies="props.permissionDependencies"
+    />
     <RoleFormDialog
         v-if="editingRole"
         :key="`role-${editingRole.id}`"
@@ -138,6 +145,7 @@ function performDelete() {
         mode="edit"
         :role="editingRole"
         :permission-catalog="props.permissionCatalog"
+        :permission-dependencies="props.permissionDependencies"
     />
 
     <AlertDialog v-model:open="deleteOpen">

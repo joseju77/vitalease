@@ -19,7 +19,8 @@ class UserController extends Controller
      * Display a paginated list of users, alongside the role/permission
      * catalogs and each user's current roles and direct permissions, so
      * the authorization assignment dialog can pre-fill without an extra
-     * request per row.
+     * request per row. `rolePermissions` lets that dialog treat permissions
+     * granted by the selected role as satisfied dependencies.
      */
     public function index(): Response
     {
@@ -48,6 +49,12 @@ class UserController extends Controller
             'roleCatalog' => Role::query()->pluck('name'),
             'permissionCatalog' => Permission::values(),
             'permissionDependencies' => Permission::dependencyMap(),
+            'rolePermissions' => Role::query()
+                ->with('permissions:name')
+                ->get()
+                ->mapWithKeys(fn (Role $role): array => [
+                    $role->name => $role->permissions->pluck('name')->all(),
+                ]),
         ]);
     }
 

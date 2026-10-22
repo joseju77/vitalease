@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableR
 import UserAuthorizationDialog from '@/components/users/UserAuthorizationDialog.vue';
 import UserFormDialog from '@/components/users/UserFormDialog.vue';
 import { formatDateTime } from '@/lib/formatDateTime';
+import type { PermissionDependencyMap } from '@/lib/permissionDependencies';
 
 defineOptions({
     layout: (h: any, page: any) => h(AppLayout, { title: 'Usuarios' }, () => page),
@@ -36,6 +37,8 @@ defineProps<{
     };
     roleCatalog: string[];
     permissionCatalog: string[];
+    permissionDependencies: PermissionDependencyMap;
+    rolePermissions: Record<string, string[]>;
 }>();
 
 const createOpen = ref(false);
@@ -147,5 +150,7 @@ function manageAuthorization(user: ManagedUser) {
         :user="authorizingUser"
         :role-catalog="roleCatalog"
         :permission-catalog="permissionCatalog"
+        :permission-dependencies="permissionDependencies"
+        :role-permissions="rolePermissions"
     />
 </template>

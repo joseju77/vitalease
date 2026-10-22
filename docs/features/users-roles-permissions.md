@@ -33,7 +33,7 @@ permiso fuera de este enum se rechaza en la validación (`Rule::enum`):
 | `inventory.update`      | Editar medicamentos y registrar ajustes.     |
 | `inventory.delete`      | Eliminar medicamentos sin movimientos.       |
 
-`inventory` usa granularidad CRUD (cuatro permisos independientes) en vez de un único permiso `*.manage` por módulo.
+`inventory` usa granularidad CRUD (cuatro permisos) en vez de un único permiso `*.manage` por módulo.
 `patients` conserva ver, crear y editar, pero **no tiene permiso de eliminación**: un paciente nunca se borra, se
 deshabilita (`patients.disable`, que también lo vuelve a habilitar) y `patients.audit` da acceso a su historial de
 cambios. El antiguo permiso `patients.delete` se renombró a `patients.disable`. `patients.create` sigue definido pero
@@ -47,6 +47,26 @@ médico (`consultations.void-any`), ver las anuladas (`consultations.view-voided
 `roles.manage` y `reports.generate` son permisos únicos, sin granularidad adicional. El seeder
 (`RolePermissionSeeder`) crea los 19 permisos a partir de `Permission::cases()`, así que el enum es siempre la fuente de
 verdad — nunca se comparan cadenas sueltas.
+
+### Dependencias entre permisos
+
+Algunos permisos solo tienen sentido junto con otros. `Permission::requires()` declara las dependencias directas (ver
+[ADR-0011](../adr/0011-dependencias-entre-permisos.md)):
+
+| Permiso | Requiere |
+|---------|----------|
+| `patients.create`, `patients.update`, `patients.disable`, `patients.audit` | `patients.view` |
+| `consultations.view` | `patients.view` |
+| `consultations.create`, `consultations.update`, `consultations.void`, `consultations.view-voided`, `consultations.audit` | `consultations.view` |
+| `consultations.void-any` | `consultations.void` |
+| `inventory.create`, `inventory.update`, `inventory.delete` | `inventory.view` |
+
+Las dependencias son transitivas: `consultations.void-any` también requiere `consultations.view` y `patients.view`.
+
+- **Al asignar.** Crear o editar un rol, o asignar permisos a un usuario, responde 422 con un error en `permissions`
+  por cada dependencia faltante. El servidor no agrega permisos por su cuenta.
+- **Usuarios.** Una dependencia queda cubierta por un permiso directo o por un permiso del rol asignado.
+- **Políticas.** No cambian: cada una sigue comprobando un solo permiso.
 
 ## Catálogo de roles
 
@@ -76,10 +96,10 @@ bypass registrado en `AppServiceProvider`; renombrarlo o borrarlo rompería ese 
 |------------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
 | `Médico`               | `consultations.view`, `consultations.create`, `consultations.update`, `consultations.void`, `patients.view`, `patients.update` | `medico.demo@vitalease.test`                                  |
 | `Administrador`        | `users.manage`, `roles.manage`                                                                                        | `administrador@vitalease.test`                                |
-| `Coordinación médica`  | `consultations.view`, `consultations.view-voided`, `consultations.void-any`, `consultations.audit`, `patients.view`, `patients.update`, `patients.disable`, `patients.audit` | `coordinacion@vitalease.test` |
+| `Coordinación médica`  | `consultations.view`, `consultations.view-voided`, `consultations.void`, `consultations.void-any`, `consultations.audit`, `patients.view`, `patients.update`, `patients.disable`, `patients.audit` | `coordinacion@vitalease.test` |
 
 Coordinación médica puede ver y anular o restaurar cualquier consulta y leer su historial, pero no crearlas ni
-editarlas. El Médico solo anula y restaura las suyas y no ve el historial de cambios. En pacientes, el Médico busca,
+editarlas; tiene `consultations.void` porque `consultations.void-any` lo requiere. El Médico solo anula y restaura las suyas y no ve el historial de cambios. En pacientes, el Médico busca,
 ve y edita; Coordinación médica además deshabilita, vuelve a habilitar y lee el historial de cambios (ver
 [gestión de pacientes](patient-management.md)). El usuario `super-admin` es
 `superadmin@vitalease.test`.
@@ -130,6 +150,15 @@ login solo ocurre para un usuario sin autenticar (`auth` middleware).
 
 - Las páginas de usuarios y roles usan diálogos de shadcn-vue para crear/editar (formulario de usuario, asignación de
   roles/permisos, formulario de rol) y confirmación de eliminación.
+- En los diálogos de rol y de permisos de usuario, marcar un permiso marca también sus requisitos y desmarcar uno
+  desmarca todo lo que depende de él. Cada permiso con requisitos muestra una indicación como «Requiere: Pacientes:
+  Ver». La lógica es compartida (`resources/js/lib/permissionDependencies.ts`) y usa la prop `permissionDependencies`.
+- En el diálogo de permisos de usuario, los permisos del rol seleccionado (prop `rolePermissions`) cuentan como
+  requisitos cubiertos: no se marcan como permisos directos y la indicación los señala como «incluido en el rol». Al
+  desmarcar, la cascada solo retira permisos directos que se quedan sin requisito. Cambiar el rol no reajusta los
+  permisos directos.
+- Si el servidor rechaza la asignación por una dependencia faltante, ambos diálogos muestran el error debajo de los
+  permisos.
 - La barra lateral (`AppSidebar`) muestra la navegación de "Usuarios" y "Roles" solo si el usuario tiene el permiso
   correspondiente.
 - Las notificaciones de éxito/error usan Sonner.

@@ -30,6 +30,22 @@ describe('listing users', function () {
             ->where('permissionDependencies', Permission::dependencyMap())
         );
     });
+
+    it('shares the permissions granted by each role', function () {
+        $admin = User::factory()->superAdmin()->create();
+        PermissionModel::findOrCreate(Permission::PatientsView->value, 'web');
+        Role::create(['name' => 'reception', 'guard_name' => 'web'])
+            ->givePermissionTo(Permission::PatientsView->value);
+        Role::create(['name' => 'auditor', 'guard_name' => 'web']);
+
+        $response = $this->actingAs($admin)->get(route('users.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->component('users/Index', false)
+            ->where('rolePermissions.reception', [Permission::PatientsView->value])
+            ->where('rolePermissions.auditor', [])
+        );
+    });
 });
 
 describe('creating users', function () {

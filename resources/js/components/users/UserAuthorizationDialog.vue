@@ -13,8 +13,23 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
+import {
+    Field,
+    FieldContent,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+    FieldLegend,
+    FieldSet,
+} from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    grantPermission,
+    permissionRequirementHint,
+    revokePermission,
+    type PermissionDependencyMap,
+} from '@/lib/permissionDependencies';
 import { groupPermissionsByResource, permissionActionLabel } from '@/lib/permissionLabels';
 
 /** Sentinel value for "no role assigned" in the single-select trigger. */
@@ -31,6 +46,9 @@ const props = defineProps<{
     user: AuthorizableUser;
     roleCatalog: string[];
     permissionCatalog: string[];
+    permissionDependencies: PermissionDependencyMap;
+    /** Permissions granted by each role, keyed by role name. */
+    rolePermissions: Record<string, string[]>;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -78,15 +96,32 @@ function isPermissionChecked(permission: string): boolean {
     return form.permissions.includes(permission);
 }
 
-function togglePermission(permission: string, checked: boolean) {
-    if (checked) {
-        if (!form.permissions.includes(permission)) {
-            form.permissions = [...form.permissions, permission];
-        }
-        return;
-    }
+/**
+ * Permissions the currently selected role already grants. They satisfy a
+ * direct permission's requirements, mirroring the server-side check in
+ * `UpdateUserAuthorizationRequest`.
+ */
+const roleGrantedPermissions = computed(() => form.roles.flatMap((role) => props.rolePermissions[role] ?? []));
 
-    form.permissions = form.permissions.filter((current) => current !== permission);
+/**
+ * Checking a permission also checks every requirement the selected role does
+ * not already grant; unchecking one also unchecks the direct permissions left
+ * without a requirement (see `permissionDependencies.ts`).
+ */
+function togglePermission(permission: string, checked: boolean) {
+    const options = {
+        catalog: props.permissionCatalog,
+        dependencies: props.permissionDependencies,
+        satisfied: roleGrantedPermissions.value,
+    };
+
+    form.permissions = checked
+        ? grantPermission(form.permissions, permission, options)
+        : revokePermission(form.permissions, permission, options);
+}
+
+function requirementHint(permission: string): string | null {
+    return permissionRequirementHint(permission, props.permissionDependencies, roleGrantedPermissions.value);
 }
 
 function submit() {
@@ -135,12 +170,19 @@ function submit() {
                                 :model-value="isPermissionChecked(permission)"
                                 @update:model-value="(value) => togglePermission(permission, value === true)"
                             />
-                            <FieldLabel :for="`permission-${permission}`">
-                                {{ permissionLabel(permission) }}
-                            </FieldLabel>
+                            <FieldContent>
+                                <FieldLabel :for="`permission-${permission}`">
+                                    {{ permissionLabel(permission) }}
+                                </FieldLabel>
+                                <FieldDescription v-if="requirementHint(permission)" class="text-xs">
+                                    {{ requirementHint(permission) }}
+                                </FieldDescription>
+                            </FieldContent>
                         </Field>
                     </FieldGroup>
                 </FieldSet>
+
+                <FieldError :errors="form.errors.permissions ? [{ message: form.errors.permissions }] : undefined" />
 
                 <DialogFooter>
                     <Button type="button" variant="outline" @click="open = false">Cancelar</Button>
