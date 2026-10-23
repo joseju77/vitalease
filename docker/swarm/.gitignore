@@ -1,0 +1,3 @@
+# Real environment and secret material never gets committed; only *.example files do.
+swarm.env
+secrets/

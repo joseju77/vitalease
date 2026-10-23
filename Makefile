@@ -89,3 +89,6 @@ test-all: test test-frontend ## Run both backend and frontend test suites
 # --- Demo data ---
 seed-demo: ## Seed realistic demo users, patients and consultations for local demonstrations (fresh DB only; counts via `php artisan demo:seed --users= --patients= --consultations=`)
 	@docker compose exec -T -u www-data laravel php artisan demo:seed
+
+# --- Single-node Swarm stack (production) ---
+include docker/swarm/swarm.mk
