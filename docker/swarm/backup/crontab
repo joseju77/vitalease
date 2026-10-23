@@ -1,0 +1,2 @@
+# Daily dump at 09:00 UTC (03:00 in UTC-06:00). Output goes to the container log.
+0 9 * * * /usr/local/bin/backup.sh >/proc/1/fd/1 2>/proc/1/fd/2

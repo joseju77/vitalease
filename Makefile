@@ -92,3 +92,4 @@ seed-demo: ## Seed realistic demo users, patients and consultations for local de
 
 # --- Single-node Swarm stack (production) ---
 include docker/swarm/swarm.mk
+include docker/swarm/backup.mk
