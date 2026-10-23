@@ -39,9 +39,11 @@ x-stop-first-rollback: &stop-first-rollback
 # Non-secret application environment shared by every PHP role. Secrets arrive
 # through the *_FILE variables, which the image entrypoint maps to plain env vars.
 x-app-env: &app-env
-    APP_NAME: ${APP_NAME:-Vitalease}
+    APP_NAME: ${APP_NAME:-VitalEase}
     APP_ENV: ${APP_ENV:-production}
     APP_DEBUG: ${APP_DEBUG:-false}
+    # Only lang/es exists; without it Laravel falls back to "en" and returns raw keys.
+    APP_LOCALE: ${APP_LOCALE:-es}
     APP_URL: ${APP_URL:?set APP_URL in docker/swarm/swarm.env}
     LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
     LOG_LEVEL: ${LOG_LEVEL:-info}
