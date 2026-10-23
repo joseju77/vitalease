@@ -49,6 +49,40 @@ wait_replicas() {
     return 1
 }
 
+# IDs of the tasks of a service currently in the running state.
+running_tasks() {
+    docker service ps --filter desired-state=running --format '{{.ID}} {{.CurrentState}}' "${stack}_$1" \
+        | awk '$2 == "Running" { print $1 }' | sort
+}
+
+# Waits until a task that was not in the given list is running and every desired
+# replica is up again; returns non-zero on timeout.
+wait_replacement() {
+    service="$1"
+    before="$2"
+    waited=0
+    while [ "$waited" -lt "$recovery_timeout" ]; do
+        new_tasks="$(running_tasks "$service" | while read -r task; do
+            printf '%s\n' "$before" | grep -qx "$task" || echo "$task"
+        done)"
+        if [ -n "$new_tasks" ] && wait_replicas_once "$service"; then
+            return 0
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+    return 1
+}
+
+# Single (non-blocking) check that every desired replica of a service is running.
+wait_replicas_once() {
+    replicas="$(docker service ls --filter "name=${stack}_$1" --format '{{.Replicas}}' | head -n 1)"
+    running="${replicas%%/*}"
+    desired="${replicas#*/}"
+    desired="${desired%% *}"
+    [ -n "$running" ] && [ "$running" = "$desired" ] && [ "$desired" != "0" ]
+}
+
 scale() {
     service="$1"
     count="$2"
@@ -63,9 +97,12 @@ case "$action" in
             echo "inject: no running app task found" >&2
             exit 1
         fi
+        before="$(running_tasks app)"
         log_event kill_app "container ${container}"
         docker kill "$container" > /dev/null
-        if wait_replicas app; then log_event recovered app; else log_event recovery_timeout app; fi
+        # Right after the kill the service still reports every replica running, so
+        # recovery means a task that did not exist before is running again.
+        if wait_replacement app "$before"; then log_event recovered app; else log_event recovery_timeout app; fi
         ;;
     meilisearch-0 | redis-0 | postgres-0)
         scale "${action%-0}" 0

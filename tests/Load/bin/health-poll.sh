@@ -44,12 +44,15 @@ while :; do
         # busybox wget -S prints the response headers to stderr; on an HTTP error
         # (503 when a critical dependency is down) it prints no body, so the status
         # line is the source of truth and the body is only parsed on success.
+        # stdout and stderr interleave: the body has no trailing newline, so the
+        # status line can be glued to its end, and the overall status is the
+        # first "status" key of the body, never a nested check's.
         response="$(docker exec "$nginx_container" wget -S -q -T 3 -O - http://127.0.0.1:8081/health 2>&1 || true)"
-        health_status="$(printf '%s' "$response" | sed -n 's/^ *HTTP\/[0-9.]* \([0-9][0-9]*\).*/\1/p' | tail -n 1)"
+        health_status="$(printf '%s' "$response" | sed -n 's/.*HTTP\/[0-9.]* \([0-9][0-9]*\).*/\1/p' | tail -n 1)"
         health_status="${health_status:-000}"
 
         case "$health_status" in
-            200) health_overall="$(printf '%s' "$response" | sed -n 's/.*{"status":"\([a-z]*\)".*/\1/p' | head -n 1)" ;;
+            200) health_overall="$(printf '%s' "$response" | sed -n 's/^ *{"status":"\([a-z]*\)".*/\1/p' | head -n 1)" ;;
             503) health_overall=down ;;
             *) health_overall=unreachable ;;
         esac
