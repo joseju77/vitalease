@@ -25,12 +25,13 @@ class DemoSeeder extends Seeder
      * Not idempotent by design: run once against a fresh database, after
      * the catalog seeders (RolePermissionSeeder, LocationSeeder,
      * FamilyMedicalUnitSeeder, EnrollmentSeeder). See `php artisan demo:seed`.
+     * `$force` bypasses the production guard (the other guards still apply).
      *
      * @throws RuntimeException
      */
-    public function run(int $users = 8, int $patients = 80, int $consultations = 600): void
+    public function run(int $users = 8, int $patients = 80, int $consultations = 600, bool $force = false): void
     {
-        $this->guardAgainstUnsafeRun();
+        $this->guardAgainstUnsafeRun($force);
 
         $this->call(DemoUserSeeder::class, parameters: ['users' => $users]);
         $this->call(DemoPatientSeeder::class, parameters: ['count' => $patients]);
@@ -49,15 +50,15 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * Refuse to seed demo data in production, before the required catalogs
+     * Refuse to seed demo data in production (unless forced), before the required catalogs
      * exist, or when the demo data already appears to be seeded.
      *
      * @throws RuntimeException
      */
-    private function guardAgainstUnsafeRun(): void
+    private function guardAgainstUnsafeRun(bool $force): void
     {
-        if (app()->isProduction()) {
-            throw new RuntimeException('Demo data seeding is not allowed in production.');
+        if (app()->isProduction() && ! $force) {
+            throw new RuntimeException('Demo data seeding is not allowed in production without --force.');
         }
 
         if (Role::where('name', 'super-admin')->where('guard_name', 'web')->doesntExist()) {
