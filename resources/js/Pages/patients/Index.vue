@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
 import { onBeforeUnmount, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
+import SearchDegradedNotice from '@/components/search/SearchDegradedNotice.vue';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { index as patientsIndex, show as patientShow } from '@/routes/patients';
+import type { AppPageProps } from '@/types';
 import type { Paginator } from '@/types/inventory';
 import type { PatientIndexFilters, PatientIndexRow, PatientStatusFilter } from '@/types/patients';
 
@@ -19,6 +21,8 @@ const props = defineProps<{
     patients: Paginator<PatientIndexRow>;
     filters: PatientIndexFilters;
 }>();
+
+const page = usePage<AppPageProps>();
 
 const STATUS_OPTIONS: { value: PatientStatusFilter; label: string }[] = [
     { value: 'active', label: 'Activos' },
@@ -79,6 +83,8 @@ onBeforeUnmount(() => {
                 </NativeSelectOption>
             </NativeSelect>
         </div>
+
+        <SearchDegradedNotice v-if="page.props?.search_degraded" />
 
         <Table>
             <TableHeader>

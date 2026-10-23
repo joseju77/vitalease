@@ -24,6 +24,8 @@ use App\Support\ConsultationListItem;
 use App\Support\PatientAbilities;
 use App\Support\Patients\PatientEditPayload;
 use App\Support\Patients\PatientProfile;
+use App\Support\Search\ResilientSearch;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
@@ -42,14 +44,15 @@ class PatientController extends Controller
     /**
      * Display a paginated, searchable patient list.
      *
-     * Free-text search runs through Scout (`Patient::search()`); without a
-     * query the list is read directly from Postgres. The status filter
+     * Free-text search runs through Scout (`Patient::search()`) and falls back
+     * to a case-insensitive Postgres match when the engine is unavailable;
+     * without a query the list is read directly from Postgres. The status filter
      * (`active` by default, `disabled`, `all`) applies on both paths on the
      * stored `is_disabled` column, so the Meilisearch engine and the
      * `collection` driver used in tests behave the same. Rows carry only
      * identifying fields: never the social security number, emails or phones.
      */
-    public function index(Request $request): Response
+    public function index(Request $request, ResilientSearch $search): Response
     {
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
@@ -64,21 +67,27 @@ class PatientController extends Controller
             default => null,
         };
 
-        if ($query !== '') {
-            $patients = Patient::search($query)
-                ->when($disabled !== null, fn (ScoutBuilder $builder) => $builder->where('is_disabled', $disabled))
-                ->orderBy('last_name')
-                ->paginate(15)
-                ->withQueryString();
-        } else {
-            $patients = Patient::query()
-                ->when($disabled !== null, fn (Builder $builder) => $builder->where('is_disabled', $disabled))
-                ->orderBy('last_name')
-                ->orderBy('first_name')
-                ->orderBy('id')
-                ->paginate(15)
-                ->withQueryString();
-        }
+        $databaseQuery = fn (?string $text): LengthAwarePaginator => Patient::query()
+            ->when($text !== null, fn (Builder $builder) => $builder->matchingText($text))
+            ->when($disabled !== null, fn (Builder $builder) => $builder->where('is_disabled', $disabled))
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->orderBy('id')
+            ->paginate(15)
+            ->withQueryString();
+
+        $patients = $query === ''
+            ? $databaseQuery(null)
+            : $search->run(
+                'patients',
+                fn (): LengthAwarePaginator => Patient::search($query)
+                    ->when($disabled !== null, fn (ScoutBuilder $builder) => $builder->where('is_disabled', $disabled))
+                    ->orderBy('last_name')
+                    ->orderBy('first_name')
+                    ->paginate(15)
+                    ->withQueryString(),
+                fn (): LengthAwarePaginator => $databaseQuery($query),
+            );
 
         $patients->getCollection()->load('enrollment');
 

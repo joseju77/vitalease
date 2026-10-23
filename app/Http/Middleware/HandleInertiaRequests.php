@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Search\SearchDegradation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -44,6 +45,9 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => $user ? $user->getAllPermissions()->pluck('name')->values()->all() : [],
                 'is_super_admin' => (bool) $user?->hasRole('super-admin'),
             ],
+            // Lazy: resolved when the page renders, after the controller has
+            // had the chance to fall back to the database.
+            'search_degraded' => fn (): bool => app(SearchDegradation::class)->isDegraded(),
         ];
     }
 }

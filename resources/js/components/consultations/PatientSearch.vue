@@ -4,6 +4,7 @@ import { Search } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { searchPatients as searchPatientsAction } from '@/actions/App/Http/Controllers/DashboardController';
 import SearchResultsField from '@/components/form/SearchResultsField.vue';
+import SearchDegradedNotice from '@/components/search/SearchDegradedNotice.vue';
 import type { PatientSearchResult } from '@/types/consultations';
 
 const MIN_QUERY_LENGTH = 1;
@@ -17,6 +18,8 @@ const query = ref('');
 const results = ref<PatientSearchResult[]>([]);
 const isLoading = ref(false);
 const hasSearched = ref(false);
+/** Set from the `X-Search-Degraded` response header when the server fell back to the database. */
+const isDegraded = ref(false);
 let abortController: AbortController | null = null;
 
 function fullName(patient: PatientSearchResult): string {
@@ -52,8 +55,11 @@ async function runSearch(term: string) {
 
         if (!response.ok) {
             results.value = [];
+            isDegraded.value = false;
             return;
         }
+
+        isDegraded.value = response.headers?.get('X-Search-Degraded') === '1';
 
         const matches = (await response.json()) as PatientSearchResult[];
         if (controller.signal.aborted) {
@@ -83,6 +89,7 @@ watch(query, (value) => {
     abortController?.abort();
     isLoading.value = false;
     hasSearched.value = false;
+    isDegraded.value = false;
     results.value = [];
 
     if (term.length < MIN_QUERY_LENGTH) {
@@ -109,21 +116,24 @@ function select(value: string) {
 </script>
 
 <template>
-    <SearchResultsField
-        v-model="query"
-        label="Paciente"
-        placeholder="Buscar paciente por nombre o número de inscripción..."
-        empty-message="No se encontraron pacientes."
-        loading-message="Buscando pacientes..."
-        :options="options"
-        :loading="isLoading"
-        :searched="hasSearched"
-        :min-query-length="MIN_QUERY_LENGTH"
-        input-class="h-10 bg-background shadow-xs dark:bg-input/30"
-        @select="select"
-    >
-        <template #leading>
-            <Search />
-        </template>
-    </SearchResultsField>
+    <div class="space-y-2">
+        <SearchResultsField
+            v-model="query"
+            label="Paciente"
+            placeholder="Buscar paciente por nombre o número de inscripción..."
+            empty-message="No se encontraron pacientes."
+            loading-message="Buscando pacientes..."
+            :options="options"
+            :loading="isLoading"
+            :searched="hasSearched"
+            :min-query-length="MIN_QUERY_LENGTH"
+            input-class="h-10 bg-background shadow-xs dark:bg-input/30"
+            @select="select"
+        >
+            <template #leading>
+                <Search />
+            </template>
+        </SearchResultsField>
+        <SearchDegradedNotice v-if="isDegraded" />
+    </div>
 </template>

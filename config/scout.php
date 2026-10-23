@@ -62,6 +62,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Queued indexing job options
+    |--------------------------------------------------------------------------
+    |
+    | Retry budget for the queued MakeSearchable / RemoveFromSearch jobs. The
+    | default window (about 49 minutes) lets workers catch up after a short
+    | Meilisearch outage; beyond it jobs land in `failed_jobs` and the index is
+    | rebuilt with `scout:import`. Only used when `SCOUT_QUEUE` is enabled.
+    |
+    */
+
+    'jobs' => [
+        'tries' => (int) env('SCOUT_JOB_TRIES', 15),
+        'backoff' => [5, 15, 30, 60, 120, 300],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Chunk Sizes
     |--------------------------------------------------------------------------
     |
@@ -142,6 +159,11 @@ return [
     'meilisearch' => [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
+        // Finite HTTP timeouts in seconds. Web requests keep them short so a
+        // hung engine falls back to the database quickly; workers and CLI
+        // override them with longer values through the environment.
+        'connect_timeout' => (float) env('MEILISEARCH_CONNECT_TIMEOUT', 1),
+        'timeout' => (float) env('MEILISEARCH_TIMEOUT', 3),
         'index-settings' => [
             Patient::class => [
                 'searchableAttributes' => [
@@ -151,7 +173,7 @@ return [
                     'enrollment_number',
                 ],
                 'filterableAttributes' => ['is_disabled'],
-                'sortableAttributes' => [],
+                'sortableAttributes' => ['last_name', 'first_name'],
             ],
             Medication::class => [
                 'searchableAttributes' => [

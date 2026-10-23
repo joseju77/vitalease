@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel } from '@/components/ui/field';
+import SearchDegradedNotice from '@/components/search/SearchDegradedNotice.vue';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import MedicationActionDialog from '@/components/inventory/MedicationActionDialog.vue';
@@ -14,6 +15,7 @@ import MedicationFormDialog from '@/components/inventory/MedicationFormDialog.vu
 import { useMedicationFlashToast } from '@/composables/useMedicationFlashToast';
 import { usePermissions } from '@/composables/usePermissions';
 import { activate as activateMedication, index as inventoryIndex, show as inventoryShow } from '@/routes/inventory';
+import type { AppPageProps } from '@/types';
 import type { InventoryFilters, Medication, Paginator } from '@/types/inventory';
 
 defineOptions({
@@ -28,6 +30,7 @@ const props = defineProps<{
 useMedicationFlashToast();
 
 const { can } = usePermissions();
+const page = usePage<AppPageProps>();
 
 const search = ref(props.filters.q ?? '');
 const lowStockOnly = ref(props.filters.low_stock);
@@ -136,6 +139,8 @@ onBeforeUnmount(() => {
                 <FieldLabel for="inventory-low-stock-filter">Solo stock bajo</FieldLabel>
             </Field>
         </div>
+
+        <SearchDegradedNotice v-if="page.props?.search_degraded" />
 
         <Table>
             <TableHeader>

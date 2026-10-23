@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Support\Search\TextTokens;
 use Database\Factories\MedicationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -65,6 +68,27 @@ class Medication extends Model
     public function auditLabel(): string
     {
         return trim(implode(' ', array_filter([$this->name, $this->presentation, $this->concentration])));
+    }
+
+    /**
+     * Database fallback for the Scout search: every token (at most five) must
+     * match, case-insensitively, at least one of the indexed fields. No typo
+     * tolerance and no accent folding, unlike the search engine.
+     *
+     * @param  Builder<Medication>  $query
+     */
+    #[Scope]
+    protected function matchingText(Builder $query, string $text): void
+    {
+        foreach (TextTokens::from($text) as $token) {
+            $pattern = TextTokens::containsPattern($token);
+
+            $query->where(function (Builder $query) use ($pattern): void {
+                foreach (['name', 'presentation', 'concentration'] as $column) {
+                    $query->orWhere($column, 'ilike', $pattern);
+                }
+            });
+        }
     }
 
     /**
