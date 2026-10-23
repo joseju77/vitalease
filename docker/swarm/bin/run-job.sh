@@ -4,7 +4,9 @@
 # removes it and exits non-zero when the job failed.
 #
 # Usage: run-job.sh <job-name> <command> [args...]
-# Env:   STACK (default vitalease), JOB_TIMEOUT seconds (default 7200)
+# Env:   STACK (default vitalease), JOB_TIMEOUT seconds (default 7200),
+#        JOB_IMAGE_REPO (optional: run this repository with the app service's tag,
+#        e.g. vitalease/seeder, so the job always matches the deployed release)
 set -eu
 
 if [ "$#" -lt 2 ]; then
@@ -37,6 +39,9 @@ docker service inspect \
 
 image="$(docker service inspect --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' "$app_service")"
 image="${image%%@*}"
+if [ -n "${JOB_IMAGE_REPO:-}" ]; then
+    image="${JOB_IMAGE_REPO}:${image##*:}"
+fi
 
 docker service inspect \
     --format '{{range .Spec.TaskTemplate.ContainerSpec.Secrets}}{{.SecretName}} {{.File.Name}}{{println}}{{end}}' \

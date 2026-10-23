@@ -9,6 +9,7 @@ use App\Support\Health\RedisCheck;
 use App\Support\Health\SchedulerCheck;
 use App\Support\Health\SchedulerHeartbeat;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -142,6 +143,12 @@ it('marks the scheduler up after a heartbeat and down once the heartbeat is stal
 
     $this->travel(181)->seconds();
     expect(fn () => app(SchedulerCheck::class)->run())->toThrow(RuntimeException::class);
+});
+
+it('accepts a heartbeat read back as a numeric string, as the redis cache store returns it', function () {
+    Cache::put(SchedulerHeartbeat::CACHE_KEY, (string) now()->getTimestamp(), SchedulerHeartbeat::TTL_SECONDS);
+
+    expect(app(SchedulerCheck::class)->run()->up)->toBeTrue();
 });
 
 it('schedules failed-job pruning and the scheduler heartbeat', function () {

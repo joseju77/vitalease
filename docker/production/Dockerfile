@@ -1,7 +1,9 @@
 # Production images. Build from the repository root:
 #   docker build --target app   -f docker/production/Dockerfile -t vitalease/app:TAG .
 #   docker build --target nginx -f docker/production/Dockerfile -t vitalease/nginx:TAG .
+#   docker build --target seeder -f docker/production/Dockerfile -t vitalease/seeder:TAG .
 # The same app image runs the app, worker, scheduler and one-off job roles via `command`.
+# The seeder image is used only by the demo-seed job (it needs Faker, a dev dependency).
 
 # ---------------------------------------------------------------------------
 # base: PHP runtime with the extensions the application needs (no xdebug).
@@ -48,6 +50,16 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 COPY . .
 RUN composer dump-autoload --no-dev --optimize --classmap-authoritative \
     && php artisan package:discover --ansi
+
+# ---------------------------------------------------------------------------
+# vendor-dev: the same tree plus dev composer dependencies, for the seeder image.
+# package:discover is not re-run, so the discovered providers stay the production
+# set and dev-only service providers are never registered.
+# ---------------------------------------------------------------------------
+FROM vendor AS vendor-dev
+
+RUN composer install --no-scripts --no-autoloader --prefer-dist \
+    && composer dump-autoload --optimize
 
 # ---------------------------------------------------------------------------
 # assets: Vite build. Wayfinder runs `php artisan wayfinder:generate` during the
@@ -101,6 +113,14 @@ EXPOSE 9000
 
 ENTRYPOINT ["tini", "--", "/usr/local/bin/entrypoint.sh"]
 CMD ["php-fpm"]
+
+# ---------------------------------------------------------------------------
+# seeder: the app image with dev dependencies, only for `demo:seed` one-off jobs.
+# Never deployed as a service.
+# ---------------------------------------------------------------------------
+FROM app AS seeder
+
+COPY --from=vendor-dev --chown=www-data:www-data /var/www/html/vendor /var/www/html/vendor
 
 # ---------------------------------------------------------------------------
 # nginx: serves the baked public/ directory and proxies PHP to app:9000.

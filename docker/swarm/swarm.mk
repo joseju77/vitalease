@@ -51,10 +51,11 @@ swarm-secrets: ## Swarm: generate missing secret files under docker/swarm/secret
 		fi; \
 	done
 
-swarm-build: ## Swarm: build the production images (vitalease/app and vitalease/nginx, tag IMAGE_TAG or git short sha)
+swarm-build: ## Swarm: build the production images (vitalease/app, vitalease/nginx and the job-only vitalease/seeder; tag IMAGE_TAG or git short sha)
 	@$(swarm_load_env); \
 	docker build --target app -t "vitalease/app:$$IMAGE_TAG" -f docker/production/Dockerfile .; \
-	docker build --target nginx -t "vitalease/nginx:$$IMAGE_TAG" -f docker/production/Dockerfile .
+	docker build --target nginx -t "vitalease/nginx:$$IMAGE_TAG" -f docker/production/Dockerfile .; \
+	docker build --target seeder -t "vitalease/seeder:$$IMAGE_TAG" -f docker/production/Dockerfile .
 
 swarm-deploy: ## Swarm: deploy or update the stack from the locally built images
 	@$(swarm_load_env); \
@@ -78,8 +79,8 @@ swarm-migrate: ## Swarm: run migrations and sync search index settings as a one-
 	@STACK=$(SWARM_STACK) JOB_TIMEOUT=$(JOB_TIMEOUT) sh $(SWARM_DIR)/bin/run-job.sh migrate \
 		sh -c 'php artisan migrate --force && php artisan scout:sync-index-settings'
 
-swarm-seed-demo: ## Swarm: seed demo data as a one-off job (SEED_ARGS="--users=100 --patients=10000 --consultations=100000")
-	@STACK=$(SWARM_STACK) JOB_TIMEOUT=$(JOB_TIMEOUT) sh $(SWARM_DIR)/bin/run-job.sh seed \
+swarm-seed-demo: ## Swarm: seed demo data as a one-off job from the seeder image (SEED_ARGS="--users=100 --patients=10000 --consultations=100000")
+	@STACK=$(SWARM_STACK) JOB_TIMEOUT=$(JOB_TIMEOUT) JOB_IMAGE_REPO=vitalease/seeder sh $(SWARM_DIR)/bin/run-job.sh seed \
 		php -d memory_limit=1G artisan demo:seed --force $(SEED_ARGS)
 
 swarm-reindex: ## Swarm: re-import patients and medications into Meilisearch (idempotent, queued when SCOUT_QUEUE=true)

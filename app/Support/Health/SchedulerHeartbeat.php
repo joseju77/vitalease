@@ -19,10 +19,14 @@ final class SchedulerHeartbeat
         Cache::put(self::CACHE_KEY, now()->getTimestamp(), self::TTL_SECONDS);
     }
 
+    /**
+     * The Redis cache store keeps numeric values unserialized and returns
+     * them as strings, so numeric strings are accepted as well as ints.
+     */
     public static function lastBeatAt(): ?int
     {
         $timestamp = Cache::get(self::CACHE_KEY);
 
-        return is_int($timestamp) ? $timestamp : null;
+        return is_numeric($timestamp) ? (int) $timestamp : null;
     }
 }
