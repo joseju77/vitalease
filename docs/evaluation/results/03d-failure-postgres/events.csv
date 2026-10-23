@@ -1,0 +1,4 @@
+timestamp_utc,event,detail
+2026-10-25T20:39:50Z,scale_postgres_0,docker service scale vitalease_postgres=0
+2026-10-25T20:40:50Z,scale_postgres_1,docker service scale vitalease_postgres=1
+2026-10-25T20:41:16Z,recovered,postgres

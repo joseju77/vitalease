@@ -1,0 +1,6 @@
+### swarm-backup
+start=2026-10-25T20:50:22.437441453Z
+backup: created /backups/vitalease_20261025T205022Z.dump (13063677 bytes)
+rc=0
+end=2026-10-25T20:50:26.991366869Z
+elapsed_s=4.548490769

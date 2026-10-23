@@ -1,0 +1,4 @@
+total 12768
+drwxr-xr-x    2 root     root          4096 Oct 25 20:50 .
+drwxr-xr-x    1 root     root          4096 Oct 25 18:32 ..
+-rw-r--r--    1 root     root      13063677 Oct 25 20:50 vitalease_20261025T205022Z.dump

@@ -1,0 +1,1 @@
+-v run_id=02b-concurrency-adjust -v initial_stock=200 -v dispense_accepted=838 -v dispense_rejected=301 -v dispense_quantity=1 -v adjust_added=1951 -v adjust_removed=1313 -v adjust_accepted=3264

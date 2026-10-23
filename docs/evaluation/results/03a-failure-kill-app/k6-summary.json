@@ -1,0 +1,1808 @@
+{
+    "digest": {
+        "generated_at": "2026-10-25T20:25:14.902Z",
+        "measured_kind": "op",
+        "iterations": 6634,
+        "requests": 12620,
+        "requests_per_second": 34.71,
+        "error_rate": 0,
+        "latency_ms": {
+            "p50": 37.97,
+            "p90": 59.13,
+            "p95": 64.9,
+            "p99": 83.8,
+            "avg": 42.85,
+            "max": 641.7
+        },
+        "latency_ms_by_name": {
+            "patients.show": {
+                "p50": 61.72,
+                "p90": 72.2,
+                "p95": 76.94,
+                "p99": 131.7,
+                "avg": 64.51,
+                "max": 481.18
+            },
+            "reports.demand-index": {
+                "p50": 28.72,
+                "p90": 33.3,
+                "p95": 37.77,
+                "p99": 74.24,
+                "avg": 31.07,
+                "max": 284.82
+            },
+            "reports.demand-projection": {
+                "p50": 37.2,
+                "p90": 44.97,
+                "p95": 52.65,
+                "p99": 66.47,
+                "avg": 39.93,
+                "max": 309.41
+            },
+            "patients.search": {
+                "p50": 33.56,
+                "p90": 38.09,
+                "p95": 41.59,
+                "p99": 56.05,
+                "avg": 35.89,
+                "max": 641.7
+            },
+            "inventory.search": {
+                "p50": 31.88,
+                "p90": 36.7,
+                "p95": 40.3,
+                "p99": 54.28,
+                "avg": 33.73,
+                "max": 185.88
+            },
+            "consultations.create-form": {
+                "p50": 43.94,
+                "p90": 50.23,
+                "p95": 53.1,
+                "p99": 72.79,
+                "avg": 46.79,
+                "max": 599.34
+            },
+            "consultations.store": {
+                "p50": 53.1,
+                "p90": 62.76,
+                "p95": 69.24,
+                "p99": 91.94,
+                "avg": 55.9,
+                "max": 303.4
+            },
+            "inventory.low-stock": {
+                "p50": 31.15,
+                "p90": 35.68,
+                "p95": 38.78,
+                "p99": 96.5,
+                "avg": 33.48,
+                "max": 188.72
+            },
+            "inventory.index": {
+                "p50": 31.31,
+                "p90": 35.21,
+                "p95": 38.8,
+                "p99": 53.29,
+                "avg": 33.22,
+                "max": 235.63
+            },
+            "patients.summary": {
+                "p50": 38.99,
+                "p90": 44.92,
+                "p95": 48.52,
+                "p99": 71.61,
+                "avg": 40.94,
+                "max": 150.59
+            },
+            "patients.search-json": {
+                "p50": 30.83,
+                "p90": 34.93,
+                "p95": 38.27,
+                "p99": 55.26,
+                "avg": 32.77,
+                "max": 308.26
+            },
+            "consultations.show": {
+                "p50": 50.86,
+                "p90": 57.01,
+                "p95": 61.26,
+                "p99": 74.43,
+                "avg": 52.66,
+                "max": 172.58
+            }
+        },
+        "login_ms": {
+            "p50": 651,
+            "p90": 1269.2,
+            "p95": 1393.5,
+            "p99": 1543.99,
+            "avg": 729.81,
+            "max": 1569
+        },
+        "counters": {
+            "create_rejected": 111,
+            "create_accepted": 921
+        }
+    },
+    "raw": {
+        "root_group": {
+            "path": "",
+            "id": "d41d8cd98f00b204e9800998ecf8427e",
+            "groups": [
+                {
+                    "name": "setup",
+                    "path": "::setup",
+                    "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                    "groups": [],
+                    "checks": [
+                        {
+                            "name": "login redirects after success",
+                            "path": "::setup::login redirects after success",
+                            "id": "82183b5bdc06e40136b5a44d716e9a03",
+                            "passes": 2,
+                            "fails": 0
+                        },
+                        {
+                            "name": "setup found patients",
+                            "path": "::setup::setup found patients",
+                            "id": "2ebb2891d6b9ff2c5967bce5fd3e8b2e",
+                            "passes": 1,
+                            "fails": 0
+                        },
+                        {
+                            "name": "setup found consultations",
+                            "path": "::setup::setup found consultations",
+                            "id": "4bfca8f1503a556dd06d6e9010689b43",
+                            "passes": 1,
+                            "fails": 0
+                        },
+                        {
+                            "name": "setup found medications",
+                            "path": "::setup::setup found medications",
+                            "id": "9ea84884d4186393da895703ab04a1e5",
+                            "passes": 1,
+                            "fails": 0
+                        }
+                    ]
+                }
+            ],
+            "checks": [
+                {
+                    "fails": 0,
+                    "name": "login redirects after success",
+                    "path": "::login redirects after success",
+                    "id": "cbe9e7be3b13408074a2201478acba3a",
+                    "passes": 40
+                },
+                {
+                    "name": "patients.search answered 200",
+                    "path": "::patients.search answered 200",
+                    "id": "bce5cc00ac7df0df9cd66e144f166e31",
+                    "passes": 1958,
+                    "fails": 0
+                },
+                {
+                    "path": "::reports.demand-index answered 200",
+                    "id": "2f919dd744decd5e9961004c88c0c41b",
+                    "passes": 344,
+                    "fails": 0,
+                    "name": "reports.demand-index answered 200"
+                },
+                {
+                    "fails": 0,
+                    "name": "consultations.create-form answered 200",
+                    "path": "::consultations.create-form answered 200",
+                    "id": "05841e51a106c3ee3404dbae669eff6c",
+                    "passes": 1032
+                },
+                {
+                    "name": "patients.search-json answered 200",
+                    "path": "::patients.search-json answered 200",
+                    "id": "7282f1e4d344deaf7338f3998f9b7e65",
+                    "passes": 1958,
+                    "fails": 0
+                },
+                {
+                    "name": "consultations.show answered 200",
+                    "path": "::consultations.show answered 200",
+                    "id": "3f5dff973b2df9fc1d5364390ea3694d",
+                    "passes": 1303,
+                    "fails": 0
+                },
+                {
+                    "name": "consultation accepted or rejected by validation",
+                    "path": "::consultation accepted or rejected by validation",
+                    "id": "2a6b327c9317006e37444bf57fd4734b",
+                    "passes": 1032,
+                    "fails": 0
+                },
+                {
+                    "name": "reports.demand-projection answered 200",
+                    "path": "::reports.demand-projection answered 200",
+                    "id": "43abba6aed19d55bd1469747b3417287",
+                    "passes": 344,
+                    "fails": 0
+                },
+                {
+                    "name": "inventory.index answered 200",
+                    "path": "::inventory.index answered 200",
+                    "id": "6c3b038d6e0839e0455a9050402d1e07",
+                    "passes": 655,
+                    "fails": 0
+                },
+                {
+                    "name": "inventory.search answered 200",
+                    "path": "::inventory.search answered 200",
+                    "id": "6c5ac2a45b64ce8ec84a2428839e5bc1",
+                    "passes": 655,
+                    "fails": 0
+                },
+                {
+                    "path": "::patients.show answered 200",
+                    "id": "42b0c8b8a110efba872eb843bf1d2a04",
+                    "passes": 1342,
+                    "fails": 0,
+                    "name": "patients.show answered 200"
+                },
+                {
+                    "name": "patients.summary answered 200",
+                    "path": "::patients.summary answered 200",
+                    "id": "2690d3d468d95d5b054d1ef3366af1c3",
+                    "passes": 1342,
+                    "fails": 0
+                },
+                {
+                    "name": "inventory.low-stock answered 200",
+                    "path": "::inventory.low-stock answered 200",
+                    "id": "5e168b216703481b28a61b147461dfb0",
+                    "passes": 655,
+                    "fails": 0
+                }
+            ],
+            "name": ""
+        },
+        "options": {
+            "summaryTrendStats": ["avg", "min", "med", "p(90)", "p(95)", "p(99)", "max"],
+            "summaryTimeUnit": "",
+            "noColor": false
+        },
+        "state": {
+            "isStdErrTTY": false,
+            "testRunDurationMs": 363634.057862,
+            "isStdOutTTY": false
+        },
+        "metrics": {
+            "http_req_failed": {
+                "type": "rate",
+                "contains": "default",
+                "values": {
+                    "rate": 0,
+                    "passes": 0,
+                    "fails": 12755
+                },
+                "thresholds": {
+                    "rate<0.01": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_duration{name:patients.summary}": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "avg": 40.938536179582684,
+                    "min": 36.178891,
+                    "med": 38.9875595,
+                    "p(90)": 44.9191626,
+                    "p(95)": 48.515276050000004,
+                    "p(99)": 71.60623942999989,
+                    "max": 150.593209
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_failed{kind:op}": {
+                "type": "rate",
+                "contains": "default",
+                "values": {
+                    "fails": 12620,
+                    "rate": 0,
+                    "passes": 0
+                },
+                "thresholds": {
+                    "rate>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_duration{name:patients.search-json}": {
+                "values": {
+                    "avg": 32.76647761695608,
+                    "min": 28.762341,
+                    "med": 30.829144499999998,
+                    "p(90)": 34.9263117,
+                    "p(95)": 38.26754225,
+                    "p(99)": 55.25611120000001,
+                    "max": 308.25974
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                },
+                "type": "trend",
+                "contains": "time"
+            },
+            "http_req_duration{kind:op}": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "p(90)": 59.133337,
+                    "p(95)": 64.89917769999998,
+                    "p(99)": 83.80491292999999,
+                    "max": 641.699855,
+                    "avg": 42.84751426973052,
+                    "min": 26.668956,
+                    "med": 37.968872000000005
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_receiving": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "p(99)": 0.9850291799999966,
+                    "max": 4.780601,
+                    "avg": 0.08478803520188155,
+                    "min": 0.0104,
+                    "med": 0.060393,
+                    "p(90)": 0.09110120000000001,
+                    "p(95)": 0.1251669
+                }
+            },
+            "checks": {
+                "type": "rate",
+                "contains": "default",
+                "values": {
+                    "rate": 1,
+                    "passes": 12665,
+                    "fails": 0
+                }
+            },
+            "http_req_tls_handshaking": {
+                "contains": "time",
+                "values": {
+                    "p(99)": 0,
+                    "max": 0,
+                    "avg": 0,
+                    "min": 0,
+                    "med": 0,
+                    "p(90)": 0,
+                    "p(95)": 0
+                },
+                "type": "trend"
+            },
+            "http_req_duration{name:consultations.show}": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "p(95)": 61.262636599999986,
+                    "p(99)": 74.43028910000002,
+                    "max": 172.583279,
+                    "avg": 52.65846345049887,
+                    "min": 46.445068,
+                    "med": 50.85581,
+                    "p(90)": 57.0106646
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_connecting": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "p(95)": 0,
+                    "p(99)": 0,
+                    "max": 4.398025,
+                    "avg": 0.005085001724813798,
+                    "min": 0,
+                    "med": 0,
+                    "p(90)": 0
+                }
+            },
+            "http_reqs{kind:op}": {
+                "values": {
+                    "count": 12620,
+                    "rate": 34.70522006161843
+                },
+                "thresholds": {
+                    "count>=0": {
+                        "ok": true
+                    }
+                },
+                "type": "counter",
+                "contains": "default"
+            },
+            "login_duration": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "min": 206,
+                    "med": 651,
+                    "p(90)": 1269.2,
+                    "p(95)": 1393.4999999999995,
+                    "p(99)": 1543.9899999999998,
+                    "max": 1569,
+                    "avg": 729.8095238095239
+                }
+            },
+            "vus_max": {
+                "type": "gauge",
+                "contains": "default",
+                "values": {
+                    "max": 20,
+                    "value": 20,
+                    "min": 20
+                }
+            },
+            "http_req_duration{expected_response:true}": {
+                "values": {
+                    "max": 1537.810055,
+                    "avg": 44.955046429400085,
+                    "min": 5.894986,
+                    "med": 38.015205,
+                    "p(90)": 59.3339792,
+                    "p(95)": 65.37331040000001,
+                    "p(99)": 105.9071704
+                },
+                "type": "trend",
+                "contains": "time"
+            },
+            "create_rejected": {
+                "type": "counter",
+                "contains": "default",
+                "values": {
+                    "count": 111,
+                    "rate": 0.30525193556574054
+                }
+            },
+            "http_req_duration{name:patients.show}": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "max": 481.179646,
+                    "avg": 64.5118151363636,
+                    "min": 48.451839,
+                    "med": 61.7152575,
+                    "p(90)": 72.20490070000001,
+                    "p(95)": 76.9413071,
+                    "p(99)": 131.69535944999717
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_blocked": {
+                "contains": "time",
+                "values": {
+                    "avg": 0.00886677350058796,
+                    "min": 0.000997,
+                    "med": 0.003422,
+                    "p(90)": 0.004837,
+                    "p(95)": 0.005453,
+                    "p(99)": 0.01003031999999992,
+                    "max": 4.452634
+                },
+                "type": "trend"
+            },
+            "iteration_duration": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "p(95)": 1114.2731766,
+                    "p(99)": 1194.25600732,
+                    "max": 2717.999004,
+                    "avg": 1087.027375445735,
+                    "min": 1046.954921,
+                    "med": 1073.565305,
+                    "p(90)": 1107.3572922
+                }
+            },
+            "data_sent": {
+                "type": "counter",
+                "contains": "data",
+                "values": {
+                    "count": 13398635,
+                    "rate": 36846.47988908897
+                }
+            },
+            "http_req_failed{kind:auth}": {
+                "type": "rate",
+                "contains": "default",
+                "values": {
+                    "rate": 0,
+                    "passes": 0,
+                    "fails": 84
+                },
+                "thresholds": {
+                    "rate>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_duration": {
+                "contains": "time",
+                "values": {
+                    "avg": 44.955046429400085,
+                    "min": 5.894986,
+                    "med": 38.015205,
+                    "p(90)": 59.3339792,
+                    "p(95)": 65.37331040000001,
+                    "p(99)": 105.9071704,
+                    "max": 1537.810055
+                },
+                "type": "trend"
+            },
+            "http_req_sending": {
+                "contains": "time",
+                "values": {
+                    "min": 0.0034,
+                    "med": 0.01177,
+                    "p(90)": 0.0164906,
+                    "p(95)": 0.018599099999999993,
+                    "p(99)": 0.028328259999999973,
+                    "max": 0.179863,
+                    "avg": 0.012531315327322637
+                },
+                "type": "trend"
+            },
+            "http_reqs{kind:auth}": {
+                "type": "counter",
+                "contains": "default",
+                "values": {
+                    "count": 84,
+                    "rate": 0.2310014647524523
+                },
+                "thresholds": {
+                    "count>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_duration{name:reports.demand-index}": {
+                "contains": "time",
+                "values": {
+                    "p(99)": 74.24206378999986,
+                    "max": 284.817637,
+                    "avg": 31.072799011627886,
+                    "min": 26.668956,
+                    "med": 28.717428499999997,
+                    "p(90)": 33.3041336,
+                    "p(95)": 37.77163069999996
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                },
+                "type": "trend"
+            },
+            "http_req_waiting": {
+                "values": {
+                    "avg": 44.857727078871065,
+                    "min": 5.858883,
+                    "med": 37.927294,
+                    "p(90)": 59.245189,
+                    "p(95)": 65.27370739999999,
+                    "p(99)": 105.80488857999998,
+                    "max": 1537.695014
+                },
+                "type": "trend",
+                "contains": "time"
+            },
+            "http_req_duration{name:reports.demand-projection}": {
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                },
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "med": 37.1976825,
+                    "p(90)": 44.9733184,
+                    "p(95)": 52.652601549999964,
+                    "p(99)": 66.46555400999996,
+                    "max": 309.414958,
+                    "avg": 39.92681390116278,
+                    "min": 34.242647
+                }
+            },
+            "http_req_duration{name:patients.search}": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "p(90)": 38.0942929,
+                    "p(95)": 41.588580199999996,
+                    "p(99)": 56.049226210000015,
+                    "max": 641.699855,
+                    "avg": 35.88821782379983,
+                    "min": 31.371586,
+                    "med": 33.563987499999996
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_duration{kind:auth}": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "p(95)": 1249.7959454499999,
+                    "p(99)": 1485.61691434,
+                    "max": 1537.810055,
+                    "avg": 363.9969676904763,
+                    "min": 5.894986,
+                    "med": 134.965124,
+                    "p(90)": 1129.7362525
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "create_accepted": {
+                "type": "counter",
+                "contains": "default",
+                "values": {
+                    "count": 921,
+                    "rate": 2.5327660599643878
+                }
+            },
+            "vus": {
+                "type": "gauge",
+                "contains": "default",
+                "values": {
+                    "value": 12,
+                    "min": 0,
+                    "max": 20
+                }
+            },
+            "http_reqs": {
+                "type": "counter",
+                "contains": "default",
+                "values": {
+                    "count": 12755,
+                    "rate": 35.07647241568487
+                }
+            },
+            "http_req_duration{name:inventory.search}": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "p(95)": 40.302762999999985,
+                    "p(99)": 54.27784146000004,
+                    "max": 185.875708,
+                    "avg": 33.729008355725185,
+                    "min": 29.740977,
+                    "med": 31.882136,
+                    "p(90)": 36.7021412
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_duration{name:consultations.create-form}": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "min": 39.593333,
+                    "med": 43.938807499999996,
+                    "p(90)": 50.2265174,
+                    "p(95)": 53.09817989999999,
+                    "p(99)": 72.78998657999992,
+                    "max": 599.336629,
+                    "avg": 46.793099243216986
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "http_req_duration{name:consultations.store}": {
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                },
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "max": 303.403382,
+                    "avg": 55.90139682945736,
+                    "min": 43.541849,
+                    "med": 53.1014385,
+                    "p(90)": 62.75500949999999,
+                    "p(95)": 69.23725195,
+                    "p(99)": 91.93758521999975
+                }
+            },
+            "http_req_duration{name:inventory.low-stock}": {
+                "values": {
+                    "p(99)": 96.49911110000154,
+                    "max": 188.720579,
+                    "avg": 33.47832345954199,
+                    "min": 29.093672,
+                    "med": 31.152284,
+                    "p(90)": 35.677519,
+                    "p(95)": 38.7786304
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                },
+                "type": "trend",
+                "contains": "time"
+            },
+            "http_req_duration{name:inventory.index}": {
+                "type": "trend",
+                "contains": "time",
+                "values": {
+                    "med": 31.310502,
+                    "p(90)": 35.2059384,
+                    "p(95)": 38.80352249999996,
+                    "p(99)": 53.29356530000003,
+                    "max": 235.62716,
+                    "avg": 33.21526403206107,
+                    "min": 29.11355
+                },
+                "thresholds": {
+                    "max>=0": {
+                        "ok": true
+                    }
+                }
+            },
+            "data_received": {
+                "type": "counter",
+                "contains": "data",
+                "values": {
+                    "count": 70902658,
+                    "rate": 194983.5458671688
+                }
+            },
+            "iterations": {
+                "contains": "default",
+                "values": {
+                    "count": 6634,
+                    "rate": 18.243615680568674
+                },
+                "type": "counter"
+            }
+        },
+        "setup_data": {
+            "patients": [
+                {
+                    "full_name": "Adriana Aguilar López",
+                    "uuid": "01a1745c-f40f-7016-a6e9-735990c277e9"
+                },
+                {
+                    "full_name": "Adriana Aguilar Ramos",
+                    "uuid": "01a1745d-0bf4-7080-ad5f-ce728e71f6ca"
+                },
+                {
+                    "full_name": "Adriana Aguilar Aguilar",
+                    "uuid": "01a1745d-0ec9-721b-9531-67a3c777a030"
+                },
+                {
+                    "uuid": "01a1745d-11ea-714b-8659-b15036435fd9",
+                    "full_name": "Adriana Aguilar González"
+                },
+                {
+                    "full_name": "Adriana Aguilar Martínez",
+                    "uuid": "01a1745d-2d15-7076-bed8-9ee60500de70"
+                },
+                {
+                    "full_name": "Adriana Aguilar Gómez",
+                    "uuid": "01a1745d-478e-7066-91e0-266957117384"
+                },
+                {
+                    "full_name": "Adriana Aguilar Guzmán",
+                    "uuid": "01a1745d-4fbf-7282-bb45-5cd593565263"
+                },
+                {
+                    "full_name": "Adriana Aguilar Mendoza",
+                    "uuid": "01a1745d-55a6-711d-87f6-3e1825b5ee6e"
+                },
+                {
+                    "full_name": "Adriana Aguilar Cruz",
+                    "uuid": "01a1745d-659e-724a-b4cd-8c24c3e19f44"
+                },
+                {
+                    "uuid": "01a1745d-6fa6-70d5-a6dd-b9c1a794d1d9",
+                    "full_name": "Adriana Aguilar Aguilar"
+                },
+                {
+                    "full_name": "Adriana Aguilar Mendoza",
+                    "uuid": "01a1745d-7b26-7248-b6f8-a2a3e8b4841a"
+                },
+                {
+                    "full_name": "Alejandra Aguilar Castillo",
+                    "uuid": "01a1745d-0f69-71d0-b3ec-914316672f17"
+                },
+                {
+                    "full_name": "Alejandra Aguilar Vázquez",
+                    "uuid": "01a1745d-1e8b-714c-b1d6-0313e4747066"
+                },
+                {
+                    "full_name": "Alejandra Aguilar Sánchez",
+                    "uuid": "01a1745d-3b47-73cf-aada-fb878b0235f3"
+                },
+                {
+                    "full_name": "Alejandra Aguilar Salazar",
+                    "uuid": "01a1745d-646e-7323-8c8b-d6804462a776"
+                },
+                {
+                    "full_name": "María Guadalupe González",
+                    "uuid": "01a1745d-7348-7037-9364-0f3787ca285d"
+                },
+                {
+                    "full_name": "María Guadalupe González Salazar",
+                    "uuid": "01a1745d-7b0b-7260-8ef5-ffc509fd99c1"
+                },
+                {
+                    "full_name": "Miguel Ángel González Reyes",
+                    "uuid": "01a1745c-f918-7063-a3ce-db4cd3a67339"
+                },
+                {
+                    "full_name": "Miguel Ángel González González",
+                    "uuid": "01a1745d-0b9e-70a0-a60c-8a2f94234cb4"
+                },
+                {
+                    "full_name": "Miguel Ángel González Gutiérrez",
+                    "uuid": "01a1745d-513a-7175-9eb4-a34d6c64d74f"
+                },
+                {
+                    "uuid": "01a1745c-f385-70a8-aadc-c2e67e8c3c89",
+                    "full_name": "Mónica González Ortiz"
+                },
+                {
+                    "full_name": "Mónica González Reyes",
+                    "uuid": "01a1745c-f4ed-73e3-adaa-db70ae7e762d"
+                },
+                {
+                    "uuid": "01a1745d-193c-7396-8d7c-06644bd2a991",
+                    "full_name": "Mónica González Reyes"
+                },
+                {
+                    "full_name": "Mónica González Mendoza",
+                    "uuid": "01a1745d-1c71-7244-8a09-3374bd5c045d"
+                },
+                {
+                    "full_name": "Mónica González Gómez",
+                    "uuid": "01a1745d-3f4d-70b7-a84e-b7d769c450ca"
+                },
+                {
+                    "full_name": "Mónica González Mendoza",
+                    "uuid": "01a1745d-5aaa-72c7-ac9a-fdd9d2900b05"
+                },
+                {
+                    "full_name": "Mónica González Salazar",
+                    "uuid": "01a1745d-6819-70ad-a386-c8626643bc8d"
+                },
+                {
+                    "full_name": "Mónica González Vázquez",
+                    "uuid": "01a1745d-6d4d-724d-867b-62e465634ec9"
+                },
+                {
+                    "full_name": "Mónica González Castillo",
+                    "uuid": "01a1745d-71e4-7192-80d0-c614a2bca5b9"
+                },
+                {
+                    "full_name": "Norma González Ramos",
+                    "uuid": "01a1745c-f849-71d1-8527-bc28f27aa668"
+                },
+                {
+                    "full_name": "José Luis Ramírez Chávez",
+                    "uuid": "01a1745d-3bec-7062-812f-d096f41b6b96"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez",
+                    "uuid": "01a1745c-ee0d-7396-9aa3-eda30ad7193b"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez Torres",
+                    "uuid": "01a1745c-f1fe-710e-9d1a-3a7508bbcd95"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez Vázquez",
+                    "uuid": "01a1745d-0a43-701e-8931-07ffc823efff"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez",
+                    "uuid": "01a1745d-1673-73dd-8802-32400abdd2a1"
+                },
+                {
+                    "uuid": "01a1745d-221d-7323-9b58-233bfc542f23",
+                    "full_name": "Juan Carlos Ramírez Martínez"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez López",
+                    "uuid": "01a1745d-24a5-7283-b5bd-7d7690ca3828"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez Pérez",
+                    "uuid": "01a1745d-3035-72ba-98ac-9a563c70ee04"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez Morales",
+                    "uuid": "01a1745d-3486-727f-8de3-ed7f31ecff98"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez Guzmán",
+                    "uuid": "01a1745d-37b6-7054-a454-49cb7e3d3b1d"
+                },
+                {
+                    "uuid": "01a1745d-3e72-7133-9c3d-86b442802e5c",
+                    "full_name": "Juan Carlos Ramírez Ortiz"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez Hernández",
+                    "uuid": "01a1745d-74ae-739e-b49e-018e47a0b5c6"
+                },
+                {
+                    "full_name": "Juan Carlos Ramírez Ramírez",
+                    "uuid": "01a1745d-77a9-72c9-99cd-7ba87a016034"
+                },
+                {
+                    "full_name": "Karla Ramírez Salazar",
+                    "uuid": "01a1745c-ec29-71a0-a459-209511c0a8e9"
+                },
+                {
+                    "full_name": "Karla Ramírez Castillo",
+                    "uuid": "01a1745d-3ec4-7226-a5dc-ea706910d393"
+                },
+                {
+                    "full_name": "Patricia Reyes Cruz",
+                    "uuid": "01a1745c-ef48-72db-8585-f2f55c69467d"
+                },
+                {
+                    "uuid": "01a1745c-f288-7160-98cc-8fa4260ac74a",
+                    "full_name": "Patricia Reyes Reyes"
+                },
+                {
+                    "full_name": "Patricia Reyes Pérez",
+                    "uuid": "01a1745d-056e-721d-be24-e6e4b15313f4"
+                },
+                {
+                    "full_name": "Patricia Reyes Hernández",
+                    "uuid": "01a1745d-1249-71e5-8dcc-8f3ea840a040"
+                },
+                {
+                    "full_name": "Patricia Reyes Vázquez",
+                    "uuid": "01a1745d-2c73-70b2-83be-dce1cf7660c1"
+                },
+                {
+                    "full_name": "Patricia Reyes Vázquez",
+                    "uuid": "01a1745d-7302-7276-8982-375a5d6ba143"
+                },
+                {
+                    "full_name": "Patricia Reyes Rodríguez",
+                    "uuid": "01a1745d-7bb6-7259-9a9a-3203f678bc2e"
+                },
+                {
+                    "full_name": "Rafael Reyes Hernández",
+                    "uuid": "01a1745c-f96e-72e4-92f2-a88608b228ed"
+                },
+                {
+                    "full_name": "Rafael Reyes Ramos",
+                    "uuid": "01a1745d-1f39-727b-902a-0d0957dcf1e0"
+                },
+                {
+                    "full_name": "Rafael Reyes Ramos",
+                    "uuid": "01a1745d-3ed8-73cb-91ad-977dc3a6fcbe"
+                },
+                {
+                    "full_name": "Rafael Reyes Ramos",
+                    "uuid": "01a1745d-4c1e-7044-a748-8e85e6e4aaba"
+                },
+                {
+                    "full_name": "Rafael Reyes Castillo",
+                    "uuid": "01a1745d-61be-7211-af26-fa1e105363f7"
+                },
+                {
+                    "full_name": "Rafael Reyes Morales",
+                    "uuid": "01a1745d-7ad6-70e5-a3a1-36fa2c553a08"
+                },
+                {
+                    "uuid": "01a1745c-fec9-7399-bdbe-66fea0995f81",
+                    "full_name": "Ricardo Reyes Rodríguez"
+                },
+                {
+                    "full_name": "Ricardo Reyes Flores",
+                    "uuid": "01a1745d-2ebe-7230-add0-bf9ee930785d"
+                },
+                {
+                    "full_name": "José Luis Ortiz",
+                    "uuid": "01a1745d-1858-714a-b48f-6da36b184b91"
+                },
+                {
+                    "full_name": "José Luis Ortiz Sánchez",
+                    "uuid": "01a1745d-1ce3-736e-b0c5-d5aa1a613f66"
+                },
+                {
+                    "full_name": "José Luis Ortiz",
+                    "uuid": "01a1745d-2256-72b6-a093-1354d1aa8159"
+                },
+                {
+                    "full_name": "José Luis Ortiz Vázquez",
+                    "uuid": "01a1745d-2273-709a-adcb-c7880e80b117"
+                },
+                {
+                    "full_name": "José Luis Ortiz Ramos",
+                    "uuid": "01a1745d-3495-724c-95ef-6b02cdff0c47"
+                },
+                {
+                    "full_name": "José Luis Ortiz Ortiz",
+                    "uuid": "01a1745d-39f3-72e0-b9ee-2b3e91c2e05e"
+                },
+                {
+                    "full_name": "José Luis Ortiz Martínez",
+                    "uuid": "01a1745d-4a11-70ce-a813-f4b1e5a748ed"
+                },
+                {
+                    "full_name": "José Luis Ortiz Torres",
+                    "uuid": "01a1745d-6993-72d9-b398-b6f67d0ff703"
+                },
+                {
+                    "uuid": "01a1745c-f758-7127-9731-e822c7880db2",
+                    "full_name": "Juan Carlos Ortiz Castillo"
+                },
+                {
+                    "full_name": "Juan Carlos Ortiz Díaz",
+                    "uuid": "01a1745d-265c-716e-b1a9-06b4879999a3"
+                },
+                {
+                    "full_name": "Juan Carlos Ortiz",
+                    "uuid": "01a1745d-3d92-7211-8d50-d6cd51781124"
+                },
+                {
+                    "full_name": "Juan Carlos Ortiz Torres",
+                    "uuid": "01a1745d-640c-708e-9a7c-88a21d706fa4"
+                },
+                {
+                    "full_name": "Juan Carlos Ortiz",
+                    "uuid": "01a1745d-79b0-71fd-b493-0e5b056f64ad"
+                },
+                {
+                    "full_name": "Karla Ortiz Vázquez",
+                    "uuid": "01a1745c-f861-71c4-ae4a-0cbe8f172b29"
+                },
+                {
+                    "full_name": "Karla Ortiz",
+                    "uuid": "01a1745c-fd79-70a8-823d-385ba649cb21"
+                },
+                {
+                    "full_name": "Adriana Chávez Pérez",
+                    "uuid": "01a1745d-7b03-73df-892b-2ce73deaaf28"
+                },
+                {
+                    "full_name": "Alejandra Chávez Ortiz",
+                    "uuid": "01a1745c-fb1e-7152-b452-5b416bc12dbf"
+                },
+                {
+                    "full_name": "Alejandra Chávez Gutiérrez",
+                    "uuid": "01a1745d-0195-7300-9351-12dbf13dbb8f"
+                },
+                {
+                    "full_name": "Alejandra Chávez Martínez",
+                    "uuid": "01a1745d-4168-73ec-a5ac-401ac57cce8b"
+                },
+                {
+                    "full_name": "Alejandra Chávez Sánchez",
+                    "uuid": "01a1745d-4d91-722e-a9d6-0da29cc36d63"
+                },
+                {
+                    "uuid": "01a1745d-65cd-7026-a8a5-b7229225d2b4",
+                    "full_name": "Alejandra Chávez Vázquez"
+                },
+                {
+                    "full_name": "Alejandra Chávez Gutiérrez",
+                    "uuid": "01a1745d-7968-7119-808f-6d640eb57391"
+                },
+                {
+                    "uuid": "01a1745c-fffa-7219-a376-db196acf3c3a",
+                    "full_name": "Alejandro Chávez Ramírez"
+                },
+                {
+                    "full_name": "Alejandro Chávez Castillo",
+                    "uuid": "01a1745d-3928-7325-a791-ecc682e1a5d1"
+                },
+                {
+                    "full_name": "Alejandro Chávez",
+                    "uuid": "01a1745d-6725-726d-84b8-af2105909ad3"
+                },
+                {
+                    "uuid": "01a1745d-6755-73a5-9bb4-493999399070",
+                    "full_name": "Alejandro Chávez Gómez"
+                },
+                {
+                    "full_name": "Alejandro Chávez Mendoza",
+                    "uuid": "01a1745d-6f5f-716c-bb40-ad8bccacb839"
+                },
+                {
+                    "full_name": "Alejandro Chávez Guzmán",
+                    "uuid": "01a1745d-7c19-722f-b6ce-3895a5f9d45a"
+                },
+                {
+                    "full_name": "Ana Cristina Chávez",
+                    "uuid": "01a1745d-0e97-71d7-a9b3-c05b4e9cbcfe"
+                },
+                {
+                    "full_name": "Ana Cristina Chávez Mendoza",
+                    "uuid": "01a1745d-36a2-7201-b111-6138a00d2b9a"
+                },
+                {
+                    "full_name": "Roberto Jiménez Vázquez",
+                    "uuid": "01a1745d-13d6-7340-b856-b6fbddfe1cfe"
+                },
+                {
+                    "full_name": "Roberto Jiménez Flores",
+                    "uuid": "01a1745d-19c0-70ed-9b5a-bbefb3f70446"
+                },
+                {
+                    "full_name": "Roberto Jiménez Ortiz",
+                    "uuid": "01a1745d-2440-70d0-a421-a068746bea16"
+                },
+                {
+                    "full_name": "Roberto Jiménez Martínez",
+                    "uuid": "01a1745d-2a81-721b-89cf-32b6ee18ef91"
+                },
+                {
+                    "uuid": "01a1745d-2b7d-7374-8fae-19bb7057352f",
+                    "full_name": "Roberto Jiménez González"
+                },
+                {
+                    "full_name": "Roberto Jiménez Ramos",
+                    "uuid": "01a1745d-39da-73ba-86d2-26f16bba84a5"
+                },
+                {
+                    "full_name": "Roberto Jiménez Díaz",
+                    "uuid": "01a1745d-7069-72ad-8405-f4cec6cbc6f6"
+                },
+                {
+                    "full_name": "Roberto Jiménez Jiménez",
+                    "uuid": "01a1745d-7b4f-71fd-8339-cd343d2c384f"
+                },
+                {
+                    "full_name": "Rodrigo Jiménez García",
+                    "uuid": "01a1745d-13b3-71f8-b810-4e30443c5e26"
+                },
+                {
+                    "full_name": "Rodrigo Jiménez Jiménez",
+                    "uuid": "01a1745d-40ec-71e0-895d-2037a2aa24ce"
+                },
+                {
+                    "full_name": "Rodrigo Jiménez Gutiérrez",
+                    "uuid": "01a1745d-5dde-7314-b298-a59a91154f42"
+                },
+                {
+                    "full_name": "Rodrigo Jiménez",
+                    "uuid": "01a1745d-660d-7278-bc43-cedca1919418"
+                },
+                {
+                    "full_name": "Rosa María Jiménez Chávez",
+                    "uuid": "01a1745c-f65d-7105-949b-030a99b43eae"
+                },
+                {
+                    "full_name": "Rosa María Jiménez Gómez",
+                    "uuid": "01a1745c-f7b7-711a-9741-130ccffb2e06"
+                },
+                {
+                    "full_name": "Rosa María Jiménez Gómez",
+                    "uuid": "01a1745d-0ded-7059-9f3e-29673087078f"
+                },
+                {
+                    "full_name": "Miguel Ángel García Vázquez",
+                    "uuid": "01a1745d-6e93-71ed-a11d-8a6664e3f2cb"
+                },
+                {
+                    "full_name": "Miguel Ángel García Reyes",
+                    "uuid": "01a1745d-7634-70fd-ad72-3c855c9841fd"
+                },
+                {
+                    "full_name": "Miguel Ángel García Medina",
+                    "uuid": "01a1745d-77cd-71fb-bac0-b87a4a02872a"
+                },
+                {
+                    "full_name": "Mónica García",
+                    "uuid": "01a1745c-f4cc-7292-b907-9b2ea084e70c"
+                },
+                {
+                    "full_name": "Mónica García Ramírez",
+                    "uuid": "01a1745d-15b9-7052-a25a-11fb4a83f956"
+                },
+                {
+                    "full_name": "Mónica García Ramírez",
+                    "uuid": "01a1745d-5b9f-7134-8419-0fdd2c380b76"
+                },
+                {
+                    "full_name": "Mónica García Rodríguez",
+                    "uuid": "01a1745d-65d6-7262-9e36-e9bd2f166761"
+                },
+                {
+                    "uuid": "01a1745c-f1c3-72a7-a940-d71c93908270",
+                    "full_name": "Norma García Salazar"
+                },
+                {
+                    "full_name": "Norma García Martínez",
+                    "uuid": "01a1745c-f783-701e-b17f-1da418f3c761"
+                },
+                {
+                    "uuid": "01a1745d-0774-72f2-bc2b-f63015bf3310",
+                    "full_name": "Norma García Ramos"
+                },
+                {
+                    "full_name": "Norma García Gutiérrez",
+                    "uuid": "01a1745d-0ec1-7308-ac25-2e622bf18891"
+                },
+                {
+                    "full_name": "Norma García Jiménez",
+                    "uuid": "01a1745d-1cf9-73b9-bd6e-020ec8c13a56"
+                },
+                {
+                    "full_name": "Norma García Flores",
+                    "uuid": "01a1745d-394d-71d3-8df5-34a97cc340b2"
+                },
+                {
+                    "uuid": "01a1745d-5525-70e5-9aba-eb8fef7cf29a",
+                    "full_name": "Norma García Hernández"
+                },
+                {
+                    "full_name": "Norma García Ramírez",
+                    "uuid": "01a1745d-6005-7340-92fa-e96ef55bb4ff"
+                }
+            ],
+            "terms": [
+                "Aguil",
+                "Ramos",
+                "Adriana",
+                "Aguila",
+                "Aguilar",
+                "Aguil",
+                "Aguilar",
+                "Mendo",
+                "Adrian",
+                "Aguil",
+                "Mendoza",
+                "Alejand",
+                "Alejand",
+                "Alejand",
+                "Aguil",
+                "Gonzál",
+                "Gonzále",
+                "Ángel",
+                "Gonzá",
+                "Gutiér",
+                "Ortiz",
+                "Mónica",
+                "Reyes",
+                "Mendoz",
+                "Mónica",
+                "Mendoza",
+                "Gonzál",
+                "Gonzá",
+                "Gonzá",
+                "Gonzále",
+                "Ramír",
+                "Carlos",
+                "Ramírez",
+                "Vázqu",
+                "Ramíre",
+                "Carlos",
+                "Carlos",
+                "Ramír",
+                "Juan",
+                "Carlos",
+                "Carlo",
+                "Carlos",
+                "Carlos",
+                "Salaza",
+                "Ramírez",
+                "Patrici",
+                "Reyes",
+                "Reyes",
+                "Reyes",
+                "Reyes",
+                "Vázquez",
+                "Patri",
+                "Rafae",
+                "Rafae",
+                "Ramos",
+                "Ramos",
+                "Castill",
+                "Reyes",
+                "Reyes",
+                "Ricar",
+                "Ortiz",
+                "Ortiz",
+                "José",
+                "Vázqu",
+                "Ramos",
+                "José",
+                "Luis",
+                "Ortiz",
+                "Carlos",
+                "Ortiz",
+                "Carlo",
+                "Torres",
+                "Juan",
+                "Karla",
+                "Ortiz",
+                "Chávez",
+                "Cháve",
+                "Gutiérr",
+                "Chávez",
+                "Alejand",
+                "Alejan",
+                "Cháve",
+                "Alejan",
+                "Alejand",
+                "Alejan",
+                "Chávez",
+                "Alejan",
+                "Chávez",
+                "Cristin",
+                "Cristi",
+                "Vázqu",
+                "Flores",
+                "Ortiz",
+                "Jimén",
+                "Gonzál",
+                "Ramos",
+                "Jimén",
+                "Robert",
+                "Rodrig",
+                "Jiménez",
+                "Rodri",
+                "Jimén",
+                "Chávez",
+                "Gómez",
+                "Rosa",
+                "Miguel",
+                "Reyes",
+                "Ángel",
+                "Mónic",
+                "García",
+                "Ramír",
+                "Mónica",
+                "Norma",
+                "Martí",
+                "García",
+                "Norma",
+                "García",
+                "Flore",
+                "García",
+                "Ramírez"
+            ],
+            "consultations": [
+                "01a1747a-1764-733a-9411-4e026a066976",
+                "01a1746c-cee9-7337-b765-c18631076ff5",
+                "01a1746b-c67d-706c-a1cc-bfe52f447bc5",
+                "01a17469-e330-7143-8aa1-0b6ed940085f",
+                "01a17468-f7f3-7035-b214-319d24b9a037",
+                "01a17479-e3a5-70c6-b26b-b4a9d643e0b7",
+                "01a17468-9b78-7070-a209-5c584e328d40",
+                "01a17468-2baf-7148-9db5-d17a384a36e2",
+                "01a17465-c9ab-707b-b418-2f11d4102bbf",
+                "01a17464-fd64-7007-9b54-7c40359f3ebe",
+                "01a17479-ce00-71a1-b59f-3c92e67a447b",
+                "01a1746b-4410-728d-b815-24f17c4d3002",
+                "01a17467-44e5-73ec-a083-25d88a416c10",
+                "01a17466-d186-7166-8d81-d509c2d0f678",
+                "01a17465-129b-715f-80bf-5b585f78ec23",
+                "01a17479-fd6a-7310-bd13-31b5867f1721",
+                "01a1746c-e01f-721a-b8d3-19712a801260",
+                "01a1746b-e430-73b4-a635-563d658f8319",
+                "01a1746b-e315-7178-851b-4f54a1917b59",
+                "01a1746a-8797-72bd-8c14-e2f9f60c3b61",
+                "01a17479-c565-72ad-865c-80e19a23a7b7",
+                "01a17479-b889-71a7-a61b-82eda4303f04",
+                "01a1746c-d151-7271-a6f3-b80aea728f69",
+                "01a1746a-9fd2-7385-8466-59e66f05def3",
+                "01a17464-35fb-717e-990c-aedb1bbf7d24",
+                "01a17479-f934-7068-a7c5-34db2ac6cc79",
+                "01a1746c-bcfa-7034-ae75-b0c6a5f6717f",
+                "01a1746c-465f-70f1-b081-aa583e10a815",
+                "01a1746a-f355-721e-a5d5-2f87a0d15205",
+                "01a17466-a120-71dc-aa23-ce4f27d94ae1",
+                "01a1746d-2590-73ce-90fc-095d7738d5ea",
+                "01a1746b-eecc-736e-ae7d-0c91c9e556c4",
+                "01a1746b-e14b-7346-9319-c8ae86016a2c",
+                "01a17467-9b49-7364-a6f2-7bc896e9628e",
+                "01a17465-daaf-7232-bd68-7e823630f83c",
+                "01a1746a-aae8-71fd-bbc1-d95fb45c7d84",
+                "01a1746a-aa4b-72f4-b71e-bbcd414c19b8",
+                "01a1746a-7f10-723c-b3b9-b14b82dcf169",
+                "01a17468-e778-7166-9123-f7f91195d176",
+                "01a17467-215a-730d-83cc-05c9aa87a021",
+                "01a1746b-d55b-7357-a9d2-c6df0aeb5804",
+                "01a17468-c5cb-7339-ba54-0183fde4d670",
+                "01a17468-6c5f-71a8-822f-cf2465346112",
+                "01a17466-a263-7345-8ffa-71709b8a7034",
+                "01a17465-5427-7398-9857-fd46a67bb140",
+                "01a1746b-15db-71b0-94b7-3eb3036f2c17",
+                "01a17467-b008-70b5-b5b5-1218395337a7",
+                "01a17467-6d07-7291-9a3d-30c0ac772c89",
+                "01a17467-59be-7222-a84d-ec5787705515",
+                "01a17466-3cec-7382-b89f-c5a67656b37c",
+                "01a1747a-01d3-7073-addb-5013f5f06464",
+                "01a17479-c9c5-7142-a804-9b7a438825bd",
+                "01a1746b-afc9-7020-ac12-f5297f5f1dce",
+                "01a1746a-afc1-731b-9abf-a788d0e2fb7b",
+                "01a17467-a4c0-71bc-be0a-1a3bf4342c2b",
+                "01a17479-f910-70bc-b384-831c4ac7ea62",
+                "01a17479-e7d2-7055-bda8-c0214a1d031f",
+                "01a17479-c115-7172-8a29-4c0147cf96d5",
+                "01a1746d-18db-71e1-914c-b897a00a0465",
+                "01a1746b-c14d-7118-885b-600c48c5e28e",
+                "01a17479-d6b2-72c2-9489-1a20196a2b4a",
+                "01a1746b-5dac-71a4-8713-f53e1321196b",
+                "01a17469-8d24-7088-bdb8-d7af3627d940",
+                "01a17467-3fdd-72e8-9001-57ce1c7a4b55",
+                "01a17467-12bf-73d5-b1e8-7c415a66adb5",
+                "01a1746c-a70f-702b-bbae-babc269d224a",
+                "01a1746c-45a4-71f7-9c88-8607a0b03b2a",
+                "01a1746b-a4c2-7020-b12f-09791a564a01",
+                "01a1746a-a721-72ea-8a0b-dc3a3a919219",
+                "01a1746a-729c-702a-9eaf-40322a463d66",
+                "01a17479-d24d-7385-80ee-b32bfc045ad8",
+                "01a1746c-aa85-7302-b6e6-36ca07fdbe1c",
+                "01a1746c-029e-71cf-9c1a-3bd492d23f90",
+                "01a1746b-6c01-7320-b09b-3029eb1a1268",
+                "01a1746a-86da-73d1-b3ca-d6cd5ffb79a5",
+                "01a1746b-01f1-7016-9e61-13edd347a34f",
+                "01a17469-6a20-7329-b343-ca96340d4b6d",
+                "01a17469-4792-70b3-82ed-56313c1be42b",
+                "01a17468-3ec0-7142-9032-a9c75ad43a85",
+                "01a17467-ef5e-70cf-98b4-f6087435f3f1",
+                "01a1746a-fe71-725a-bbe9-e0bb86da1ed3",
+                "01a17469-2ea0-7339-b55f-5919adbec7c8",
+                "01a17467-f84a-7185-8452-218808c95613",
+                "01a17466-0446-701a-b602-b63b484ce288",
+                "01a17465-b5ae-70cf-ac9a-3f2a55793a07",
+                "01a1746d-0f44-7249-af48-95dc7b2718b8",
+                "01a1746c-20af-7085-8d4d-235396b88bf0",
+                "01a1746b-d5ae-7033-a257-d7c387756704",
+                "01a1746a-62d9-71f4-b084-35645ceea683",
+                "01a17469-d645-7219-987b-3efcdbf96ad5",
+                "01a1746c-ccdf-73a5-9e29-abca49509dc0",
+                "01a17469-c832-733d-86ca-579bcb673b09",
+                "01a17469-955e-70c4-b101-1608f4ad0c80",
+                "01a17468-d98d-72ff-abff-6602f4ab19d9",
+                "01a17468-3ce8-7011-9be6-5c8479f8d71e",
+                "01a1746c-4186-7302-9c73-a29f140186c7",
+                "01a1746b-535d-712e-a156-951e26a6552d",
+                "01a17469-5645-73a9-b93e-6f40c5ffe5b8",
+                "01a17469-0093-71b7-8f06-d13a67641f6a",
+                "01a17468-5a95-73c3-9b29-7768f627c173",
+                "01a1746c-e71b-7399-a987-ba8155fef2ab",
+                "01a1746c-8816-72e3-af90-14b09abc9c8c",
+                "01a1746c-7d1c-7230-8ef8-55f7d6f5156d",
+                "01a1746c-3e20-73d7-96e3-6137dc9388de",
+                "01a1746b-a35e-7312-bffa-8cda33cc33ee",
+                "01a1746a-60a1-7208-964b-9848212e352f",
+                "01a17468-9590-70e0-b79c-c04a06dc376a",
+                "01a17466-3606-71c3-bad0-5e7734427b7f",
+                "01a17464-a105-70f1-8d45-c664ce9fe9a6",
+                "01a17463-dd50-717f-8e46-fe55bab37362",
+                "01a1746c-cf4e-7116-a282-890c96b12f3a",
+                "01a1746c-35a6-703b-8803-3dd0285b0fbf",
+                "01a1746a-0428-73ca-8f42-3110b672645a",
+                "01a17468-a64f-72ed-9d53-c45cfac2588c",
+                "01a17468-7533-7056-b3bf-dcb4114a30c3",
+                "01a1746c-7f00-737d-aa5a-96176fbba726",
+                "01a1746b-c926-7084-aa75-b1fc29f3fbf4",
+                "01a1746b-07c3-734c-bd0d-eba10c389a2f",
+                "01a17467-5ba3-70dd-b67b-b79e27e85086",
+                "01a17466-02de-71f2-ac00-b517ffc59d91",
+                "01a1746b-63f7-7071-882c-71fe02dac3cb",
+                "01a17469-d868-7274-9100-368b1c88cfa4",
+                "01a17467-ba5a-715f-9339-0efb7c845584",
+                "01a17467-b8d5-7263-9b5e-ab4a7523d40f",
+                "01a17467-7d60-7061-930d-6ff01076b067",
+                "01a1746c-59fe-71d3-9242-e3700e76d61a",
+                "01a1746b-be4f-727b-9ba2-d97957e11f55",
+                "01a1746b-b7d7-71a8-9691-e36e6ce7cf2a",
+                "01a17465-7c13-73c6-9c8b-48a416244770",
+                "01a17464-9266-70e8-b6df-29c9ed948505",
+                "01a1746a-4081-71be-a0d5-b6dbb35669b2",
+                "01a17467-a43f-7242-b9e4-c0091ba98c30",
+                "01a17461-5317-7211-b259-2d9aa8411565",
+                "01a17460-3281-70e5-a304-aedb43c1ca5e",
+                "01a1745e-f2d9-72b3-80ff-a189a87971b4",
+                "01a1746c-9442-73e7-987b-ee51e6abd1cb",
+                "01a1746c-2fa6-7135-8e01-9d7d721332d6",
+                "01a1746b-2a91-723d-9e94-f07abd44eb5d",
+                "01a17468-af38-705f-bf86-1b0ff8e57bf8",
+                "01a17468-6aa9-7018-836f-def737f9bc9f",
+                "01a1746a-9c0f-703a-936d-e14c6ff9c3d6",
+                "01a17464-c8f6-720b-9cbd-226feff04940",
+                "01a17462-5593-73ca-8c59-6c180cdadc99",
+                "01a17462-48c5-7109-a38b-f6adc891b737",
+                "01a1745f-d5be-7061-a8db-9972972ae4d9",
+                "01a17469-c86a-738f-9e4c-bc3126181875",
+                "01a17468-dc4b-71db-bda1-fe319cef59f2",
+                "01a17468-cda6-7077-ba49-b2e37cabb06c",
+                "01a17468-9fc7-7252-b7f5-aa7da80857cb",
+                "01a17468-86ab-70b5-87c8-dedb4ba74d70",
+                "01a1746c-3645-715e-a48e-55e680e56600",
+                "01a1746c-018e-7157-9ee2-c03dd3c51c6b",
+                "01a1746b-2f11-7354-891e-b10eb01db475",
+                "01a1746a-38ca-7247-864c-15617c981826",
+                "01a17469-bb8b-738c-9219-338f0e8c7766",
+                "01a1746c-c9d5-7393-8d81-c1dda97f38c7",
+                "01a1746c-9a69-70fd-a0ff-26ca095f4f35",
+                "01a1746a-7afe-7378-9999-3e112d0ae4a5",
+                "01a1746a-24fa-732c-8a65-5bbf9eca898a",
+                "01a17469-7a5a-71f8-b0b4-1d912e949670",
+                "01a17469-ff87-7013-94ae-1c3fe202828a",
+                "01a17468-a427-703f-8ad5-5d5bf2175353",
+                "01a17464-064b-70a8-8e90-77c9a5f4fefb",
+                "01a17462-c467-72a4-b5a9-c90b1358a863",
+                "01a17462-3e05-7044-8936-a40d0d2fc44e",
+                "01a1746b-519e-70fc-bbd1-dbf9757d2ca8",
+                "01a1746a-b447-7081-a1c7-0d3c6a601fc3",
+                "01a1746a-2c3e-71b4-b2d1-044e632db8c0",
+                "01a17467-7aa1-7023-a6a9-90c2a0ca6a92",
+                "01a17465-df2b-739e-b017-c38a6066a832",
+                "01a1746c-9b5f-71d1-ae4a-5f4111af6a9b",
+                "01a17468-52e1-7092-8903-46b1375fcb38",
+                "01a17467-74da-701b-a89b-7589842df73d",
+                "01a17466-f1c5-7303-bf2e-e05cd95029eb",
+                "01a17462-7739-7343-bc32-38549eeee6dc",
+                "01a1746d-1fd9-723f-81a2-92977e2a8767",
+                "01a1746d-14bd-7030-9975-34cae2669b61",
+                "01a17469-94fb-73d2-b444-13f2849dde60",
+                "01a17469-4297-71a7-855b-0011980776cb",
+                "01a17469-1c4d-736d-81a3-17b6362e60cf",
+                "01a1746c-4a86-73d6-ac21-c7b9983b44a3",
+                "01a1746b-b9d0-7304-b8cc-3af543f07407",
+                "01a17467-768b-72d6-a2d1-16c2e0c7192b",
+                "01a17464-f86e-7392-91d0-7d59c2991206",
+                "01a17464-5bbe-709d-82aa-21542be1fe78",
+                "01a1746c-9068-7278-bc4e-8a333bfa50a1",
+                "01a1746c-06c9-73f4-85b7-6b36cd831199",
+                "01a1746b-8774-70bd-a90f-debdb21ddbca",
+                "01a17469-473d-7164-b34f-eb9f1319788a",
+                "01a17468-e84e-73f8-b5c0-dc9dd581533d",
+                "01a1746c-6232-718d-8df1-ce8390df6b2b",
+                "01a1746b-3ec3-73a5-a0b9-b4fc48e18bd8",
+                "01a1746a-b7b2-73c4-83e2-d8a3e16598d1",
+                "01a1746a-73ce-72b2-91dd-8e3a7a0fa8cb",
+                "01a17468-0eb7-70a9-8f37-6f55f915a1e8",
+                "01a1746a-bde1-704e-ad90-912dd144e8c7",
+                "01a17468-f25f-7096-948f-3d721d9fef5e",
+                "01a17468-9ed7-71cb-bf38-5bf61edcd2d9",
+                "01a17466-6f71-73b0-aa56-1cc62ec97611",
+                "01a17465-0e21-717d-a2fa-80edecc86ddd"
+            ],
+            "medications": [
+                {
+                    "current_stock": 24,
+                    "name": "Ambroxol",
+                    "uuid": "01a1745d-7c53-706c-b895-27766e3c3723"
+                },
+                {
+                    "current_stock": 69,
+                    "name": "Amlodipino",
+                    "uuid": "01a1745d-7c7a-7062-b9e2-174e0ea65815"
+                },
+                {
+                    "current_stock": 76,
+                    "name": "Amoxicilina",
+                    "uuid": "01a1745d-7c4b-7189-8cbc-caa14fa25ca8"
+                },
+                {
+                    "name": "Amoxicilina/Ácido clavulánico",
+                    "uuid": "01a1745d-7c4d-71e7-85d4-7c4e5cb10354",
+                    "current_stock": 102
+                },
+                {
+                    "current_stock": 0,
+                    "name": "Betahistina",
+                    "uuid": "01a1745d-7c88-70bc-a7d4-ce0bb75256ce"
+                },
+                {
+                    "name": "Butilhioscina",
+                    "uuid": "01a1745d-7c5f-7282-9903-173314fa2aba",
+                    "current_stock": 138
+                },
+                {
+                    "current_stock": 76,
+                    "name": "Captopril",
+                    "uuid": "01a1745d-7c7c-7016-914c-0c74de303939"
+                },
+                {
+                    "uuid": "01a1745d-7c81-72ba-b233-7a92edea93de",
+                    "current_stock": 16,
+                    "name": "Cefalexina"
+                },
+                {
+                    "current_stock": 61,
+                    "name": "Ceftriaxona",
+                    "uuid": "01a1745d-7c5a-7330-b944-bd51fed7a0e2"
+                },
+                {
+                    "name": "Ciprofloxacino oftálmico",
+                    "uuid": "01a1745d-7c70-73f0-8f22-f81e694f8ccf",
+                    "current_stock": 54
+                },
+                {
+                    "current_stock": 43,
+                    "name": "Clonazepam",
+                    "uuid": "01a1745d-7c97-707b-a27c-62185f3fb82a"
+                },
+                {
+                    "current_stock": 45,
+                    "name": "Cloranfenicol oftálmico",
+                    "uuid": "01a1745d-7c75-70b6-a27f-b397c007e603"
+                },
+                {
+                    "current_stock": 67,
+                    "name": "Clotrimazol",
+                    "uuid": "01a1745d-7c6b-7358-82e1-6ae15e6b2cdd"
+                },
+                {
+                    "current_stock": 60,
+                    "name": "Compresas térmicas reutilizables",
+                    "uuid": "01a1745d-7c72-73ab-b7ea-dc15a7ac4511"
+                },
+                {
+                    "current_stock": 17,
+                    "name": "Diclofenaco",
+                    "uuid": "01a1745d-7c39-719b-89c1-42c90651d004"
+                },
+                {
+                    "current_stock": 53,
+                    "name": "Dimenhidrinato",
+                    "uuid": "01a1745d-7c8a-7188-ac51-7a07ef017749"
+                },
+                {
+                    "current_stock": 64,
+                    "name": "Fluconazol",
+                    "uuid": "01a1745d-7c68-715f-8377-a5181027be30"
+                },
+                {
+                    "current_stock": 68,
+                    "name": "Fluoxetina",
+                    "uuid": "01a1745d-7c99-727a-b552-8bbeb8cb4510"
+                },
+                {
+                    "current_stock": 48,
+                    "name": "Hidrocortisona",
+                    "uuid": "01a1745d-7c7e-7034-97ec-227f320c5c09"
+                },
+                {
+                    "current_stock": 11,
+                    "name": "Insulina glargina",
+                    "uuid": "01a1745d-7c90-72d8-a99b-6c1a2349306c"
+                },
+                {
+                    "uuid": "01a1745d-7c46-725d-a5e5-eea3bbf33d05",
+                    "current_stock": 145,
+                    "name": "Ketorolaco"
+                },
+                {
+                    "current_stock": 69,
+                    "name": "Levotiroxina",
+                    "uuid": "01a1745d-7c92-73c9-a21d-6b3c2f69422b"
+                },
+                {
+                    "uuid": "01a1745d-7c50-71bc-9747-62bb4324f565",
+                    "current_stock": 196,
+                    "name": "Loratadina"
+                },
+                {
+                    "current_stock": 94,
+                    "name": "Losartán",
+                    "uuid": "01a1745d-7c77-70f2-a1dd-0884b5d19e08"
+                },
+                {
+                    "name": "Metformina",
+                    "uuid": "01a1745d-7c8d-71cb-a863-884580941c3b",
+                    "current_stock": 69
+                },
+                {
+                    "current_stock": 38,
+                    "name": "Metocarbamol",
+                    "uuid": "01a1745d-7c48-725e-bc81-0eb58527bf63"
+                },
+                {
+                    "name": "Metoclopramida",
+                    "uuid": "01a1745d-7c86-7093-a285-4cdea17990ca",
+                    "current_stock": 55
+                },
+                {
+                    "name": "Naproxeno",
+                    "uuid": "01a1745d-7c40-72a2-bbb4-1b46618b31cb",
+                    "current_stock": 23
+                },
+                {
+                    "current_stock": 78,
+                    "name": "Nitrofurantoína",
+                    "uuid": "01a1745d-7c66-72a4-939e-1427f01f2eb7"
+                },
+                {
+                    "current_stock": 81,
+                    "name": "Omeprazol",
+                    "uuid": "01a1745d-7c61-700b-8090-903aeb2b4f19"
+                },
+                {
+                    "current_stock": 175,
+                    "name": "Paracetamol",
+                    "uuid": "01a1745d-7c3e-7367-9d40-c2ab33e24cc6"
+                },
+                {
+                    "current_stock": 0,
+                    "name": "Prednisona",
+                    "uuid": "01a1745d-7c58-7188-b0a8-a2398a982f14"
+                },
+                {
+                    "current_stock": 18,
+                    "name": "Salbutamol",
+                    "uuid": "01a1745d-7c55-7383-a8ae-d3fc550e19ba"
+                },
+                {
+                    "current_stock": 38,
+                    "name": "Sertralina",
+                    "uuid": "01a1745d-7c95-71e4-9a7d-e24925b4eca5"
+                },
+                {
+                    "current_stock": 36,
+                    "name": "Solución Hartmann",
+                    "uuid": "01a1745d-7c43-71cf-9700-3840489e4b9c"
+                },
+                {
+                    "current_stock": 58,
+                    "name": "Sucralfato",
+                    "uuid": "01a1745d-7c64-72ca-b4ab-ef9e0adba46b"
+                },
+                {
+                    "current_stock": 73,
+                    "name": "Sumatriptán",
+                    "uuid": "01a1745d-7c83-70a5-921c-f14317c08a44"
+                },
+                {
+                    "current_stock": 87,
+                    "name": "Vida Suero Oral",
+                    "uuid": "01a1745d-7c5d-72ae-aa2e-c6e17428840f"
+                },
+                {
+                    "name": "Ácido mefenámico",
+                    "uuid": "01a1745d-7c6d-7392-a060-80f71cacc7e7",
+                    "current_stock": 31
+                }
+            ]
+        }
+    }
+}

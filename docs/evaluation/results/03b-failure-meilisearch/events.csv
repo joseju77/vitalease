@@ -1,0 +1,4 @@
+timestamp_utc,event,detail
+2026-10-25T20:27:33Z,scale_meilisearch_0,docker service scale vitalease_meilisearch=0
+2026-10-25T20:28:33Z,scale_meilisearch_1,docker service scale vitalease_meilisearch=1
+2026-10-25T20:29:00Z,recovered,meilisearch
