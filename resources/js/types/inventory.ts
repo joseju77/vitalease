@@ -81,8 +81,36 @@ export interface DemandProjectionSeriesPoint {
     value: number;
 }
 
+/** Projection method chosen by backtest; values match the PHP forecaster names. */
+export type DemandProjectionMethod = 'linear_trend' | 'historical_mean';
+
+/** Why the method was chosen; `short_history` means fewer than 9 months. */
+export type DemandProjectionMethodReason = 'short_history' | 'linear_beats_mean' | 'mean_beats_linear';
+
+export interface DemandProjectionMethodError {
+    mae: number | null;
+    rmse: number | null;
+}
+
+/** One-step rolling-origin error of both candidate methods. */
+export interface DemandProjectionBacktest {
+    horizon: number;
+    margin: number;
+    evaluated_points: number;
+    linear_trend: DemandProjectionMethodError;
+    historical_mean: DemandProjectionMethodError;
+}
+
+/** Syntetos-Boylan class of the series plus the lag-12 seasonality flag. */
+export interface DemandPatternSummary {
+    class: 'smooth' | 'erratic' | 'intermittent' | 'lumpy' | 'no_demand';
+    adi: number | null;
+    cv2: number | null;
+    seasonality: 'seasonal' | 'not_seasonal' | 'not_assessed';
+}
+
 /**
- * The OLS demand projection for one medication, as built by
+ * The demand projection for one medication, as built by
  * `App\Services\Inventory\MedicationDemandProjection` and mapped by
  * `MedicationDemandProjectionController`. `status` is `'insufficient_data'`
  * when fewer than two complete months of consumption history exist, in
@@ -100,6 +128,11 @@ export interface DemandProjection {
     next_month_demand: number | null;
     current_stock: number;
     suggested_reorder_quantity: number | null;
+    /** Null only when `status` is `'insufficient_data'` (as are the three fields below). */
+    method: DemandProjectionMethod | null;
+    method_reason: DemandProjectionMethodReason | null;
+    backtest: DemandProjectionBacktest | null;
+    demand_pattern: DemandPatternSummary | null;
     medication: MedicationSummary;
     is_indicative: boolean;
 }
