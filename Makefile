@@ -7,7 +7,7 @@ verify_ssh_key := $(shell mkdir -p docker/ssh && [ ! -f docker/ssh/authorized_ke
 export COMPOSE_PROJECT_NAME := $(shell echo $(APP_NAME) | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')
 export COMPOSE_FILE := docker-compose.dev.yml
 
-.PHONY: help setup build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell lint lint-fix lint-staged test test-db test-frontend test-all seed-demo forecast-fetch-nhs
+.PHONY: help setup build rebuild start stop down up restart recreate laravel-shell laravel-shell-root postgres-shell nginx-shell redis-shell lint lint-fix lint-staged test test-db test-frontend test-all seed-demo forecast-fetch-nhs forecast-evaluate
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -93,6 +93,8 @@ seed-demo: ## Seed realistic demo users, patients and consultations for local de
 # --- Forecast evaluation ---
 forecast-fetch-nhs: ## Download the NHS EPD sample used to evaluate the demand projection (network; resumable; extract stays git-ignored)
 	@docker compose exec -T -u www-data laravel php artisan forecast:fetch-nhs --no-interaction
+forecast-evaluate: ## Backtest the demand projection methods offline (local NHS extract + synthetic) and write docs/evaluation/results/05-* and 06-*
+	@docker compose exec -T -u www-data laravel php -d memory_limit=512M artisan forecast:evaluate --no-interaction
 
 # --- Single-node Swarm stack (production) ---
 include docker/swarm/swarm.mk
