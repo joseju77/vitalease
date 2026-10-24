@@ -15,8 +15,8 @@ use RuntimeException;
  *
  * Layout under the extract directory:
  *   sample.json        sampling parameters and the selected practice codes
- *   months/YYYYMM.csv  practice_code,bnf_chemical_substance,items (sorted)
- *   manifest.json      endpoint, SQL, row counts and sha256 per month
+ *   months/YYYYMM.csv  practice_code,bnf_chemical_substance (BNF code),items (sorted)
+ *   manifest.json      endpoint, SQL, the resolved substance column, row counts and sha256 per month
  *
  * The extract is raw NHS data and must stay git-ignored.
  */
@@ -85,12 +85,13 @@ final class NhsEpdExtractor
             $resourceId = NhsEpdClient::resourceIdForMonth($month);
             $rows = [];
             $queries = [];
+            $column = $this->client->substanceColumn($resourceId);
 
             foreach (array_chunk($codes, self::CHUNK_SIZE) as $chunk) {
-                $queries[] = $this->client->monthSql($resourceId, $chunk);
+                $queries[] = $this->client->monthSql($resourceId, $chunk, $column);
                 $requested++;
 
-                foreach ($this->client->monthItems($resourceId, $chunk) as $row) {
+                foreach ($this->client->monthItems($resourceId, $chunk, $column) as $row) {
                     if (! in_array($row['practice_code'], $chunk, true)) {
                         throw new RuntimeException('The NHS API returned a practice outside the requested sample.');
                     }
@@ -105,6 +106,7 @@ final class NhsEpdExtractor
 
             $manifest['months'][$month] = [
                 'resource_id' => $resourceId,
+                'substance_column' => $column,
                 'sql' => $queries,
                 'rows' => count($rows),
                 'sha256' => hash_file('sha256', $file),

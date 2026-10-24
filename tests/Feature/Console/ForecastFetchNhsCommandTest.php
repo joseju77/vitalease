@@ -20,6 +20,25 @@ afterEach(function () {
     File::deleteDirectory($this->extractDirectory);
 });
 
+function nhsSql(Request $request): string
+{
+    return (string) ($request->data()['sql'] ?? '');
+}
+
+/**
+ * Field list of a monthly resource, as returned by datastore_search.
+ *
+ * @return array<string, mixed>
+ */
+function nhsFieldsResponse(bool $currentSchema): array
+{
+    $ids = $currentSchema
+        ? ['PRACTICE_CODE', 'BNF_PRESENTATION_CODE', 'BNF_CHEMICAL_SUBSTANCE', 'BNF_CHEMICAL_SUBSTANCE_CODE', 'ADQ_USAGE', 'ITEMS']
+        : ['PRACTICE_CODE', 'BNF_CODE', 'BNF_CHEMICAL_SUBSTANCE', 'CHEMICAL_SUBSTANCE_BNF_DESCR', 'ADQUSAGE', 'ITEMS'];
+
+    return ['success' => true, 'result' => ['fields' => array_map(fn (string $id): array => ['id' => $id, 'type' => 'text'], $ids), 'records' => []]];
+}
+
 /**
  * @param  list<array<string, mixed>>  $records
  * @return array<string, mixed>
@@ -39,7 +58,11 @@ function fakeNhsApi(array $totals, ?Closure $monthResponse = null): void
 {
     Http::preventStrayRequests();
     Http::fake(function (Request $request) use ($totals, $monthResponse) {
-        $sql = (string) $request->data()['sql'];
+        $sql = nhsSql($request);
+
+        if ($sql === '') {
+            return Http::response(nhsFieldsResponse(currentSchema: (int) substr($request->data()['resource_id'], -6) >= 202503));
+        }
 
         if (! str_contains($sql, 'BNF_CHEMICAL_SUBSTANCE')) {
             return Http::response(nhsEnvelope(array_map(
@@ -56,7 +79,7 @@ function fakeNhsApi(array $totals, ?Closure $monthResponse = null): void
         preg_match_all("/'([^']+)'/", $sql, $matches);
 
         return Http::response(nhsEnvelope(array_map(
-            fn (string $code): array => ['PRACTICE_CODE' => $code, 'BNF_CHEMICAL_SUBSTANCE' => 'Invented substance', 'ITEMS' => '12.0'],
+            fn (string $code): array => ['PRACTICE_CODE' => $code, 'BNF_CHEMICAL_SUBSTANCE' => '0212000B0', 'ITEMS' => '12.0'],
             $matches[1],
         )));
     });
@@ -103,7 +126,7 @@ describe('extract', function () {
 
         expect($lines[0])->toBe('practice_code,bnf_chemical_substance,items')
             ->and($lines)->toHaveCount(4)
-            ->and($lines[1])->toEndWith(',"Invented substance",12');
+            ->and($lines[1])->toEndWith(',0212000B0,12');
     });
 
     it('sends the month resource id and only the sampled practices', function () {
@@ -113,17 +136,17 @@ describe('extract', function () {
             ->assertSuccessful();
 
         $sample = sampledNhsPractices($this->extractDirectory);
-        $monthly = Http::recorded(fn (Request $request): bool => str_contains((string) $request->data()['sql'], 'BNF_CHEMICAL_SUBSTANCE'));
+        $monthly = Http::recorded(fn (Request $request): bool => str_contains(nhsSql($request), 'BNF_CHEMICAL_SUBSTANCE'));
 
         expect($monthly->map(fn (array $pair): string => $pair[0]->data()['resource_id'])->values()->all())
             ->toBe(['EPD_SNOMED_202101', 'EPD_SNOMED_202102']);
 
         foreach ($monthly as [$request]) {
-            preg_match_all("/'([^']+)'/", (string) $request->data()['sql'], $matches);
+            preg_match_all("/'([^']+)'/", nhsSql($request), $matches);
 
             expect($matches[1])->toBe($sample)
-                ->and($request->data()['sql'])->toContain('GROUP BY PRACTICE_CODE, BNF_CHEMICAL_SUBSTANCE')
-                ->and($request->data()['sql'])->not->toContain('HAVING');
+                ->and(nhsSql($request))->toContain('GROUP BY PRACTICE_CODE, BNF_CHEMICAL_SUBSTANCE')
+                ->and(nhsSql($request))->not->toContain('HAVING');
         }
     });
 
@@ -133,10 +156,132 @@ describe('extract', function () {
         $this->artisan('forecast:fetch-nhs', ['--from' => '2021-01', '--to' => '2021-03', '--practices' => 3, '--path' => $this->extractDirectory])
             ->assertSuccessful();
 
-        $totals = Http::recorded(fn (Request $request): bool => ! str_contains((string) $request->data()['sql'], 'BNF_CHEMICAL_SUBSTANCE'));
+        $totals = Http::recorded(fn (Request $request): bool => nhsSql($request) !== '' && ! str_contains(nhsSql($request), 'BNF_CHEMICAL_SUBSTANCE'));
 
         expect($totals->map(fn (array $pair): string => $pair[0]->data()['resource_id'])->values()->all())
             ->toBe(['EPD_SNOMED_202101', 'EPD_SNOMED_202103']);
+    });
+});
+
+describe('substance column schema', function () {
+    /**
+     * @return array<string, list<string>>
+     */
+    function nhsExtractedSubstances(string $directory, string $month): array
+    {
+        $rows = array_map('str_getcsv', file($directory.'/months/'.$month.'.csv', FILE_IGNORE_NEW_LINES));
+        array_shift($rows);
+        $bySubstance = [];
+
+        foreach ($rows as [$practice, $substance]) {
+            $bySubstance[$practice][] = $substance;
+        }
+
+        return $bySubstance;
+    }
+
+    /**
+     * Fake an API whose old schema returns codes in BNF_CHEMICAL_SUBSTANCE and
+     * whose current schema returns names there and codes in the _CODE column.
+     */
+    function fakeSchemaChangingApi(): void
+    {
+        fakeNhsApi(eligibleNhsTotals(), function (Request $request, string $sql) {
+            // Querying the legacy column after the change would return names.
+            $names = (int) substr($request->data()['resource_id'], -6) >= 202503 && ! str_contains($sql, 'BNF_CHEMICAL_SUBSTANCE_CODE AS BNF_CHEMICAL_SUBSTANCE');
+            preg_match_all("/'([^']+)'/", $sql, $matches);
+
+            return Http::response(nhsEnvelope(array_map(
+                fn (string $code): array => ['PRACTICE_CODE' => $code, 'BNF_CHEMICAL_SUBSTANCE' => $names ? 'Atorvastatin' : '0212000B0', 'ITEMS' => '5'],
+                $matches[1],
+            )));
+        });
+    }
+
+    it('extracts the same codes before and after the schema change', function () {
+        fakeSchemaChangingApi();
+
+        $this->artisan('forecast:fetch-nhs', ['--from' => '2025-02', '--to' => '2025-03', '--practices' => 3, '--path' => $this->extractDirectory])
+            ->assertSuccessful();
+
+        expect(nhsExtractedSubstances($this->extractDirectory, '202503'))->toBe(nhsExtractedSubstances($this->extractDirectory, '202502'))
+            ->and(collect(nhsExtractedSubstances($this->extractDirectory, '202503'))->flatten()->unique()->all())->toBe(['0212000B0']);
+    });
+
+    it('queries the legacy column up to 202502 and the aliased code column from 202503', function () {
+        fakeSchemaChangingApi();
+
+        $this->artisan('forecast:fetch-nhs', ['--from' => '2025-02', '--to' => '2025-03', '--practices' => 3, '--path' => $this->extractDirectory])
+            ->assertSuccessful();
+
+        $sql = Http::recorded(fn (Request $request): bool => str_contains(nhsSql($request), 'GROUP BY PRACTICE_CODE,'))
+            ->map(fn (array $pair): string => nhsSql($pair[0]))->values();
+
+        expect($sql[0])->toContain('SELECT PRACTICE_CODE, BNF_CHEMICAL_SUBSTANCE, SUM(ITEMS)')
+            ->and($sql[0])->toEndWith('GROUP BY PRACTICE_CODE, BNF_CHEMICAL_SUBSTANCE')
+            ->and($sql[1])->toContain('SELECT PRACTICE_CODE, BNF_CHEMICAL_SUBSTANCE_CODE AS BNF_CHEMICAL_SUBSTANCE, SUM(ITEMS)')
+            ->and($sql[1])->toEndWith('GROUP BY PRACTICE_CODE, BNF_CHEMICAL_SUBSTANCE_CODE');
+    });
+
+    it('records the resolved column per month in the manifest', function () {
+        fakeSchemaChangingApi();
+
+        $this->artisan('forecast:fetch-nhs', ['--from' => '2025-02', '--to' => '2025-03', '--practices' => 3, '--path' => $this->extractDirectory])
+            ->assertSuccessful();
+
+        $manifest = json_decode((string) file_get_contents($this->extractDirectory.'/manifest.json'), true);
+
+        expect($manifest['months']['202502']['substance_column'])->toBe('BNF_CHEMICAL_SUBSTANCE')
+            ->and($manifest['months']['202503']['substance_column'])->toBe('BNF_CHEMICAL_SUBSTANCE_CODE');
+    });
+
+    it('accepts four-character appliance codes', function () {
+        fakeNhsApi(eligibleNhsTotals(), function (Request $request, string $sql) {
+            preg_match_all("/'([^']+)'/", $sql, $matches);
+
+            return Http::response(nhsEnvelope(array_map(
+                fn (string $code): array => ['PRACTICE_CODE' => $code, 'BNF_CHEMICAL_SUBSTANCE' => '2101', 'ITEMS' => '2'],
+                $matches[1],
+            )));
+        });
+
+        $this->artisan('forecast:fetch-nhs', ['--from' => '2021-01', '--to' => '2021-01', '--practices' => 3, '--path' => $this->extractDirectory])
+            ->assertSuccessful();
+
+        expect(collect(nhsExtractedSubstances($this->extractDirectory, '202101'))->flatten()->unique()->all())->toBe(['2101']);
+    });
+
+    it('fails loudly when the substance values are names instead of codes', function (string $value) {
+        fakeNhsApi(eligibleNhsTotals(), function (Request $request, string $sql) use ($value) {
+            preg_match_all("/'([^']+)'/", $sql, $matches);
+
+            return Http::response(nhsEnvelope(array_map(
+                fn (string $code): array => ['PRACTICE_CODE' => $code, 'BNF_CHEMICAL_SUBSTANCE' => $value, 'ITEMS' => '5'],
+                $matches[1],
+            )));
+        });
+
+        $this->artisan('forecast:fetch-nhs', ['--from' => '2025-03', '--to' => '2025-03', '--practices' => 3, '--path' => $this->extractDirectory])
+            ->expectsOutputToContain('not a BNF chemical substance code')
+            ->assertFailed();
+
+        expect(file_exists($this->extractDirectory.'/months/202503.csv'))->toBeFalse();
+    })->with(['name' => 'Invented substance', 'empty' => '', 'lowercase code' => '0212000b0', 'too long' => '0212000B0X']);
+
+    it('fails when the resource has no substance column', function () {
+        Http::preventStrayRequests();
+        Http::fake(fn (Request $request) => match (true) {
+            nhsSql($request) === '' => Http::response(['success' => true, 'result' => ['fields' => [['id' => 'PRACTICE_CODE']]]]),
+            default => Http::response(nhsEnvelope(array_map(
+                fn (string $code, int $items): array => ['PRACTICE_CODE' => $code, 'ITEMS' => (string) $items],
+                array_keys(eligibleNhsTotals()),
+                array_values(eligibleNhsTotals()),
+            ))),
+        });
+
+        $this->artisan('forecast:fetch-nhs', ['--from' => '2025-03', '--to' => '2025-03', '--practices' => 3, '--path' => $this->extractDirectory])
+            ->expectsOutputToContain('No BNF chemical substance column')
+            ->assertFailed();
     });
 });
 
@@ -174,7 +319,7 @@ describe('sampling', function () {
         $this->artisan('forecast:fetch-nhs', ['--from' => '2021-01', '--to' => '2021-01', '--practices' => 2, '--path' => $this->extractDirectory])
             ->assertSuccessful();
 
-        $sql = Http::recorded()->map(fn (array $pair): string => (string) $pair[0]->data()['sql'])->implode("\n");
+        $sql = Http::recorded()->map(fn (array $pair): string => nhsSql($pair[0]))->implode("\n");
 
         expect(sampledNhsPractices($this->extractDirectory))->toBe(['AAA111', 'BBB222'])
             ->and($sql)->not->toContain("'-'", 'LOW001', 'DROP', 'good one');
@@ -186,10 +331,10 @@ describe('sampling', function () {
         $this->artisan('forecast:fetch-nhs', ['--from' => '2021-01', '--to' => '2021-01', '--practices' => 3, '--path' => $this->extractDirectory])
             ->assertSuccessful();
 
-        $eligibility = Http::recorded(fn (Request $request): bool => ! str_contains((string) $request->data()['sql'], 'BNF_CHEMICAL_SUBSTANCE'))->first()[0];
+        $eligibility = Http::recorded(fn (Request $request): bool => nhsSql($request) !== '' && ! str_contains(nhsSql($request), 'BNF_CHEMICAL_SUBSTANCE'))->first()[0];
 
-        expect($eligibility->data()['sql'])->toContain("PRACTICE_CODE <> '-'")
-            ->and($eligibility->data()['sql'])->not->toContain('HAVING');
+        expect(nhsSql($eligibility))->toContain("PRACTICE_CODE <> '-'")
+            ->and(nhsSql($eligibility))->not->toContain('HAVING');
     });
 
     it('fails when too few practices are eligible', function () {
@@ -208,8 +353,8 @@ describe('resume', function () {
 
         $this->artisan('forecast:fetch-nhs', $arguments)->assertSuccessful();
 
-        // 2 eligibility queries + 5 monthly queries
-        expect(Http::recorded())->toHaveCount(7);
+        // 2 eligibility queries + 5 field lookups + 5 monthly queries
+        expect(Http::recorded())->toHaveCount(12);
 
         // Lose two months: only those are fetched again, and no eligibility query is repeated.
         unlink($this->extractDirectory.'/months/202102.csv');
@@ -218,7 +363,7 @@ describe('resume', function () {
 
         $this->artisan('forecast:fetch-nhs', $arguments)->assertSuccessful();
 
-        $newRequests = Http::recorded()->slice($before)->map(fn (array $pair): string => $pair[0]->data()['resource_id'])->values()->all();
+        $newRequests = Http::recorded()->slice($before)->filter(fn (array $pair): bool => nhsSql($pair[0]) !== '')->map(fn (array $pair): string => $pair[0]->data()['resource_id'])->values()->all();
 
         expect($newRequests)->toBe(['EPD_SNOMED_202102', 'EPD_SNOMED_202104']);
     });
@@ -262,7 +407,7 @@ describe('failures', function () {
             preg_match_all("/'([^']+)'/", $sql, $matches);
 
             return Http::response(nhsEnvelope(array_map(
-                fn (string $code): array => ['PRACTICE_CODE' => $code, 'BNF_CHEMICAL_SUBSTANCE' => 'Invented substance', 'ITEMS' => '1'],
+                fn (string $code): array => ['PRACTICE_CODE' => $code, 'BNF_CHEMICAL_SUBSTANCE' => '0212000B0', 'ITEMS' => '1'],
                 $matches[1],
             )));
         });
@@ -271,7 +416,7 @@ describe('failures', function () {
             ->assertSuccessful();
 
         $attempts = Http::recorded(fn (Request $request): bool => $request->data()['resource_id'] === 'EPD_SNOMED_202102'
-            && str_contains((string) $request->data()['sql'], 'BNF_CHEMICAL_SUBSTANCE'));
+            && str_contains(nhsSql($request), 'BNF_CHEMICAL_SUBSTANCE'));
 
         expect($failures)->toBe(2)
             ->and($attempts)->toHaveCount(3)
@@ -285,7 +430,7 @@ describe('failures', function () {
             ->expectsOutputToContain('The NHS API request failed')
             ->assertFailed();
 
-        $attempts = Http::recorded(fn (Request $request): bool => str_contains((string) $request->data()['sql'], 'BNF_CHEMICAL_SUBSTANCE'));
+        $attempts = Http::recorded(fn (Request $request): bool => str_contains(nhsSql($request), 'BNF_CHEMICAL_SUBSTANCE'));
 
         expect($attempts)->toHaveCount(3)
             ->and(file_exists($this->extractDirectory.'/months/202101.csv'))->toBeFalse();
@@ -297,7 +442,7 @@ describe('failures', function () {
         $this->artisan('forecast:fetch-nhs', ['--from' => '2021-01', '--to' => '2021-01', '--practices' => 3, '--path' => $this->extractDirectory])
             ->assertFailed();
 
-        $attempts = Http::recorded(fn (Request $request): bool => str_contains((string) $request->data()['sql'], 'BNF_CHEMICAL_SUBSTANCE'));
+        $attempts = Http::recorded(fn (Request $request): bool => str_contains(nhsSql($request), 'BNF_CHEMICAL_SUBSTANCE'));
 
         expect($attempts)->toHaveCount(1);
     });
@@ -337,7 +482,7 @@ describe('failures', function () {
     });
 
     it('rejects a response row for a practice outside the sample', function () {
-        fakeNhsApi(eligibleNhsTotals(), fn () => Http::response(nhsEnvelope([['PRACTICE_CODE' => 'ZZZ999', 'BNF_CHEMICAL_SUBSTANCE' => 'x', 'ITEMS' => '1']])));
+        fakeNhsApi(eligibleNhsTotals(), fn () => Http::response(nhsEnvelope([['PRACTICE_CODE' => 'ZZZ999', 'BNF_CHEMICAL_SUBSTANCE' => '0102000AJ', 'ITEMS' => '1']])));
 
         $this->artisan('forecast:fetch-nhs', ['--from' => '2021-01', '--to' => '2021-01', '--practices' => 3, '--path' => $this->extractDirectory])
             ->expectsOutputToContain('outside the requested sample')
