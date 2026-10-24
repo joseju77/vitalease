@@ -1,4 +1,3 @@
-/* eslint-disable vue/one-component-per-file -- minimal inline test double for Inertia's Head. */
 import { mount, VueWrapper } from '@vue/test-utils';
 import { defineComponent } from 'vue';
 import { afterEach, describe, expect, it, vi } from 'vitest';
