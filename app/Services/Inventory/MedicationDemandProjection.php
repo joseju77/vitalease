@@ -4,6 +4,7 @@ namespace App\Services\Inventory;
 
 use App\Enums\InventoryMovementType;
 use App\Models\Medication;
+use App\Services\Inventory\Forecasting\LinearTrendFit;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
@@ -94,42 +95,22 @@ final class MedicationDemandProjection
             return DemandProjectionResult::insufficientData($history, $currentStock);
         }
 
-        $xMean = ($n - 1) / 2;
-        $yMean = array_sum($series) / $n;
-
-        $sxy = 0.0;
-        $sxx = 0.0;
-        $syy = 0.0;
-
-        foreach ($series as $x => $y) {
-            $dx = $x - $xMean;
-            $dy = $y - $yMean;
-            $sxy += $dx * $dy;
-            $sxx += $dx * $dx;
-            $syy += $dy * $dy;
-        }
-
-        $slope = $sxx > 0.0 ? $sxy / $sxx : 0.0;
-        $intercept = $yMean - $slope * $xMean;
-
-        $ssRes = 0.0;
-        foreach ($series as $x => $y) {
-            $ssRes += ($y - ($intercept + $slope * $x)) ** 2;
-        }
-
-        $rSquared = $syy > 0.0 ? 1.0 - ($ssRes / $syy) : 1.0;
+        $fit = LinearTrendFit::fromSeries($series);
+        $slope = $fit->slope;
+        $intercept = $fit->intercept;
+        $rSquared = $fit->rSquared;
 
         $fitted = [];
         $cursor = $firstMonth;
         foreach (array_keys($series) as $x) {
-            $fitted[] = ['month' => $cursor->format('Y-m'), 'value' => round($intercept + $slope * $x, 2)];
+            $fitted[] = ['month' => $cursor->format('Y-m'), 'value' => round($fit->valueAt($x), 2)];
             $cursor = $cursor->addMonthNoOverflow();
         }
 
         $projection = [];
         $cursor = $firstMonth->addMonths($n);
         for ($i = 0; $i < $horizon; $i++) {
-            $value = max(0.0, $intercept + $slope * ($n + $i));
+            $value = max(0.0, $fit->valueAt($n + $i));
             $projection[] = ['month' => $cursor->format('Y-m'), 'value' => round($value, 2)];
             $cursor = $cursor->addMonthNoOverflow();
         }
