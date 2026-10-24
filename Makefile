@@ -95,6 +95,7 @@ forecast-fetch-nhs: ## Download the NHS EPD sample used to evaluate the demand p
 	@docker compose exec -T -u www-data laravel php artisan forecast:fetch-nhs --no-interaction
 forecast-evaluate: ## Backtest the demand projection methods offline (local NHS extract + synthetic) and write docs/evaluation/results/05-* and 06-*
 	@docker compose exec -T -u www-data laravel php -d memory_limit=512M artisan forecast:evaluate --no-interaction
+	@if [ -f docs/evaluation/results/05-forecast-nhs/series.csv ]; then gzip -9 -n -f docs/evaluation/results/05-forecast-nhs/series.csv; fi
 
 # --- Single-node Swarm stack (production) ---
 include docker/swarm/swarm.mk
