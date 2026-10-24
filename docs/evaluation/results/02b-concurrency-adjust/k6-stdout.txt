@@ -1,0 +1,279 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /scripts/experiments/concurrency-adjust.js
+        output: -
+
+     scenarios: (100.00%) 2 scenarios, 60 max VUs, 1m30s max duration (incl. graceful stop):
+              * adjusters: 30 looping VUs for 1m0s (exec: adjust, gracefulStop: 30s)
+              * dispensers: 30 looping VUs for 1m0s (exec: dispense, gracefulStop: 30s)
+
+
+Run          [ 100% ] setup()
+adjusters    [   0% ]
+dispensers   [   0% ]
+
+Run          [ 100% ] setup()
+adjusters    [   0% ]
+dispensers   [   0% ]
+time="2026-10-25T19:44:37Z" level=info msg="K6_SETUP {\"run_id\":\"02b-concurrency-adjust\",\"medication_uuid\":\"01a1745d-7c53-706c-b895-27766e3c3723\",\"medication\":\"Ambroxol\",\"initial_stock\":200,\"dispense_quantity\":1}" source=console
+
+running (0m03.0s), 60/60 VUs, 0 complete and 0 interrupted iterations
+adjusters    [   0% ] 30 VUs  0m00.1s/1m0s
+dispensers   [   0% ] 30 VUs  0m00.1s/1m0s
+
+running (0m04.0s), 60/60 VUs, 0 complete and 0 interrupted iterations
+adjusters    [   2% ] 30 VUs  0m01.1s/1m0s
+dispensers   [   2% ] 30 VUs  0m01.1s/1m0s
+
+running (0m05.0s), 60/60 VUs, 0 complete and 0 interrupted iterations
+adjusters    [   4% ] 30 VUs  0m02.1s/1m0s
+dispensers   [   4% ] 30 VUs  0m02.1s/1m0s
+
+running (0m06.0s), 60/60 VUs, 0 complete and 0 interrupted iterations
+adjusters    [   5% ] 30 VUs  0m03.1s/1m0s
+dispensers   [   5% ] 30 VUs  0m03.1s/1m0s
+
+running (0m07.0s), 60/60 VUs, 11 complete and 0 interrupted iterations
+adjusters    [   7% ] 30 VUs  0m04.1s/1m0s
+dispensers   [   7% ] 30 VUs  0m04.1s/1m0s
+
+running (0m08.0s), 60/60 VUs, 101 complete and 0 interrupted iterations
+adjusters    [   9% ] 30 VUs  0m05.1s/1m0s
+dispensers   [   9% ] 30 VUs  0m05.1s/1m0s
+
+running (0m09.0s), 60/60 VUs, 187 complete and 0 interrupted iterations
+adjusters    [  10% ] 30 VUs  0m06.1s/1m0s
+dispensers   [  10% ] 30 VUs  0m06.1s/1m0s
+
+running (0m10.0s), 60/60 VUs, 282 complete and 0 interrupted iterations
+adjusters    [  12% ] 30 VUs  0m07.1s/1m0s
+dispensers   [  12% ] 30 VUs  0m07.1s/1m0s
+
+running (0m11.0s), 60/60 VUs, 365 complete and 0 interrupted iterations
+adjusters    [  14% ] 30 VUs  0m08.1s/1m0s
+dispensers   [  14% ] 30 VUs  0m08.1s/1m0s
+
+running (0m12.0s), 60/60 VUs, 456 complete and 0 interrupted iterations
+adjusters    [  15% ] 30 VUs  0m09.1s/1m0s
+dispensers   [  15% ] 30 VUs  0m09.1s/1m0s
+
+running (0m13.0s), 60/60 VUs, 544 complete and 0 interrupted iterations
+adjusters    [  17% ] 30 VUs  0m10.1s/1m0s
+dispensers   [  17% ] 30 VUs  0m10.1s/1m0s
+
+running (0m14.0s), 60/60 VUs, 633 complete and 0 interrupted iterations
+adjusters    [  19% ] 30 VUs  0m11.1s/1m0s
+dispensers   [  19% ] 30 VUs  0m11.1s/1m0s
+
+running (0m15.0s), 60/60 VUs, 720 complete and 0 interrupted iterations
+adjusters    [  20% ] 30 VUs  0m12.1s/1m0s
+dispensers   [  20% ] 30 VUs  0m12.1s/1m0s
+
+running (0m16.0s), 60/60 VUs, 806 complete and 0 interrupted iterations
+adjusters    [  22% ] 30 VUs  0m13.1s/1m0s
+dispensers   [  22% ] 30 VUs  0m13.1s/1m0s
+
+running (0m17.0s), 60/60 VUs, 905 complete and 0 interrupted iterations
+adjusters    [  24% ] 30 VUs  0m14.1s/1m0s
+dispensers   [  24% ] 30 VUs  0m14.1s/1m0s
+
+running (0m18.0s), 60/60 VUs, 996 complete and 0 interrupted iterations
+adjusters    [  25% ] 30 VUs  0m15.1s/1m0s
+dispensers   [  25% ] 30 VUs  0m15.1s/1m0s
+
+running (0m19.0s), 60/60 VUs, 1088 complete and 0 interrupted iterations
+adjusters    [  27% ] 30 VUs  0m16.1s/1m0s
+dispensers   [  27% ] 30 VUs  0m16.1s/1m0s
+
+running (0m20.0s), 60/60 VUs, 1180 complete and 0 interrupted iterations
+adjusters    [  29% ] 30 VUs  0m17.1s/1m0s
+dispensers   [  29% ] 30 VUs  0m17.1s/1m0s
+
+running (0m21.0s), 60/60 VUs, 1267 complete and 0 interrupted iterations
+adjusters    [  30% ] 30 VUs  0m18.1s/1m0s
+dispensers   [  30% ] 30 VUs  0m18.1s/1m0s
+
+running (0m22.0s), 60/60 VUs, 1365 complete and 0 interrupted iterations
+adjusters    [  32% ] 30 VUs  0m19.1s/1m0s
+dispensers   [  32% ] 30 VUs  0m19.1s/1m0s
+
+running (0m23.0s), 60/60 VUs, 1452 complete and 0 interrupted iterations
+adjusters    [  34% ] 30 VUs  0m20.1s/1m0s
+dispensers   [  34% ] 30 VUs  0m20.1s/1m0s
+
+running (0m24.0s), 60/60 VUs, 1546 complete and 0 interrupted iterations
+adjusters    [  35% ] 30 VUs  0m21.1s/1m0s
+dispensers   [  35% ] 30 VUs  0m21.1s/1m0s
+
+running (0m25.0s), 60/60 VUs, 1632 complete and 0 interrupted iterations
+adjusters    [  37% ] 30 VUs  0m22.1s/1m0s
+dispensers   [  37% ] 30 VUs  0m22.1s/1m0s
+
+running (0m26.0s), 60/60 VUs, 1720 complete and 0 interrupted iterations
+adjusters    [  39% ] 30 VUs  0m23.1s/1m0s
+dispensers   [  39% ] 30 VUs  0m23.1s/1m0s
+
+running (0m27.0s), 60/60 VUs, 1818 complete and 0 interrupted iterations
+adjusters    [  40% ] 30 VUs  0m24.1s/1m0s
+dispensers   [  40% ] 30 VUs  0m24.1s/1m0s
+
+running (0m28.0s), 60/60 VUs, 1900 complete and 0 interrupted iterations
+adjusters    [  42% ] 30 VUs  0m25.1s/1m0s
+dispensers   [  42% ] 30 VUs  0m25.1s/1m0s
+
+running (0m29.0s), 60/60 VUs, 2001 complete and 0 interrupted iterations
+adjusters    [  44% ] 30 VUs  0m26.1s/1m0s
+dispensers   [  44% ] 30 VUs  0m26.1s/1m0s
+
+running (0m30.0s), 60/60 VUs, 2090 complete and 0 interrupted iterations
+adjusters    [  45% ] 30 VUs  0m27.1s/1m0s
+dispensers   [  45% ] 30 VUs  0m27.1s/1m0s
+
+running (0m31.0s), 60/60 VUs, 2181 complete and 0 interrupted iterations
+adjusters    [  47% ] 30 VUs  0m28.1s/1m0s
+dispensers   [  47% ] 30 VUs  0m28.1s/1m0s
+
+running (0m32.0s), 60/60 VUs, 2275 complete and 0 interrupted iterations
+adjusters    [  49% ] 30 VUs  0m29.1s/1m0s
+dispensers   [  49% ] 30 VUs  0m29.1s/1m0s
+
+running (0m33.0s), 60/60 VUs, 2368 complete and 0 interrupted iterations
+adjusters    [  50% ] 30 VUs  0m30.1s/1m0s
+dispensers   [  50% ] 30 VUs  0m30.1s/1m0s
+
+running (0m34.0s), 60/60 VUs, 2463 complete and 0 interrupted iterations
+adjusters    [  52% ] 30 VUs  0m31.1s/1m0s
+dispensers   [  52% ] 30 VUs  0m31.1s/1m0s
+
+running (0m35.0s), 60/60 VUs, 2551 complete and 0 interrupted iterations
+adjusters    [  54% ] 30 VUs  0m32.1s/1m0s
+dispensers   [  54% ] 30 VUs  0m32.1s/1m0s
+
+running (0m36.0s), 60/60 VUs, 2642 complete and 0 interrupted iterations
+adjusters    [  55% ] 30 VUs  0m33.1s/1m0s
+dispensers   [  55% ] 30 VUs  0m33.1s/1m0s
+
+running (0m37.0s), 60/60 VUs, 2738 complete and 0 interrupted iterations
+adjusters    [  57% ] 30 VUs  0m34.1s/1m0s
+dispensers   [  57% ] 30 VUs  0m34.1s/1m0s
+
+running (0m38.0s), 60/60 VUs, 2827 complete and 0 interrupted iterations
+adjusters    [  59% ] 30 VUs  0m35.1s/1m0s
+dispensers   [  59% ] 30 VUs  0m35.1s/1m0s
+
+running (0m39.0s), 60/60 VUs, 2918 complete and 0 interrupted iterations
+adjusters    [  60% ] 30 VUs  0m36.1s/1m0s
+dispensers   [  60% ] 30 VUs  0m36.1s/1m0s
+
+running (0m40.0s), 60/60 VUs, 3017 complete and 0 interrupted iterations
+adjusters    [  62% ] 30 VUs  0m37.1s/1m0s
+dispensers   [  62% ] 30 VUs  0m37.1s/1m0s
+
+running (0m41.0s), 60/60 VUs, 3106 complete and 0 interrupted iterations
+adjusters    [  64% ] 30 VUs  0m38.1s/1m0s
+dispensers   [  64% ] 30 VUs  0m38.1s/1m0s
+
+running (0m42.0s), 60/60 VUs, 3201 complete and 0 interrupted iterations
+adjusters    [  65% ] 30 VUs  0m39.1s/1m0s
+dispensers   [  65% ] 30 VUs  0m39.1s/1m0s
+
+running (0m43.0s), 60/60 VUs, 3294 complete and 0 interrupted iterations
+adjusters    [  67% ] 30 VUs  0m40.1s/1m0s
+dispensers   [  67% ] 30 VUs  0m40.1s/1m0s
+
+running (0m44.0s), 60/60 VUs, 3383 complete and 0 interrupted iterations
+adjusters    [  69% ] 30 VUs  0m41.1s/1m0s
+dispensers   [  69% ] 30 VUs  0m41.1s/1m0s
+
+running (0m45.0s), 60/60 VUs, 3482 complete and 0 interrupted iterations
+adjusters    [  70% ] 30 VUs  0m42.1s/1m0s
+dispensers   [  70% ] 30 VUs  0m42.1s/1m0s
+
+running (0m46.0s), 60/60 VUs, 3568 complete and 0 interrupted iterations
+adjusters    [  72% ] 30 VUs  0m43.1s/1m0s
+dispensers   [  72% ] 30 VUs  0m43.1s/1m0s
+
+running (0m47.0s), 60/60 VUs, 3659 complete and 0 interrupted iterations
+adjusters    [  74% ] 30 VUs  0m44.1s/1m0s
+dispensers   [  74% ] 30 VUs  0m44.1s/1m0s
+
+running (0m48.0s), 60/60 VUs, 3753 complete and 0 interrupted iterations
+adjusters    [  75% ] 30 VUs  0m45.1s/1m0s
+dispensers   [  75% ] 30 VUs  0m45.1s/1m0s
+
+running (0m49.0s), 60/60 VUs, 3838 complete and 0 interrupted iterations
+adjusters    [  77% ] 30 VUs  0m46.1s/1m0s
+dispensers   [  77% ] 30 VUs  0m46.1s/1m0s
+
+running (0m50.0s), 60/60 VUs, 3935 complete and 0 interrupted iterations
+adjusters    [  79% ] 30 VUs  0m47.1s/1m0s
+dispensers   [  79% ] 30 VUs  0m47.1s/1m0s
+
+running (0m51.0s), 60/60 VUs, 4023 complete and 0 interrupted iterations
+adjusters    [  80% ] 30 VUs  0m48.1s/1m0s
+dispensers   [  80% ] 30 VUs  0m48.1s/1m0s
+
+running (0m52.0s), 60/60 VUs, 4118 complete and 0 interrupted iterations
+adjusters    [  82% ] 30 VUs  0m49.1s/1m0s
+dispensers   [  82% ] 30 VUs  0m49.1s/1m0s
+
+running (0m53.0s), 60/60 VUs, 4192 complete and 0 interrupted iterations
+adjusters    [  84% ] 30 VUs  0m50.1s/1m0s
+dispensers   [  84% ] 30 VUs  0m50.1s/1m0s
+
+running (0m54.0s), 60/60 VUs, 4263 complete and 0 interrupted iterations
+adjusters    [  85% ] 30 VUs  0m51.1s/1m0s
+dispensers   [  85% ] 30 VUs  0m51.1s/1m0s
+
+running (0m55.0s), 60/60 VUs, 4352 complete and 0 interrupted iterations
+adjusters    [  87% ] 30 VUs  0m52.1s/1m0s
+dispensers   [  87% ] 30 VUs  0m52.1s/1m0s
+
+running (0m56.0s), 60/60 VUs, 4438 complete and 0 interrupted iterations
+adjusters    [  89% ] 30 VUs  0m53.1s/1m0s
+dispensers   [  89% ] 30 VUs  0m53.1s/1m0s
+
+running (0m57.0s), 60/60 VUs, 4526 complete and 0 interrupted iterations
+adjusters    [  90% ] 30 VUs  0m54.1s/1m0s
+dispensers   [  90% ] 30 VUs  0m54.1s/1m0s
+
+running (0m58.0s), 60/60 VUs, 4616 complete and 0 interrupted iterations
+adjusters    [  92% ] 30 VUs  0m55.1s/1m0s
+dispensers   [  92% ] 30 VUs  0m55.1s/1m0s
+
+running (0m59.0s), 60/60 VUs, 4701 complete and 0 interrupted iterations
+adjusters    [  94% ] 30 VUs  0m56.1s/1m0s
+dispensers   [  94% ] 30 VUs  0m56.1s/1m0s
+
+running (1m00.0s), 60/60 VUs, 4775 complete and 0 interrupted iterations
+adjusters    [  95% ] 30 VUs  0m57.1s/1m0s
+dispensers   [  95% ] 30 VUs  0m57.1s/1m0s
+
+running (1m01.0s), 60/60 VUs, 4865 complete and 0 interrupted iterations
+adjusters    [  97% ] 30 VUs  0m58.1s/1m0s
+dispensers   [  97% ] 30 VUs  0m58.1s/1m0s
+
+running (1m02.0s), 60/60 VUs, 4942 complete and 0 interrupted iterations
+adjusters    [  99% ] 30 VUs  0m59.1s/1m0s
+dispensers   [  99% ] 30 VUs  0m59.1s/1m0s
+
+running (1m03.0s), 47/60 VUs, 5019 complete and 0 interrupted iterations
+adjusters  ↓ [ 100% ] 30 VUs  1m0s
+dispensers ↓ [ 100% ] 30 VUs  1m0s
+
+iterations: 5066   requests: 5066 (79.79/s)   error rate: 0
+latency ms: p50=403.81 p90=1456.37 p95=1676.09 p99=1899.55
+  concurrency.adjust: p50=291.52 p95=758.12 p99=927.73
+  concurrency.dispense: p50=1402.64 p95=1878.16 p99=2781.32
+counters: {"dispense_accepted":838,"dispense_rejected":301,"adjust_accepted":3264,"adjust_rejected":663,"adjust_added_units":1951,"adjust_removed_units":1313}
+
+running (1m03.5s), 00/60 VUs, 5066 complete and 0 interrupted iterations
+adjusters  ✓ [ 100% ] 30 VUs  1m0s
+dispensers ✓ [ 100% ] 30 VUs  1m0s

@@ -1,0 +1,3 @@
+timestamp_utc,event,detail
+2026-10-25T20:45:59Z,restart_nginx,docker service update --force vitalease_nginx
+2026-10-25T20:46:28Z,recovered,nginx

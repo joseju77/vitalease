@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use RuntimeException;
 
-#[Signature('demo:seed {--users=8 : Total demo users, including the 4 fixed accounts} {--patients=80 : Number of demo patients} {--consultations=600 : Number of demo consultations}')]
+#[Signature('demo:seed {--users=8 : Total demo users, including the 4 fixed accounts} {--patients=80 : Number of demo patients} {--consultations=600 : Number of demo consultations} {--force : Seed even in production (required for the Swarm stack)} {--memory-limit= : PHP memory limit for this run, e.g. 1G (large datasets)}')]
 #[Description('Seed realistic demo users, patients and consultations for local/staging demonstrations (fresh database only)')]
 class DemoSeedCommand extends Command
 {
@@ -18,8 +18,10 @@ class DemoSeedCommand extends Command
      */
     public function handle(): int
     {
-        if (app()->isProduction()) {
-            $this->components->error('Demo data seeding is not allowed in production.');
+        $force = (bool) $this->option('force');
+
+        if (app()->isProduction() && ! $force) {
+            $this->components->error('Demo data seeding is not allowed in production without --force.');
 
             return self::FAILURE;
         }
@@ -46,13 +48,26 @@ class DemoSeedCommand extends Command
             return self::FAILURE;
         }
 
-        $this->call('db:seed', ['--no-interaction' => true]);
+        $memoryLimit = $this->option('memory-limit');
+
+        if ($memoryLimit !== null) {
+            if (! is_string($memoryLimit) || preg_match('/^(-1|\d+[KMG]?)$/i', $memoryLimit) !== 1) {
+                $this->components->error('The --memory-limit option must be -1 or an integer with an optional K, M or G suffix (e.g. 1G).');
+
+                return self::FAILURE;
+            }
+
+            ini_set('memory_limit', $memoryLimit);
+        }
+
+        // db:seed has its own production confirmation, so --force is propagated.
+        $this->call('db:seed', ['--no-interaction' => true] + ($force ? ['--force' => true] : []));
 
         try {
             app(DemoSeeder::class)
                 ->setContainer($this->laravel)
                 ->setCommand($this)
-                ->__invoke(['users' => $users, 'patients' => $patients, 'consultations' => $consultations]);
+                ->__invoke(['users' => $users, 'patients' => $patients, 'consultations' => $consultations, 'force' => $force]);
         } catch (RuntimeException $exception) {
             $this->components->error($exception->getMessage());
 

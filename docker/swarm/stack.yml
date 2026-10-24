@@ -1,0 +1,358 @@
+# Single-node Docker Swarm stack (logical distribution on one server).
+#
+# Deploy through `make swarm-deploy` (it sources docker/swarm/swarm.env and sets
+# IMAGE_TAG). Secrets are external: create them with `make swarm-secrets`.
+# Only nginx publishes a port; everything else lives on the internal overlay.
+#
+# Memory limits sum to 6464M and reservations to 2.0 CPU / 2848M, which fits a
+# 4 core / 8 GB node. CPU limits are per-task caps, not a partition.
+
+x-restart: &restart
+    condition: any
+    delay: 5s
+    window: 30s
+
+x-rolling-update: &rolling-update
+    parallelism: 1
+    delay: 10s
+    order: start-first
+    failure_action: rollback
+    monitor: 30s
+
+x-rolling-rollback: &rolling-rollback
+    parallelism: 1
+    delay: 5s
+    order: start-first
+    monitor: 20s
+
+x-stop-first-update: &stop-first-update
+    parallelism: 1
+    delay: 10s
+    order: stop-first
+    failure_action: rollback
+    monitor: 20s
+
+x-stop-first-rollback: &stop-first-rollback
+    parallelism: 1
+    order: stop-first
+
+# Non-secret application environment shared by every PHP role. Secrets arrive
+# through the *_FILE variables, which the image entrypoint maps to plain env vars.
+x-app-env: &app-env
+    APP_NAME: ${APP_NAME:-VitalEase}
+    APP_ENV: ${APP_ENV:-production}
+    APP_DEBUG: ${APP_DEBUG:-false}
+    # Only lang/es exists; without it Laravel falls back to "en" and returns raw keys.
+    APP_LOCALE: ${APP_LOCALE:-es}
+    APP_URL: ${APP_URL:?set APP_URL in docker/swarm/swarm.env}
+    LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+    TRUSTED_PROXIES: ${TRUSTED_PROXIES:-10.20.0.0/24}
+    SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+    SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+    CACHE_STORE: ${CACHE_STORE:-redis}
+    QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+    DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+    DB_HOST: ${DB_HOST:-postgres}
+    DB_PORT: ${DB_PORT:-5432}
+    DB_DATABASE: ${DB_DATABASE:?set DB_DATABASE in docker/swarm/swarm.env}
+    DB_USERNAME: ${DB_USERNAME:?set DB_USERNAME in docker/swarm/swarm.env}
+    DB_CONNECT_TIMEOUT: ${DB_CONNECT_TIMEOUT:-5}
+    REDIS_CLIENT: ${REDIS_CLIENT:-phpredis}
+    REDIS_HOST: ${REDIS_HOST:-redis}
+    REDIS_PORT: ${REDIS_PORT:-6379}
+    REDIS_TIMEOUT: ${REDIS_TIMEOUT:-2}
+    REDIS_READ_TIMEOUT: ${REDIS_READ_TIMEOUT:-5}
+    SCOUT_DRIVER: ${SCOUT_DRIVER:-meilisearch}
+    SCOUT_QUEUE: ${SCOUT_QUEUE:-true}
+    SCOUT_JOB_TRIES: ${SCOUT_JOB_TRIES:-15}
+    MEILISEARCH_HOST: ${MEILISEARCH_HOST:-http://meilisearch:7700}
+    APP_KEY_FILE: /run/secrets/app_key
+    DB_PASSWORD_FILE: /run/secrets/db_password
+    REDIS_PASSWORD_FILE: /run/secrets/redis_password
+    MEILISEARCH_KEY_FILE: /run/secrets/meili_master_key
+
+# Long-running roles (worker, scheduler) use the longer Meilisearch timeouts.
+x-background-env: &background-env
+    <<: *app-env
+    MEILISEARCH_CONNECT_TIMEOUT: "2"
+    MEILISEARCH_TIMEOUT: "15"
+
+x-app-secrets: &app-secrets
+    - app_key
+    - db_password
+    - redis_password
+    - meili_master_key
+
+services:
+    nginx:
+        image: vitalease/nginx:${IMAGE_TAG:?set IMAGE_TAG}
+        networks:
+            - internal
+        ports:
+            # Host mode keeps the real client IP (ingress mode would SNAT it).
+            # The internal :8081 listener is deliberately NOT published.
+            - target: 80
+              published: ${HTTP_PORT:-80}
+              protocol: tcp
+              mode: host
+        healthcheck:
+            test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8081/nginx-health"]
+            interval: 15s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
+        deploy:
+            replicas: 1
+            restart_policy: *restart
+            # A host-mode port cannot be bound by two tasks, so no start-first.
+            update_config: *stop-first-update
+            rollback_config: *stop-first-rollback
+            resources:
+                limits:
+                    cpus: "0.50"
+                    memory: 128M
+                reservations:
+                    cpus: "0.10"
+                    memory: 32M
+
+    app:
+        image: vitalease/app:${IMAGE_TAG:?set IMAGE_TAG}
+        command: ["php-fpm"]
+        networks:
+            - internal
+        environment:
+            <<: *app-env
+            MEILISEARCH_CONNECT_TIMEOUT: ${MEILISEARCH_CONNECT_TIMEOUT:-1}
+            MEILISEARCH_TIMEOUT: ${MEILISEARCH_TIMEOUT:-3}
+        secrets: *app-secrets
+        healthcheck:
+            # Boots the framework through public/index.php so a broken release fails
+            # the check (and the update rolls back); /up does not touch dependencies.
+            test:
+                - CMD-SHELL
+                - >-
+                    out=$$(SCRIPT_NAME=/index.php SCRIPT_FILENAME=/var/www/html/public/index.php
+                    REQUEST_URI=/up REQUEST_METHOD=GET QUERY_STRING=
+                    cgi-fcgi -bind -connect 127.0.0.1:9000 2>&1)
+                    && echo "$$out" | grep -qi 'content-type'
+                    && ! echo "$$out" | grep -qE '^Status: [45]'
+            interval: 15s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
+        deploy:
+            replicas: 3
+            restart_policy: *restart
+            update_config: *rolling-update
+            rollback_config: *rolling-rollback
+            resources:
+                limits:
+                    cpus: "1.00"
+                    memory: 640M
+                reservations:
+                    cpus: "0.25"
+                    memory: 256M
+
+    worker:
+        image: vitalease/app:${IMAGE_TAG:?set IMAGE_TAG}
+        command: ["php", "artisan", "queue:work", "redis", "--sleep=1", "--timeout=60", "--max-time=3600", "--memory=192"]
+        networks:
+            - internal
+        environment: *background-env
+        secrets: *app-secrets
+        stop_grace_period: 75s
+        healthcheck:
+            test: ["CMD-SHELL", "pgrep -f 'queue[:]work' >/dev/null"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
+        deploy:
+            replicas: 2
+            restart_policy: *restart
+            update_config: *rolling-update
+            rollback_config: *rolling-rollback
+            resources:
+                limits:
+                    cpus: "0.50"
+                    memory: 256M
+                reservations:
+                    cpus: "0.10"
+                    memory: 128M
+
+    scheduler:
+        image: vitalease/app:${IMAGE_TAG:?set IMAGE_TAG}
+        command: ["php", "artisan", "schedule:work"]
+        networks:
+            - internal
+        environment: *background-env
+        secrets: *app-secrets
+        healthcheck:
+            test: ["CMD-SHELL", "pgrep -f 'schedule[:]work' >/dev/null"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
+        deploy:
+            # Exactly one: a second scheduler would double-run scheduled tasks.
+            replicas: 1
+            restart_policy: *restart
+            update_config: *stop-first-update
+            rollback_config: *stop-first-rollback
+            resources:
+                limits:
+                    cpus: "0.25"
+                    memory: 192M
+                reservations:
+                    cpus: "0.05"
+                    memory: 64M
+
+    postgres:
+        image: postgres:18.6-alpine3.24
+        command: ["postgres", "-c", "shared_buffers=512MB", "-c", "max_connections=100"]
+        networks:
+            - internal
+        environment:
+            POSTGRES_USER: ${DB_USERNAME:?set DB_USERNAME in docker/swarm/swarm.env}
+            POSTGRES_DB: ${DB_DATABASE:?set DB_DATABASE in docker/swarm/swarm.env}
+            POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+        secrets:
+            - db_password
+        volumes:
+            # PostgreSQL 18 images keep the cluster under a versioned subdirectory.
+            - pgdata:/var/lib/postgresql
+            # Swarm has no shm_size; shared_buffers needs a larger /dev/shm than 64M.
+            - type: tmpfs
+              target: /dev/shm
+              tmpfs:
+                  size: 268435456
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+        deploy:
+            replicas: 1
+            restart_policy: *restart
+            update_config: *stop-first-update
+            rollback_config: *stop-first-rollback
+            placement:
+                constraints:
+                    - node.role == manager
+            resources:
+                limits:
+                    cpus: "1.50"
+                    memory: 2048M
+                reservations:
+                    cpus: "0.50"
+                    memory: 1024M
+
+    redis:
+        image: redis:8.10.1-alpine3.23
+        # Go through the image entrypoint so redis-server drops to the redis user.
+        command:
+            - sh
+            - -c
+            - >-
+                exec docker-entrypoint.sh redis-server
+                --requirepass "$$(cat /run/secrets/redis_password)"
+                --appendonly yes --maxmemory 256mb --maxmemory-policy volatile-lru
+        networks:
+            - internal
+        secrets:
+            - redis_password
+        volumes:
+            - redisdata:/data
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli ping | grep -q PONG
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
+        deploy:
+            replicas: 1
+            restart_policy: *restart
+            update_config: *stop-first-update
+            rollback_config: *stop-first-rollback
+            placement:
+                constraints:
+                    - node.role == manager
+            resources:
+                limits:
+                    cpus: "0.50"
+                    memory: 384M
+                reservations:
+                    cpus: "0.10"
+                    memory: 128M
+
+    meilisearch:
+        image: getmeili/meilisearch:v1.54.0
+        command:
+            - sh
+            - -c
+            - MEILI_MASTER_KEY="$$(cat /run/secrets/meili_master_key)" exec meilisearch
+        networks:
+            - internal
+        environment:
+            MEILI_ENV: production
+            MEILI_NO_ANALYTICS: "true"
+            MEILI_MAX_INDEXING_MEMORY: 512Mb
+            MEILI_MAX_INDEXING_THREADS: "1"
+        secrets:
+            - meili_master_key
+        volumes:
+            - meilidata:/meili_data
+        healthcheck:
+            test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:7700/health >/dev/null"]
+            interval: 15s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+        deploy:
+            replicas: 1
+            restart_policy: *restart
+            update_config: *stop-first-update
+            rollback_config: *stop-first-rollback
+            placement:
+                constraints:
+                    - node.role == manager
+            resources:
+                limits:
+                    cpus: "1.00"
+                    memory: 1024M
+                reservations:
+                    cpus: "0.25"
+                    memory: 512M
+
+networks:
+    internal:
+        driver: overlay
+        # Attachable so one-off jobs (`make swarm-migrate`) can join it. The fixed
+        # subnet is what TRUSTED_PROXIES refers to.
+        attachable: true
+        ipam:
+            config:
+                - subnet: 10.20.0.0/24
+
+volumes:
+    pgdata:
+    redisdata:
+    meilidata:
+
+secrets:
+    app_key:
+        external: true
+        name: vitalease_app_key
+    db_password:
+        external: true
+        name: vitalease_db_password
+    redis_password:
+        external: true
+        name: vitalease_redis_password
+    meili_master_key:
+        external: true
+        name: vitalease_meili_master_key

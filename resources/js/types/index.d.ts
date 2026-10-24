@@ -55,4 +55,6 @@ export interface Auth {
 
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
     auth: Auth;
+    /** True when the search fell back to the database during this request. */
+    search_degraded?: boolean;
 };

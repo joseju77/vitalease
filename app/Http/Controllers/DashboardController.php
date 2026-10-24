@@ -7,7 +7,10 @@ use App\Models\Patient;
 use App\Models\User;
 use App\Support\ConsultationListItem;
 use App\Support\PatientAbilities;
+use App\Support\Search\ResilientSearch;
+use App\Support\Search\SearchDegradation;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -39,18 +42,33 @@ class DashboardController extends Controller
      * Look up patients by name or enrollment number for the staff search
      * bar, restricted to the Scout-indexed fields. Disabled patients are
      * included and flagged `is_disabled` so the bar can show them as not
-     * selectable.
+     * selectable. When the engine is unavailable the same fields are matched
+     * in Postgres and the response carries an `X-Search-Degraded` header; the
+     * body shape never changes.
      */
-    public function searchPatients(Request $request): JsonResponse
+    public function searchPatients(Request $request, ResilientSearch $search, SearchDegradation $degradation): JsonResponse
     {
         $validated = $request->validate([
             'query' => ['required', 'string', 'max:100'],
         ]);
 
-        $patients = Patient::search($validated['query'])->take(10)->get();
+        $text = $validated['query'];
+
+        $patients = $search->run(
+            'patients',
+            fn (): Collection => Patient::search($text)->take(10)->get(),
+            fn (): Collection => Patient::query()
+                ->matchingText($text)
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->orderBy('id')
+                ->limit(10)
+                ->get(),
+        );
 
         return response()->json(
-            $patients->map(fn (Patient $patient): array => $this->mapPatient($patient))->all()
+            $patients->map(fn (Patient $patient): array => $this->mapPatient($patient))->all(),
+            headers: $degradation->isDegraded() ? ['X-Search-Degraded' => '1'] : [],
         );
     }
 

@@ -1,0 +1,15 @@
+                      check_name                       | result |                                     detail                                     
+-------------------------------------------------------+--------+--------------------------------------------------------------------------------
+ baseline movement found                               | PASS   | medication Ambroxol (01a1745d-7c53-706c-b895-27766e3c3723)
+ current_stock >= 0                                    | PASS   | current_stock=0
+ no movement with negative stock_after                 | PASS   | across the whole movement history of the medication
+ current_stock = sum(movements)                        | PASS   | current_stock=0 sum=0
+ stock_after chain consistent                          | PASS   | 0 inconsistent of 3673 movements
+ last stock_after = current_stock                      | PASS   | current_stock=0
+ accepted dispensations = dispensation movements       | PASS   | movements=200 accepted=200 rejected(422)=3848
+ accepted adjustments = adjustment movements           | PASS   | movements=0 accepted=0
+ initial - dispensed + net adjustments = current_stock | PASS   | current_stock=0 expected=0 (initial=200 dispensed_units=200 added=0 removed=0)
+ all medications: current_stock = sum(movements)       | PASS   | 0 mismatching medications
+ all medications: no negative stock                    | PASS   | 0 medications below zero
+(11 rows)
+

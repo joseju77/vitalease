@@ -1,0 +1,15 @@
+### swarm-restore-verify
+start=2026-10-25T20:50:26.996879033Z
+NOTICE:  database "vitalease_restore_check" does not exist, skipping
+table                              live     restored
+users                               100          100  ok
+patients                          10000        10000  ok
+medical_consultations            100079       100079  ok
+medications                          39           39  ok
+inventory_movements              205238       205238  ok
+audits                              363          363  ok
+restore-verify: dump=/backups/vitalease_20261025T205022Z.dump size=13063677B restore_seconds=2
+restore-verify: PASS
+rc=0
+end=2026-10-25T20:50:30.177003281Z
+elapsed_s=3.174721454

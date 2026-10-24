@@ -6,6 +6,8 @@ use App\Http\Requests\Inventory\StoreMedicationRequest;
 use App\Http\Requests\Inventory\UpdateMedicationRequest;
 use App\Models\InventoryMovement;
 use App\Models\Medication;
+use App\Support\Search\ResilientSearch;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,14 +21,15 @@ class MedicationController extends Controller
     /**
      * Display a paginated, searchable medication catalog.
      *
-     * Free-text search runs through Meilisearch (`Medication::search()`);
-     * without a query the catalog is read directly from Postgres. The
+     * Free-text search runs through Meilisearch (`Medication::search()`) and
+     * falls back to a case-insensitive Postgres match when the engine is
+     * unavailable; without a query the catalog is read directly from Postgres. The
      * low-stock filter applies on both paths: a `whereColumn` on the plain
      * query, and a `where('is_low_stock', ...)` Scout filter backed by the
      * precomputed `is_low_stock` filterable attribute, since Meilisearch
      * cannot compare two attributes of the same document to each other.
      */
-    public function index(Request $request): Response
+    public function index(Request $request, ResilientSearch $search): Response
     {
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
@@ -36,22 +39,27 @@ class MedicationController extends Controller
         $query = trim((string) ($validated['q'] ?? ''));
         $lowStock = $request->boolean('low_stock');
 
-        if ($query !== '') {
-            $medications = Medication::search($query)
-                ->when($lowStock, fn (ScoutBuilder $builder) => $builder->where('is_low_stock', true))
-                ->query(fn (Builder $q) => $q->withExists(['inventoryMovements', 'treatments']))
-                ->orderBy('name')
-                ->paginate(15)
-                ->withQueryString();
-        } else {
-            $medications = Medication::query()
-                ->withExists(['inventoryMovements', 'treatments'])
-                ->when($lowStock, fn (Builder $builder) => $builder->whereColumn('current_stock', '<=', 'minimum_stock'))
-                ->orderBy('name')
-                ->orderBy('id')
-                ->paginate(15)
-                ->withQueryString();
-        }
+        $databaseQuery = fn (?string $text): LengthAwarePaginator => Medication::query()
+            ->withExists(['inventoryMovements', 'treatments'])
+            ->when($text !== null, fn (Builder $builder) => $builder->matchingText($text))
+            ->when($lowStock, fn (Builder $builder) => $builder->whereColumn('current_stock', '<=', 'minimum_stock'))
+            ->orderBy('name')
+            ->orderBy('id')
+            ->paginate(15)
+            ->withQueryString();
+
+        $medications = $query === ''
+            ? $databaseQuery(null)
+            : $search->run(
+                'medications',
+                fn (): LengthAwarePaginator => Medication::search($query)
+                    ->when($lowStock, fn (ScoutBuilder $builder) => $builder->where('is_low_stock', true))
+                    ->query(fn (Builder $q) => $q->withExists(['inventoryMovements', 'treatments']))
+                    ->orderBy('name')
+                    ->paginate(15)
+                    ->withQueryString(),
+                fn (): LengthAwarePaginator => $databaseQuery($query),
+            );
 
         return Inertia::render('inventory/Index', [
             'medications' => $medications->through(fn (Medication $medication): array => $this->mapMedication($medication)),

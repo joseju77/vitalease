@@ -6,8 +6,11 @@ use App\Enums\BloodType;
 use App\Enums\MaritalStatus;
 use App\Enums\SexAtBirth;
 use App\Support\Auditing\ReplacesCatalogIds;
+use App\Support\Search\TextTokens;
 use Database\Factories\PatientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -119,6 +122,27 @@ class Patient extends Model implements AuditableContract
             'enrollment_id' => ['enrollment', Enrollment::class],
             'family_medical_unit_id' => ['family_medical_unit', FamilyMedicalUnit::class],
         ]);
+    }
+
+    /**
+     * Database fallback for the Scout search: every token (at most five) must
+     * match, case-insensitively, at least one of the indexed fields. No typo
+     * tolerance and no accent folding, unlike the search engine.
+     *
+     * @param  Builder<Patient>  $query
+     */
+    #[Scope]
+    protected function matchingText(Builder $query, string $text): void
+    {
+        foreach (TextTokens::from($text) as $token) {
+            $pattern = TextTokens::containsPattern($token);
+
+            $query->where(function (Builder $query) use ($pattern): void {
+                foreach (['first_name', 'last_name', 'second_last_name', 'enrollment_number'] as $column) {
+                    $query->orWhere($column, 'ilike', $pattern);
+                }
+            });
+        }
     }
 
     /**

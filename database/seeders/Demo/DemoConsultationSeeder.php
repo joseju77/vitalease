@@ -64,6 +64,12 @@ class DemoConsultationSeeder extends Seeder
     public const int CURATED_COUNT = 6;
 
     /**
+     * How many baseline (non-curated) timeline events share one database
+     * transaction while seeding.
+     */
+    private const int TRANSACTION_CHUNK_SIZE = 100;
+
+    /**
      * Earliest and latest attention hour, in `America/Mexico_City`.
      */
     private const int OPENING_HOUR = 8;
@@ -185,19 +191,46 @@ class DemoConsultationSeeder extends Seeder
         // when the environment enables console auditing; only curated
         // events opt in.
         $this->withoutAuditing(function () use ($events, $context): void {
-            foreach ($events as $event) {
-                Carbon::withTestNow($event['at'], function () use ($event, $context): void {
-                    $process = fn () => DB::transaction(function () use ($event, $context): void {
-                        $this->processEvent($event, $context);
-                    });
+            $batch = [];
 
-                    if ($event['curated'] ?? false) {
-                        $this->withAuditing($context['demoPhysician'], $process);
-                    } else {
-                        $process();
+            $flush = function () use (&$batch, $context): void {
+                if ($batch === []) {
+                    return;
+                }
+
+                // One commit per chunk instead of per event: far fewer fsyncs
+                // for the 100k-consultation measurement dataset. The data
+                // written is identical; only the commit granularity changes.
+                DB::transaction(function () use ($batch, $context): void {
+                    foreach ($batch as $event) {
+                        Carbon::withTestNow($event['at'], fn () => $this->processEvent($event, $context));
                     }
                 });
+
+                $batch = [];
+            };
+
+            foreach ($events as $event) {
+                if ($event['curated'] ?? false) {
+                    // Curated events keep their own transaction and opt in to auditing.
+                    $flush();
+
+                    Carbon::withTestNow($event['at'], fn () => $this->withAuditing(
+                        $context['demoPhysician'],
+                        fn () => DB::transaction(fn () => $this->processEvent($event, $context)),
+                    ));
+
+                    continue;
+                }
+
+                $batch[] = $event;
+
+                if (count($batch) >= self::TRANSACTION_CHUNK_SIZE) {
+                    $flush();
+                }
             }
+
+            $flush();
         });
     }
 

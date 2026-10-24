@@ -39,6 +39,17 @@ export default defineConfigWithVueTs(
         },
     },
     {
+        // k6 scripts run in k6's own JavaScript runtime, which injects these globals.
+        files: ['tests/Load/**/*.js'],
+        languageOptions: {
+            globals: {
+                __ENV: 'readonly',
+                __VU: 'readonly',
+                __ITER: 'readonly',
+            },
+        },
+    },
+    {
         ignores: [
             'vendor/**',
             'node_modules/**',
