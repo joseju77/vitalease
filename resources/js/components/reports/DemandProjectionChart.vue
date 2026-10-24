@@ -1,25 +1,33 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { VisAxis, VisCrosshair, VisLine, VisTooltip, VisXYContainer } from '@unovis/vue';
 import { ChartContainer, ChartLegendContent, ChartTooltipContent, componentToString } from '@/components/ui/chart';
 import type { ChartConfig } from '@/components/ui/chart';
-import type { DemandChartPoint } from '@/types/inventory';
+import { CHART_METHOD_LABELS } from '@/lib/demandProjectionMethod';
+import type { DemandChartPoint, DemandProjectionMethod } from '@/types/inventory';
 
 /**
  * Three-series demand chart for one medication: historical consumption and
- * the OLS fitted trend render as solid lines, the future projection as a
- * dashed line that continues from the fitted line's last point. Points are
+ * the chosen method's fitted line (a trend for linear regression, a flat line
+ * for the historical mean) render as solid lines, the future projection as a
+ * dashed line that continues from the fitted line's last point. Only the
+ * chosen method is drawn, and its legend entry says so. Points are
  * pre-merged by `lib/demandProjectionChart.ts`'s `buildDemandChartPoints`,
  * so this component only maps fields to Unovis accessors.
  */
-const props = defineProps<{
-    points: DemandChartPoint[];
-}>();
+const props = withDefaults(
+    defineProps<{
+        points: DemandChartPoint[];
+        method?: DemandProjectionMethod;
+    }>(),
+    { method: 'linear_trend' },
+);
 
-const chartConfig: ChartConfig = {
+const chartConfig = computed<ChartConfig>(() => ({
     history: { label: 'Consumo real', color: 'var(--chart-1)' },
-    fitted: { label: 'Tendencia', color: 'var(--chart-2)' },
+    fitted: { label: CHART_METHOD_LABELS[props.method], color: 'var(--chart-2)' },
     projection: { label: 'Estimación', color: 'var(--chart-3)' },
-};
+}));
 
 /** SVG `stroke-dasharray`, applied only to the projection line. */
 const PROJECTION_DASH_ARRAY = [6, 4];
@@ -45,9 +53,11 @@ function labelForIndex(index: number): string {
     return props.points[index]?.label ?? '';
 }
 
-const tooltipTemplate = componentToString(chartConfig, ChartTooltipContent, {
-    labelFormatter: labelForIndex,
-});
+const tooltipTemplate = computed(() =>
+    componentToString(chartConfig.value, ChartTooltipContent, {
+        labelFormatter: labelForIndex,
+    }),
+);
 </script>
 
 <template>
