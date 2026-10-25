@@ -194,10 +194,13 @@ punto adicional en [ADR-0007](../adr/0007-inventario-de-medicamentos-y-libro-de-
 
 ## Proyección de demanda
 
-`App\Services\Inventory\MedicationDemandProjection` calcula, para un medicamento, un ajuste lineal simple
-(mínimos cuadrados ordinarios, OLS) sobre su consumo mensual histórico. Es de solo lectura: nunca escribe en el
-libro de movimientos. El reporte es indicativo/demostrativo, no una garantía de compra (ver
-[ADR-0008](../adr/0008-grafica-de-proyeccion-con-shadcn-vue-chart-y-unovis.md)).
+`App\Services\Inventory\MedicationDemandProjection` proyecta, para un medicamento, su consumo mensual histórico con
+uno de dos métodos: un ajuste lineal simple (mínimos cuadrados ordinarios, OLS) o el promedio histórico. El método se
+elige por medicamento con una prueba hacia atrás (backtest) sobre su propia serie (ver
+[Selección del método](#selección-del-método)). Es de solo lectura: nunca escribe en el libro de movimientos. El
+reporte es indicativo y de apoyo a la decisión, no una garantía de compra (ver
+[ADR-0008](../adr/0008-grafica-de-proyeccion-con-shadcn-vue-chart-y-unovis.md) y
+[ADR-0013](../adr/0013-evaluacion-y-seleccion-del-metodo-de-proyeccion.md)).
 
 ### Serie de consumo
 
@@ -218,6 +221,37 @@ Con `x = 0..n-1` (un punto por mes calendario) y `y` = consumo del mes:
 - `R² = 1.0` cuando `SStot = 0` (una serie constante es un ajuste perfecto).
 - `b = 0` cuando `Sxx = 0` (menos de dos valores `x` distintos).
 
+### Selección del método
+
+`forMedication()` ejecuta un backtest de origen móvil (ventana expansiva, entrenamiento mínimo de 6 meses, un mes
+adelante, valores recortados en 0) sobre la serie ya consultada, sin consultas nuevas, y compara el error absoluto
+medio (MAE) de la regresión lineal con el del promedio histórico en los mismos orígenes:
+
+| Situación                                                                 | Método                | `method_reason`      |
+|---------------------------------------------------------------------------|-----------------------|----------------------|
+| Menos de 2 meses                                                          | Sin proyección        | (`insufficient_data`) |
+| De 2 a 8 meses                                                            | Promedio histórico    | `short_history`      |
+| 9 meses o más, al menos 3 orígenes y MAE lineal ≤ 0.95 × MAE del promedio | Regresión lineal      | `linear_beats_mean`  |
+| Cualquier otro caso (incluye empates y MAE del promedio igual a 0)         | Promedio histórico    | `mean_beats_linear`  |
+
+- El margen de 5 % se fijó a priori y no se calibró con los datos de la evaluación.
+- Con el promedio histórico la proyección es una línea plana; `next_month_demand` es `ceil(promedio)` y `slope`,
+  `intercept` y `r_squared` son `null`. La demanda del próximo mes y la sugerencia de reorden usan el método elegido.
+- El resultado agrega `method`, `method_reason`, `backtest` (puntos evaluados y MAE/RMSE de ambos métodos) y
+  `demand_pattern` (clase Syntetos-Boylan con `adi` y `cv2`, y estacionalidad); los campos anteriores no cambian.
+
+La pantalla del reporte muestra el método elegido y el motivo, el MAE del método elegido junto al del promedio
+histórico con el número de meses evaluados, y la clase de patrón de demanda con una explicación breve. Si el patrón es
+errático, intermitente o irregular, o hay menos de 9 meses, aparece una advertencia **informativa**: la sugerencia de
+reorden se sigue mostrando sin cambios. La gráfica traza solo el método elegido. Siempre se muestra una nota: la
+proyección es indicativa y se evaluó con consumo real público de otro contexto (recetas del NHS de Inglaterra) y con
+series sintéticas, **no con el consumo de la Unidad**. La sugerencia de reorden se presenta como apoyo a la decisión
+del encargado del inventario, no como una orden de compra.
+
+La evaluación que respalda esta regla (procedimiento, datos, resultados y límites) está en
+[forecast.md](../evaluation/forecast.md) y su justificación formal en
+[ADR-0013](../adr/0013-evaluacion-y-seleccion-del-metodo-de-proyeccion.md).
+
 ### Casos límite y horizonte
 
 | Caso                          | Comportamiento                                                                                          |
@@ -230,7 +264,7 @@ Con `x = 0..n-1` (un punto por mes calendario) y `y` = consumo del mes:
 
 ### Limitaciones y extensión futura
 
-- No modela estacionalidad ni ciclos: es una regresión lineal simple sobre toda la serie.
+- No modela estacionalidad ni ciclos: solo detecta (con 24 meses o más) y advierte un patrón anual; ninguno de los dos métodos lo incorpora. En la evaluación la regresión lineal perdió frente al promedio en series estacionales.
 - No valida outliers ni eventos atípicos (por ejemplo, una compra excepcional) antes de ajustar la recta.
 - Solo usa el consumo histórico del propio medicamento como variable; no incorpora variables externas (estación
   del año, campañas, disponibilidad de proveedores).

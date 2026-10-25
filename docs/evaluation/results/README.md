@@ -67,9 +67,28 @@ values passed to `make load-run`.
 | `03d-failure-postgres` | same | postgres scaled to 0 at ~2 min, back to 1 after 60 s | Behaviour without the database |
 | `03e-failure-restart-nginx` | same | `docker service update --force` of nginx at ~2 min | Restart of the only published entry point |
 | `04-backup-restore` | `make swarm-backup`, `make swarm-restore-verify` | — | Dump duration and size, restore into a scratch DB and row-count comparison |
+| `05-forecast-nhs` | `make forecast-fetch-nhs`, `make forecast-evaluate` | Seed 20261024, 20 practices, unit ITEMS, 2020-11 to 2026-08, `min_train=6`, horizons 1 and 3 | Backtest error of the demand projection methods on NHS England prescribing series (real public data from another context, not the Unit's consumption) |
+| `06-forecast-synthetic` | `make forecast-evaluate` | Seed 20261024, 8 patterns x 30 replicates | Same backtest on generated series |
 
 Concurrency runs were followed by `make swarm-sql-check`
 (`tests/Load/sql/stock-consistency.sql`).
+
+## Forecast evaluation results (05, 06)
+
+Output of `forecast:evaluate`, analysed in `docs/evaluation/forecast.md`. Unlike
+the experiments above they are not timestamped runs on the Swarm: they are
+deterministic given the seed and the NHS extract.
+
+| File | Content |
+|---|---|
+| `summary.md`, `summary.json` | Parameters, series counts, aggregates by demand class and seasonality, online selection and margin sensitivity |
+| `series.csv` (`series.csv.gz` in `05-forecast-nhs`) | One row per series: anonymous index, class, seasonality, MAE/RMSE/MASE per method and horizon. `series.csv.gz` is `gzip -n` of the CSV; read it with `zcat` |
+| `run.json` | Actual run date and PHP version; the only file that changes between two runs |
+
+- The NHS extract (`storage/app/private/datasets/nhs-epd/`) is git-ignored; its
+  SHA-256 is recorded as `extract_sha256` in `05-forecast-nhs/summary.json`.
+- No practice codes and no monthly consumption values are committed.
+- Contains NHSBSA data, OGL 3.0.
 
 ## Files
 
