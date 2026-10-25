@@ -15,8 +15,10 @@ class MedicationDemandProjectionController extends Controller
 
     /**
      * Render the medication demand projection report: every active
-     * medication for the selector, and the OLS projection for the selected
-     * one, if any.
+     * medication for the selector, and the projection for the selected one,
+     * if any. The projection method (linear trend or historical mean) is
+     * chosen by backtest; its `method`, `method_reason`, `backtest` and
+     * `demand_pattern` keys are merged into the result props.
      */
     public function __invoke(Request $request): Response
     {

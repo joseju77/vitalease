@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import type { AcceptableValue } from 'reka-ui';
 import { computed, ref, watch } from 'vue';
 import ComboboxField from '@/components/form/ComboboxField.vue';
+import DemandMethodSummary from '@/components/reports/DemandMethodSummary.vue';
 import DemandProjectionChart from '@/components/reports/DemandProjectionChart.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,12 +56,13 @@ const chartPoints = computed(() => (props.projection?.status === 'ok' ? buildDem
 
 /**
  * Plain-language trend sentence for clinical staff, e.g. "En promedio, el
- * consumo sube 13 unidades cada mes", or `null` when there is no fitted slope.
+ * consumo sube 13 unidades cada mes", or `null` when there is no fitted slope
+ * (always the case for the historical mean, which has no slope to describe).
  */
 const slopeLabel = computed(() => {
     const slope = props.projection?.slope;
 
-    if (slope === null || slope === undefined) {
+    if (props.projection?.method !== 'linear_trend' || slope === null || slope === undefined) {
         return null;
     }
 
@@ -101,8 +103,10 @@ const slopeLabel = computed(() => {
         <Alert v-if="projection !== null">
             <AlertDescription>
                 Esta estimación se calcula con lo que se ha entregado de este medicamento en los últimos meses. Es solo
-                una referencia para planear compras: no toma en cuenta temporadas ni situaciones imprevistas, así que
-                revísala con tu criterio antes de hacer un pedido.
+                una referencia para planear compras: ninguno de los métodos toma en cuenta temporadas ni situaciones
+                imprevistas, así que revísala con tu criterio antes de hacer un pedido. Los métodos se evaluaron con
+                consumo real público de otro contexto (recetas del NHS de Inglaterra) y con series sintéticas, no con el
+                consumo de la Unidad.
             </AlertDescription>
         </Alert>
 
@@ -119,6 +123,8 @@ const slopeLabel = computed(() => {
         </Card>
 
         <template v-else>
+            <DemandMethodSummary :projection="projection" />
+
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Card>
                     <CardHeader>
@@ -137,7 +143,9 @@ const slopeLabel = computed(() => {
                 <Card>
                     <CardHeader>
                         <CardTitle class="text-sm font-medium text-muted-foreground">Reorden sugerido</CardTitle>
-                        <CardDescription>Cantidad indicativa, no una orden de compra.</CardDescription>
+                        <CardDescription>
+                            Sugerencia para apoyar tu decisión; no es una orden de compra.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent class="text-2xl font-semibold">
                         {{ projection.suggested_reorder_quantity }}
@@ -147,7 +155,7 @@ const slopeLabel = computed(() => {
 
             <p v-if="slopeLabel" class="text-sm text-muted-foreground">{{ slopeLabel }}</p>
 
-            <DemandProjectionChart :points="chartPoints" />
+            <DemandProjectionChart :points="chartPoints" :method="projection.method ?? 'linear_trend'" />
         </template>
     </div>
 </template>

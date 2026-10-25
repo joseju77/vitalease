@@ -7,9 +7,10 @@ import type { DemandProjection, MedicationSummary } from '@/types/inventory';
 
 import ComboboxField from '@/components/form/ComboboxField.vue';
 
-const { routerGet, chartPointsProp } = vi.hoisted(() => ({
+const { routerGet, chartPointsProp, chartMethodProp } = vi.hoisted(() => ({
     routerGet: vi.fn(),
     chartPointsProp: [] as unknown[],
+    chartMethodProp: { value: undefined as string | undefined },
 }));
 
 vi.mock('@inertiajs/vue3', async (importOriginal) => {
@@ -37,8 +38,9 @@ vi.mock('@/layouts/AppLayout.vue', () => ({ default: {} }));
 vi.mock('@/components/reports/DemandProjectionChart.vue', () => ({
     default: defineComponent({
         name: 'DemandProjectionChartStub',
-        props: { points: { type: Array, default: () => [] } },
+        props: { points: { type: Array, default: () => [] }, method: { type: String, default: undefined } },
         setup: (props) => {
+            chartMethodProp.value = props.method;
             chartPointsProp.length = 0;
             chartPointsProp.push(...props.points);
             return () => h('div', { 'data-testid': 'chart-stub' });
@@ -70,6 +72,16 @@ function okProjection(overrides: Partial<DemandProjection> = {}): DemandProjecti
         next_month_demand: 108,
         current_stock: 40,
         suggested_reorder_quantity: 68,
+        method: 'linear_trend',
+        method_reason: 'linear_beats_mean',
+        backtest: {
+            horizon: 1,
+            margin: 0.05,
+            evaluated_points: 3,
+            linear_trend: { mae: 4, rmse: 5 },
+            historical_mean: { mae: 12, rmse: 14 },
+        },
+        demand_pattern: { class: 'smooth', adi: 1, cv2: 0.02, seasonality: 'not_assessed' },
         medication: medicationSummary(),
         is_indicative: true,
         ...overrides,
@@ -88,6 +100,10 @@ function insufficientProjection(overrides: Partial<DemandProjection> = {}): Dema
         next_month_demand: null,
         current_stock: 40,
         suggested_reorder_quantity: null,
+        method: null,
+        method_reason: null,
+        backtest: null,
+        demand_pattern: null,
         medication: medicationSummary(),
         is_indicative: true,
         ...overrides,
@@ -161,7 +177,7 @@ describe('Pages/reports/MedicationDemand.vue', () => {
         expect(text).not.toContain('R²');
         expect(text).not.toContain('0.87');
         expect(text).toContain(
-            'Esta estimación se calcula con lo que se ha entregado de este medicamento en los últimos meses. Es solo una referencia para planear compras: no toma en cuenta temporadas ni situaciones imprevistas, así que revísala con tu criterio antes de hacer un pedido.',
+            'Esta estimación se calcula con lo que se ha entregado de este medicamento en los últimos meses. Es solo una referencia para planear compras: ninguno de los métodos toma en cuenta temporadas ni situaciones imprevistas, así que revísala con tu criterio antes de hacer un pedido.',
         );
         expect(text).toContain('En promedio, el consumo sube 13 unidades cada mes');
         expect(page.findComponent({ name: 'DemandProjectionChartStub' }).exists()).toBe(true);
@@ -175,5 +191,91 @@ describe('Pages/reports/MedicationDemand.vue', () => {
         const page = mountPage([medicationSummary()], okProjection({ slope }));
 
         expect(page.text()).toContain(expected);
+    });
+
+    it('shows the linear method, its reason, and MAE next to the mean with evaluated months', () => {
+        const page = mountPage([medicationSummary()], okProjection());
+        const text = page.text();
+
+        expect(page.get('[data-testid="method-badge"]').text()).toBe('Regresión lineal');
+        expect(text).toContain('la regresión lineal se equivocó claramente menos');
+        expect(page.get('[data-testid="backtest-error"]').text()).toContain('MAE) de Regresión lineal: 4 unidades');
+        expect(page.get('[data-testid="backtest-error"]').text()).toContain('Promedio histórico: 12');
+        expect(page.get('[data-testid="backtest-error"]').text()).toContain('3 meses de prueba');
+        expect(chartMethodProp.value).toBe('linear_trend');
+    });
+
+    it('shows the historical mean without slope wording and passes the method to the chart', () => {
+        const page = mountPage(
+            [medicationSummary()],
+            okProjection({
+                method: 'historical_mean',
+                method_reason: 'mean_beats_linear',
+                slope: null,
+                intercept: null,
+                r_squared: null,
+            }),
+        );
+
+        expect(page.get('[data-testid="method-badge"]').text()).toBe('Promedio histórico');
+        expect(page.text()).not.toContain('En promedio, el consumo');
+        expect(chartMethodProp.value).toBe('historical_mean');
+    });
+
+    it('handles a backtest without evaluated months gracefully', () => {
+        const page = mountPage(
+            [medicationSummary()],
+            okProjection({
+                method: 'historical_mean',
+                method_reason: 'short_history',
+                slope: null,
+                backtest: {
+                    horizon: 1,
+                    margin: 0.05,
+                    evaluated_points: 0,
+                    linear_trend: { mae: null, rmse: null },
+                    historical_mean: { mae: null, rmse: null },
+                },
+            }),
+        );
+
+        expect(page.find('[data-testid="backtest-error"]').exists()).toBe(false);
+        expect(page.get('[data-testid="backtest-error-unavailable"]').text()).toContain('Aún no hay meses suficientes');
+        expect(page.text()).toContain('menos de 9 meses');
+    });
+
+    it('shows the pattern class with its explanation and no warning for a smooth pattern', () => {
+        const page = mountPage([medicationSummary()], okProjection());
+
+        expect(page.get('[data-testid="pattern-badge"]').text()).toBe('Regular');
+        expect(page.get('[data-testid="pattern-card"]').text()).toContain('varía poco');
+        expect(page.find('[data-testid="pattern-warning"]').exists()).toBe(false);
+    });
+
+    it.each([
+        ['lumpy', 'linear_beats_mean'],
+        ['smooth', 'short_history'],
+    ] as const)('warns informationally for %s / %s while keeping the reorder card', (cls, reason) => {
+        const page = mountPage(
+            [medicationSummary()],
+            okProjection({
+                method_reason: reason,
+                demand_pattern: { class: cls, adi: 2, cv2: 1, seasonality: 'not_assessed' },
+            }),
+        );
+
+        expect(page.find('[data-testid="pattern-warning"]').exists()).toBe(true);
+        expect(page.text()).toContain('Reorden sugerido');
+        expect(page.text()).toContain('68');
+    });
+
+    it('always shows the note about the evaluation data and the suggestion wording', () => {
+        const page = mountPage([medicationSummary()], okProjection());
+        const text = page.text();
+
+        expect(text).toContain('consumo real público de otro contexto (recetas del NHS de Inglaterra)');
+        expect(text).toContain('series sintéticas');
+        expect(text).toContain('no con el consumo de la Unidad');
+        expect(text).toContain('Sugerencia para apoyar tu decisión; no es una orden de compra.');
     });
 });

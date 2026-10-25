@@ -1,0 +1,107 @@
+{
+    "endpoint": "https://example.invalid/fixture",
+    "unit": "ITEMS",
+    "months": {
+        "202101": {
+            "resource_id": "EPD_SNOMED_202101",
+            "rows": 6,
+            "sha256": "afc500babb903690b8835d3f9004507679da8b46b10960364a6ff252ebf0fa2e"
+        },
+        "202102": {
+            "resource_id": "EPD_SNOMED_202102",
+            "rows": 6,
+            "sha256": "479a5b4cced160482c3b267d8ae15484f680394b2bf449ec3fc67ae77af7d527"
+        },
+        "202103": {
+            "resource_id": "EPD_SNOMED_202103",
+            "rows": 4,
+            "sha256": "a837f5a3035cf794859e46b42110e8955a856405bf18c877c2711ae95a73f952"
+        },
+        "202104": {
+            "resource_id": "EPD_SNOMED_202104",
+            "rows": 5,
+            "sha256": "7d77ce74994943d2c7f8a4a728ff2c516cb3205f21b3e6194633ba7051e5a346"
+        },
+        "202105": {
+            "resource_id": "EPD_SNOMED_202105",
+            "rows": 4,
+            "sha256": "e2e8d24a8fff82c569eeda784b63c742e8cd67c7489838944318b8d5ed6b3aeb"
+        },
+        "202106": {
+            "resource_id": "EPD_SNOMED_202106",
+            "rows": 5,
+            "sha256": "ddddfbdff620307474ffe5edf7bd51b38a1a57eb632e053c1a5a4a9ad433b07c"
+        },
+        "202107": {
+            "resource_id": "EPD_SNOMED_202107",
+            "rows": 4,
+            "sha256": "cecba82cbe2798752ac90c75620d23965dcd6f10fd3b83b18c7dd4a28d84f684"
+        },
+        "202108": {
+            "resource_id": "EPD_SNOMED_202108",
+            "rows": 5,
+            "sha256": "9d9eaddccc734af785e3bc2f6cb4c87018903ba409561d45394ca5383838247b"
+        },
+        "202109": {
+            "resource_id": "EPD_SNOMED_202109",
+            "rows": 5,
+            "sha256": "d0b832d03a620854e4c271b3dc6db36b82859cc2879530e29f0df1d1ea02907a"
+        },
+        "202110": {
+            "resource_id": "EPD_SNOMED_202110",
+            "rows": 5,
+            "sha256": "4eb074858afb31b5a2931667bad717e3960d65b02f71d30aaa2514ae97be7b9a"
+        },
+        "202111": {
+            "resource_id": "EPD_SNOMED_202111",
+            "rows": 4,
+            "sha256": "b2874b9a87ab05f6343ce73a55bcc23ed89ab3ad36a98b5061f2497095f3f8c0"
+        },
+        "202112": {
+            "resource_id": "EPD_SNOMED_202112",
+            "rows": 5,
+            "sha256": "b53c889f9714d1e9f55a4bbf4064229294788a93a105f55df0ffc363eefae0da"
+        },
+        "202201": {
+            "resource_id": "EPD_SNOMED_202201",
+            "rows": 5,
+            "sha256": "80c3a2e4aa7fc74fc24cc04ff44772b34fc9fcdacac3f01a2d8af1d65eb98b37"
+        },
+        "202202": {
+            "resource_id": "EPD_SNOMED_202202",
+            "rows": 5,
+            "sha256": "8a8ac93ce7d69e51cdf272d78567de346185cd640d1dec2d27fcf569b525b5ff"
+        },
+        "202203": {
+            "resource_id": "EPD_SNOMED_202203",
+            "rows": 5,
+            "sha256": "a298b15789ddcdf973bf935633ac2c64adc5f71733e14f9c8d8e1773fcd5acc8"
+        },
+        "202204": {
+            "resource_id": "EPD_SNOMED_202204",
+            "rows": 5,
+            "sha256": "dbd0566111a80a57577169fe9f3d9466fd888cf867c701a67427de5ad0493e04"
+        },
+        "202205": {
+            "resource_id": "EPD_SNOMED_202205",
+            "rows": 5,
+            "sha256": "96ec1c5620298a161593c88b3342ce52246ada20b5f67290ca0566d1f53acca6"
+        },
+        "202206": {
+            "resource_id": "EPD_SNOMED_202206",
+            "rows": 4,
+            "sha256": "c771e94adbc04033ca54ca836637297093f817567218562f47fb073a2a6de777"
+        },
+        "202207": {
+            "resource_id": "EPD_SNOMED_202207",
+            "rows": 4,
+            "sha256": "09a861c6738f7ab0c000bd948d132eabe44c988d1c25f47924680879d1f9ec09"
+        },
+        "202208": {
+            "resource_id": "EPD_SNOMED_202208",
+            "rows": 5,
+            "sha256": "3ea612559e0f114944dd7904e000437bf785cea5c924cb3cb79e0073b47286ae"
+        }
+    },
+    "extract_sha256": "fixture-extract-checksum"
+}

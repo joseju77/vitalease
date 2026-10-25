@@ -64,6 +64,7 @@ vi.mock('@unovis/vue', () => ({
     }),
 }));
 
+import { ChartContainer } from '@/components/ui/chart';
 import DemandProjectionChart from './DemandProjectionChart.vue';
 
 function point(overrides: Partial<DemandChartPoint> = {}): DemandChartPoint {
@@ -134,5 +135,23 @@ describe('DemandProjectionChart', () => {
 
         expect(yAxis.type).toBe('y');
         expect(yAxis.position).toBe('left');
+    });
+
+    it('labels the fitted line as the chosen method, defaulting to the linear trend', () => {
+        const fittedLabel = (wrapper: ReturnType<typeof mount>) =>
+            wrapper.findComponent(ChartContainer).props('config').fitted.label;
+
+        expect(fittedLabel(mount(DemandProjectionChart, { props: { points } }))).toBe(
+            'Tendencia lineal (método elegido)',
+        );
+        expect(fittedLabel(mount(DemandProjectionChart, { props: { points, method: 'historical_mean' } }))).toBe(
+            'Promedio histórico (método elegido)',
+        );
+    });
+
+    it('still renders only the three series when the historical mean is chosen', () => {
+        mount(DemandProjectionChart, { props: { points, method: 'historical_mean' } });
+
+        expect(visLineProps).toHaveLength(3);
     });
 });

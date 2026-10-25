@@ -15,6 +15,9 @@ Alcance y límites, dichos desde el principio:
   midió una vez (salvo una repetición de la corrida de una réplica, ver más abajo).
 - Un resultado es lo que dicen los archivos; las explicaciones causales se marcan como hipótesis o como no investigadas.
 
+La evaluación de la proyección de demanda (Etapa 10), que no mide carga ni fallas sino el error de pronóstico con
+recetas del NHS de Inglaterra y series sintéticas, está en [forecast.md](forecast.md).
+
 ## Entorno
 
 | | Servidor del Swarm (sistema bajo prueba) | Generador de carga (k6) |
