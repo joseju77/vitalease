@@ -104,9 +104,7 @@ const slopeLabel = computed(() => {
             <AlertDescription>
                 Esta estimación se calcula con lo que se ha entregado de este medicamento en los últimos meses. Es solo
                 una referencia para planear compras: ninguno de los métodos toma en cuenta temporadas ni situaciones
-                imprevistas, así que revísala con tu criterio antes de hacer un pedido. Los métodos se evaluaron con
-                consumo real público de otro contexto (recetas del NHS de Inglaterra) y con series sintéticas, no con el
-                consumo de la Unidad.
+                imprevistas, así que revísala con tu criterio antes de hacer un pedido.
             </AlertDescription>
         </Alert>
 

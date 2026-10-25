@@ -77,14 +77,14 @@ export function formatMonths(count: number): string {
 const numberFormatter = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
 
 export interface BacktestErrorSummary {
-    chosenMae: number;
+    linearMae: number;
     meanMae: number;
     evaluatedMonths: number;
 }
 
 /**
- * MAE of the chosen method next to the historical mean's, or `null` when the
- * backtest has no evaluated months or no usable error (null/0 points).
+ * MAE of both compared methods (linear trend and historical mean), or `null`
+ * when the backtest has no evaluated months or no usable error (null/0 points).
  */
 export function summarizeBacktestError(projection: DemandProjection): BacktestErrorSummary | null {
     const backtest: DemandProjectionBacktest | null = projection.backtest;
@@ -94,14 +94,14 @@ export function summarizeBacktestError(projection: DemandProjection): BacktestEr
         return null;
     }
 
-    const chosenMae = backtest[method].mae;
+    const linearMae = backtest.linear_trend.mae;
     const meanMae = backtest.historical_mean.mae;
 
-    if (chosenMae === null || meanMae === null) {
+    if (linearMae === null || meanMae === null) {
         return null;
     }
 
-    return { chosenMae, meanMae, evaluatedMonths: backtest.evaluated_points };
+    return { linearMae, meanMae, evaluatedMonths: backtest.evaluated_points };
 }
 
 export function formatError(value: number): string {

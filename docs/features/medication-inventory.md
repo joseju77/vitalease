@@ -240,12 +240,13 @@ medio (MAE) de la regresión lineal con el del promedio histórico en los mismos
 - El resultado agrega `method`, `method_reason`, `backtest` (puntos evaluados y MAE/RMSE de ambos métodos) y
   `demand_pattern` (clase Syntetos-Boylan con `adi` y `cv2`, y estacionalidad); los campos anteriores no cambian.
 
-La pantalla del reporte muestra el método elegido y el motivo, el MAE del método elegido junto al del promedio
-histórico con el número de meses evaluados, y la clase de patrón de demanda con una explicación breve. Si el patrón es
-errático, intermitente o irregular, o hay menos de 9 meses, aparece una advertencia **informativa**: la sugerencia de
-reorden se sigue mostrando sin cambios. La gráfica traza solo el método elegido. Siempre se muestra una nota: la
-proyección es indicativa y se evaluó con consumo real público de otro contexto (recetas del NHS de Inglaterra) y con
-series sintéticas, **no con el consumo de la Unidad**. La sugerencia de reorden se presenta como apoyo a la decisión
+La pantalla del reporte muestra el método elegido y el motivo, el MAE de la regresión lineal y el del promedio
+histórico (marcando el método elegido) con el número de meses evaluados, y la clase de patrón de demanda con una
+explicación breve. Si el patrón es errático, intermitente o irregular, o hay menos de 9 meses, aparece una advertencia
+**informativa**: la sugerencia de reorden se sigue mostrando sin cambios. La gráfica traza solo el método elegido.
+Siempre se muestra una nota: la proyección es solo una referencia para planear compras. Los datos con los que se
+evaluaron los métodos (consumo real público de otro contexto y series sintéticas, **no el consumo de la Unidad**) se
+documentan en el reporte de evaluación, no en la pantalla. La sugerencia de reorden se presenta como apoyo a la decisión
 del encargado del inventario, no como una orden de compra.
 
 La evaluación que respalda esta regla (procedimiento, datos, resultados y límites) está en

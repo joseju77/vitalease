@@ -45,11 +45,30 @@ const showWarning = computed(() => shouldWarnAboutProjection(pattern.value, prop
                 <CardContent class="space-y-3 text-sm">
                     <Badge data-testid="method-badge">{{ methodLabel }}</Badge>
                     <p v-if="reasonText">{{ reasonText }}</p>
-                    <p v-if="errorSummary" data-testid="backtest-error">
-                        Error promedio (MAE) de {{ methodLabel }}: {{ formatError(errorSummary.chosenMae) }} unidades
-                        por mes. Promedio histórico: {{ formatError(errorSummary.meanMae) }}. Calculado con
-                        {{ formatMonths(errorSummary.evaluatedMonths) }} de prueba.
-                    </p>
+                    <div v-if="errorSummary" class="space-y-1" data-testid="backtest-error">
+                        <p>
+                            Error promedio por mes (MAE), medido en
+                            {{ formatMonths(errorSummary.evaluatedMonths) }} de prueba:
+                        </p>
+                        <ul class="list-inside list-disc">
+                            <li data-testid="backtest-error-linear">
+                                {{ METHOD_LABELS.linear_trend }}:
+                                {{ formatError(errorSummary.linearMae) }} unidades<span
+                                    v-if="projection.method === 'linear_trend'"
+                                >
+                                    (método elegido)</span
+                                >
+                            </li>
+                            <li data-testid="backtest-error-mean">
+                                {{ METHOD_LABELS.historical_mean }}:
+                                {{ formatError(errorSummary.meanMae) }} unidades<span
+                                    v-if="projection.method === 'historical_mean'"
+                                >
+                                    (método elegido)</span
+                                >
+                            </li>
+                        </ul>
+                    </div>
                     <p v-else class="text-muted-foreground" data-testid="backtest-error-unavailable">
                         Aún no hay meses suficientes para medir el error de la proyección.
                     </p>

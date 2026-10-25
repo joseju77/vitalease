@@ -83,13 +83,11 @@ describe('lib/demandProjectionMethod', () => {
         expect(shouldWarnAboutProjection(null, null)).toBe(false);
     });
 
-    it('summarizes the chosen method MAE next to the mean MAE', () => {
-        expect(summarizeBacktestError(projection({ method: 'linear_trend' }))).toEqual({
-            chosenMae: 6,
-            meanMae: 3.25,
-            evaluatedMonths: 4,
-        });
-        expect(summarizeBacktestError(projection())).toEqual({ chosenMae: 3.25, meanMae: 3.25, evaluatedMonths: 4 });
+    it('summarizes the MAE of both compared methods regardless of the chosen one', () => {
+        const expected = { linearMae: 6, meanMae: 3.25, evaluatedMonths: 4 };
+
+        expect(summarizeBacktestError(projection({ method: 'linear_trend' }))).toEqual(expected);
+        expect(summarizeBacktestError(projection())).toEqual(expected);
     });
 
     it('returns null when there is no usable backtest', () => {

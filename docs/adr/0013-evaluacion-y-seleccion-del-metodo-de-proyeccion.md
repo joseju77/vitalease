@@ -202,7 +202,8 @@ cambia la sugerencia de reorden).
 ### Compromisos aceptados
 
 - **La proyección no está validada con el consumo de la Unidad.** Se validó con datos públicos de otro contexto y con
-  series sintéticas; se comunica así en la pantalla y en la documentación.
+  series sintéticas; se comunica así en la documentación y en el reporte de evaluación. La pantalla solo indica que
+  la proyección es una referencia para planear compras.
 - La media móvil de 3 meses quedó fuera de las opciones de la aplicación pese a haber tenido menos error en la
   evaluación (trabajo futuro).
 - La extracción del NHS depende de la disponibilidad y del esquema de una API externa que ya cambió una vez; las

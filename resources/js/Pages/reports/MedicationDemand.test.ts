@@ -199,9 +199,12 @@ describe('Pages/reports/MedicationDemand.vue', () => {
 
         expect(page.get('[data-testid="method-badge"]').text()).toBe('Regresión lineal');
         expect(text).toContain('la regresión lineal se equivocó claramente menos');
-        expect(page.get('[data-testid="backtest-error"]').text()).toContain('MAE) de Regresión lineal: 4 unidades');
-        expect(page.get('[data-testid="backtest-error"]').text()).toContain('Promedio histórico: 12');
         expect(page.get('[data-testid="backtest-error"]').text()).toContain('3 meses de prueba');
+        expect(page.get('[data-testid="backtest-error-linear"]').text()).toContain(
+            'Regresión lineal: 4 unidades (método elegido)',
+        );
+        expect(page.get('[data-testid="backtest-error-mean"]').text()).toContain('Promedio histórico: 12 unidades');
+        expect(page.get('[data-testid="backtest-error-mean"]').text()).not.toContain('método elegido');
         expect(chartMethodProp.value).toBe('linear_trend');
     });
 
@@ -218,6 +221,11 @@ describe('Pages/reports/MedicationDemand.vue', () => {
         );
 
         expect(page.get('[data-testid="method-badge"]').text()).toBe('Promedio histórico');
+        expect(page.get('[data-testid="backtest-error-linear"]').text()).toContain('Regresión lineal: 4 unidades');
+        expect(page.get('[data-testid="backtest-error-linear"]').text()).not.toContain('método elegido');
+        expect(page.get('[data-testid="backtest-error-mean"]').text()).toContain(
+            'Promedio histórico: 12 unidades (método elegido)',
+        );
         expect(page.text()).not.toContain('En promedio, el consumo');
         expect(chartMethodProp.value).toBe('historical_mean');
     });
@@ -269,13 +277,11 @@ describe('Pages/reports/MedicationDemand.vue', () => {
         expect(page.text()).toContain('68');
     });
 
-    it('always shows the note about the evaluation data and the suggestion wording', () => {
+    it('always shows the reference note and the suggestion wording', () => {
         const page = mountPage([medicationSummary()], okProjection());
         const text = page.text();
 
-        expect(text).toContain('consumo real público de otro contexto (recetas del NHS de Inglaterra)');
-        expect(text).toContain('series sintéticas');
-        expect(text).toContain('no con el consumo de la Unidad');
+        expect(text).toContain('Es solo una referencia para planear compras');
         expect(text).toContain('Sugerencia para apoyar tu decisión; no es una orden de compra.');
     });
 });
